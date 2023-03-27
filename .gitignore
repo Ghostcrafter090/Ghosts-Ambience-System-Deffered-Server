@@ -1,0 +1,97 @@
+# This file is used to ignore files which are generated
+# ----------------------------------------------------------------------------
+
+
+
+*~
+*.autosave
+*.a
+*.log
+*.core
+*.moc
+*.o
+*.key
+*.obj
+*.cx
+*.cxl
+*.derp
+*.orig
+*.rej
+vars/*
+working/*.pyl
+working/cond.cmd
+working/daytimes.cmd
+working/sound/assets/assets.zip
+working/sound/fire/fire.zip
+serverCommands.json
+systemLoop.json
+vars/sounds/window.cxl
+vars/sounds/outside.cxl
+vars/sounds/clock.cxl
+vars/pluginsList.pyn
+vars/dispstring.cx
+vars/data.json
+vars
+
+*.old
+*.so
+*.mp3
+*.wav
+*.so.*
+*_pch.h.cpp
+*_resource.rc
+*.qm
+.#*
+*.*#
+core
+!core/
+tags
+.DS_Store
+.directory
+*.debug
+Makefile*
+*.prl
+*.app
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+Thumbs.db
+*.res
+*.rc
+/.qmake.cache
+/.qmake.stash
+
+# qtcreator generated files
+*.pro.user*
+
+# xemacs temporary files
+*.flc
+
+# Vim temporary files
+.*.swp
+
+# Visual Studio generated files
+*.ib_pdb_index
+*.idb
+*.ilk
+*.pdb
+*.sln
+*.suo
+*.vcproj
+*vcproj.*.*.user
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj
+*vcxproj.*
+
+# MinGW generated files
+*.Debug
+*.Release
+
+# Python byte code
+*.pyc
+
+# Binaries
+# --------
+

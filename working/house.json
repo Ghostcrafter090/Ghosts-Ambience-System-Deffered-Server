@@ -1,0 +1,8 @@
+{
+    "numberOfFloors": 1,
+    "floors": {
+        "0": {
+            "numberOfRooms": 11
+        }
+    }
+}

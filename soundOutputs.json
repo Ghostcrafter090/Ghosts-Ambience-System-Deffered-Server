@@ -1,0 +1,9 @@
+{
+    "clock": ["VoiceMeeter Input (VB-Audio Voi", "MME"],
+    "fireplace": ["VoiceMeeter Aux Input (VB-Audio", "MME"],
+    "window": ["VoiceMeeter VAIO3 Input (VB-Aud", "MME"],
+    "outside": ["Speakers (VB-Audio Virtual Cabl", "MME"],
+    "light": ["CABLE Input (2- VB-Audio Virtua", "MME"],
+    "generic": ["Speakers (3- VB-Audio Virtual C", "MME"],
+    "windown": ["Speakers (4- VB-Audio Virtual C", "MME"]
+}

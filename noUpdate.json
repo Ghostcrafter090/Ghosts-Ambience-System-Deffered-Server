@@ -1,0 +1,13 @@
+{
+    "list": [
+        ".\\server.json",
+        ".\\working\\mics.json",
+        ".\\working\\speakers.json",
+        ".\\working\\soundEvents.json",
+        ".\\working\\speechPerMinute.cx",
+        ".\\working\\transcript.cxl",
+        ".\\working\\house.json",
+        ".\\working\\ghosts.json",
+        ".\\working\\speechPerMinute.cx"
+    ]
+}
