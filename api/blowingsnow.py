@@ -22,7 +22,7 @@ class utils:
     def dataGrabber():
         out = pytools.IO.getList('.\\dataList.pyl')[1]
         if out == 1:
-            out = [[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+            out = [[0, 0, 0, 0, "", 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
         return out
     
     def testWindow():

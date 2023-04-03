@@ -1,5 +1,6 @@
 import modules.pytools as pytools
 import modules.defferedTools as tools
+import vm
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse
@@ -15,46 +16,45 @@ class client:
         
     def run():
         while True:
-            if False:
-                try:
-                    for host in pytools.IO.getJson(".\\hosts.json")["hosts"]:
-                        time.sleep(1)
+            try:
+                for host in pytools.IO.getJson(".\\hosts.json")["hosts"]:
+                    time.sleep(1)
+                    try:
+                        if pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                            "command": "ping"
+                        })), timeout=30)["status"] == "success":
+                            print("Host " + host + " still active.")
+                        else:
+                            try:
+                                print("Host went offline. Removing host " + host + "...")
+                                hostsFile = pytools.IO.getJson(".\\hosts.json")
+                                while host in hostsFile["hosts"]:
+                                    hostsFile["hosts"].remove(host)
+                                hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                                while host in hostsDataFile:
+                                    hostsDataFile.pop(host)
+                                pytools.IO.saveJson(".\\hosts.json", hostsFile)
+                                pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
+                                pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+                            except:
+                                print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                    except:
                         try:
-                            if pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                "command": "ping"
-                            })), timeout=5)["status"] == "success":
-                                print("Host " + host + " still active.")
-                                time.sleep(15)
-                            try:
-                                print("Host went offline. Removing host " + host + "...")
-                                hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                while host in hostsFile["hosts"]:
-                                    hostsFile["hosts"].remove(host)
-                                hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
-                                while host in hostsDataFile:
-                                    hostsDataFile.pop(host)
-                                pytools.IO.saveJson(".\\hosts.json", hostsFile)
-                                pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
-                                pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
-                            except:
-                                print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                            print("Host went offline. Removing host " + host + "...")
+                            hostsFile = pytools.IO.getJson(".\\hosts.json")
+                            while host in hostsFile["hosts"]:
+                                hostsFile["hosts"].remove(host)
+                            hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                            while host in hostsDataFile:
+                                hostsDataFile.pop(host)
+                            pytools.IO.saveJson(".\\hosts.json", hostsFile)
+                            pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
+                            pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
                         except:
-                            try:
-                                print("Host went offline. Removing host " + host + "...")
-                                hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                while host in hostsFile["hosts"]:
-                                    hostsFile["hosts"].remove(host)
-                                hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
-                                while host in hostsDataFile:
-                                    hostsDataFile.pop(host)
-                                pytools.IO.saveJson(".\\hosts.json", hostsFile)
-                                pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
-                                pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
-                            except:
-                                print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
-                except:
-                    print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
-            time.sleep(1)
+                            print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+            except:
+                print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+            time.sleep(5)
 
 class puppet:
     def ping(data):
@@ -131,6 +131,10 @@ class com:
         print("Server stopped.")
 
     def run():
+        threadVoicemeeter = threading.Thread(target=vm.vm.handler)
+        threadVConfigure = threading.Thread(target=vm.configure.handler)
+        threadVoicemeeter.start()
+        threadVConfigure.start()
         while True:
             threadf = threading.Thread(target=com.start)
             threadf.start()

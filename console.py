@@ -1,4 +1,7 @@
-import modules.pytools as pytools
+try:
+    import modules.pytools as pytools
+except:
+    import pytools
 import time
 import os
 import termcolor
@@ -210,7 +213,7 @@ class system:
                 else:
                     subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "copy \"" + flags.pythonf + "\" \".\\ambience.exe\" /y")[0]
                     subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "copy \".\\ambience.exe\" \"" + flags.pythonf.replace("python.exe", "ambience.exe").replace("py.exe", "ambience.exe") + "\" /y")[0]
-                os.system("start /min \"\" \".\\ambience.exe\" main.py --run --apiKey=" + flags.apiKey)
+                os.system("start /min \"\" \".\\ambience.exe\" main.py --run --deffered --apiKey=" + flags.apiKey)
                 system.status.active = True
         else:
             while comm.connect() == False:
@@ -540,7 +543,7 @@ class menu:
                         # print(os.listdir())
                         # print(os.listdir(".\\working"))
                         # print(".\\working\\plugin." + plugin + ".run()_errorlog.log")
-                        f = pytools.IO.getFile(".\\working\\plugin." + plugin.split("_keys.json")[0] + ".run()_errorlog.log", False).split("\n")
+                        f = pytools.IO.getFile(".\\working\\" + plugin.split("_keys.json")[0] + "_errorlog.log", False).split("\n")
                         printColor(40 + menu.plugI, menu.plugN + 3, "", "green")
                         menu.plugN = menu.plugN + 1
                         menu.plugN = menu.plugN + 1
@@ -808,6 +811,56 @@ def main():
                     except:
                         pass
                     
+                    try:
+                        clients = pytools.IO.getJson(".\\hosts.json", doPrint=False)
+                        clientsData = pytools.IO.getJson(".\\working\\hostData.json", doPrint=False)
+                        
+                        pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information            ")
+                        pytools.IO.console.printAt(130, globals.maxY - 2, "---------------------------------------")
+                        pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR OPEN ")
+                        pytools.IO.console.printAt(130, globals.maxY - 4, "                                      ")
+                        
+                        totalSounds = 0
+                        maxSounds = 0
+                        i = 2
+                        for client in clients["hosts"]:
+                            try:
+                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                if clientsData[client]["current"] > clientsData[client]["max"] + 1:
+                                    printColor(145, globals.maxY - 3 - i, "overload", "red")
+                                    if flash == 0:
+                                        printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                    else:
+                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                else:
+                                    printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                    printColor(145, globals.maxY - 3 - i, "connected", "green")
+                            except:
+                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
+                                if flash == 0:
+                                    printColor(130, globals.maxY - 3 - i, "!", "red")
+                                else:
+                                    printColor(130, globals.maxY - 3 - i, " ", "red")
+                            try:
+                                totalSounds = totalSounds + clientsData[client]["current"]
+                                maxSounds = maxSounds + clientsData[client]["max"]
+                            except:
+                                pass
+                            i = i + 1
+                        pytools.IO.console.printAt(131, globals.maxY - 3 - i - 1, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
+                        pytools.IO.console.printAt(130, globals.maxY - 3 - i, "                                      ")
+                        i = i + 2
+                        fn = i
+                        while i < (fn + 10):
+                            pytools.IO.console.printAt(130, globals.maxY - 3 - i, spaces[0:40])
+                            i = i + 1
+                        i = 1
+                        # while i < 10:
+                        #     pytools.IO.console.printAt(140, globals.maxY - len(clients["hosts"]) - len(clients["hosts"]) - len(clients["hosts"]) - i, spaces[0:30])
+                        #     i = i + 1
+                    except:
+                        pass
+                        
                     try:
                         if system.status.active == True:
                             if os.path.exists(".\\working\\halloweenmode.derp"):

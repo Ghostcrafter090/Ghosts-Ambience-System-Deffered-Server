@@ -872,12 +872,18 @@ class net:
         return local_filename
 
 class cipher:  
-    def base64_encode(s):
-        encode = base64.standard_b64encode(bytes(s, encoding="utf-8")).decode("utf-8").replace("=", "?")
+    def base64_encode(s, isBytes=False):
+        if not isBytes:
+            encode = base64.standard_b64encode(bytes(s, encoding="utf-8")).decode("utf-8").replace("=", "?")
+        else:
+            encode = base64.standard_b64encode(s).decode("utf-8").replace("=", "?")
         return encode
         
-    def base64_decode(s: str):
-        decode = base64.standard_b64decode(s.replace("?", "=")).decode("utf-8")
+    def base64_decode(s: str, isBytes=False):
+        if not isBytes:
+            decode = base64.standard_b64decode(s.replace("?", "=")).decode("utf-8")
+        else:
+            decode = base64.standard_b64decode(s.replace("?", "="))
         return decode
 
     def listToString(s):

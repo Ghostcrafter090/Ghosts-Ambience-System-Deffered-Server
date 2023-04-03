@@ -35,28 +35,28 @@ class sounds:
         print("Lighting fireplace...")
         audioEvent = audio.event()
         audioEvent.register('match_light.mp3', 5, 50, 1, 0, 0)
-        audioEvent.register('match.wav', 1, 10, 1, 0, 1)
+        audioEvent.register('match.mp3', 1, 10, 1, 0, 1)
         audioEvent.run()
 
     def playFire():
         print("Playing standard fire effect...")
         audioEvent = audio.event()
-        audioEvent.register('fire.wav', 1, 5, 1, 0, 0)
-        audioEvent.register('fire.wav', 5, 100, 1, -100, 0)   
+        audioEvent.register('fire.mp3', 1, 5, 1, 0, 0)
+        audioEvent.register('fire.mp3', 5, 100, 1, -100, 0)   
         audioEvent.run()
         
     def playFireStart():
         print("Playing standard fire_starting effect...")
         audioEvent = audio.event()
-        audioEvent.register('fire_start.wav', 1, 5, 1, 0, 0)
-        audioEvent.register('fire_start.wav', 5, 100, 1, -100, 0)
+        audioEvent.register('fire_start.mp3', 1, 5, 1, 0, 0)
+        audioEvent.register('fire_start.mp3', 5, 100, 1, -100, 0)
         audioEvent.run()
 
     def playFireEnd():
         print("Playing standard fire_ending effect...")
         audioEvent = audio.event()
-        audioEvent.register('fire_end.wav', 1, 5, 1, 0, 0)
-        audioEvent.register('fire_end.wav', 5, 100, 1, -100, 0)
+        audioEvent.register('fire_end.mp3', 1, 5, 1, 0, 0)
+        audioEvent.register('fire_end.mp3', 5, 100, 1, -100, 0)
         audioEvent.run()
 
     def playFireiLog():

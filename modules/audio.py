@@ -538,9 +538,72 @@ class multiEvent:
     
     streamThreads = []
     handlerThreads = []
-    
+
+class tools:
+    def testWeights(randomInt, soundsf):
+        try:
+            percent = 1 - (soundsf[hosts.listf[randomInt]]["current"] / soundsf[hosts.listf[randomInt]]["max"])
+            if percent > 1:
+                percent = 1
+            i = 0
+            disparety = 0
+            while i < len(hosts.listf):
+                try:
+                    if i != randomInt:
+                        otherPercent = 1 - (soundsf[hosts.listf[i]]["current"] / soundsf[hosts.listf[i]]["max"])
+                        if otherPercent > 1:
+                            otherPercent = 1
+                        if otherPercent < 0:
+                            otherPercent = 0
+                        disparety = disparety + (percent - otherPercent)
+                except:
+                    pass
+                i = i + 1
+            a = 1.87611
+            b = 9.35926
+            c = 9.35486
+            d = -0.00277778
+            chance = a ** (b * (percent + disparety) - c) + d
+            return chance
+        except:
+            return 0
+        
+    def getRandomInt(soundsf):
+        try:
+            while True:
+                try:
+                    hosts.listf = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                    break
+                except:
+                    pass
+            i = 0
+            hostWeights = []
+            while i < len(hosts.listf):
+                hostWeights.append([tools.testWeights(i, soundsf), i])
+                i = i + 1
+            def key(iter):
+                return iter[0]
+            maxf = max(hostWeights, key=key)
+            hostWeights = sorted(hostWeights, key=key)
+            if maxf[0] > 0:
+                i = 0
+                while i < len(hosts.listf):
+                    hostWeights[i][0] = hostWeights[i][0] / maxf[0]
+                    i = i + 1
+            else:
+                return False
+            randFloat = random.random()
+            i = 0
+            while i < len(hosts.listf):
+                print(randFloat, hostWeights[i][0])
+                if randFloat < hostWeights[i][0]:
+                    return hostWeights[i][1]
+                i = i + 1
+        except:
+            return -1
+ 
 class playSoundWindow:
-    def __init__(self, path, volume, speed, balence, wait, remember=False, lowPass=False, highPass=False, play=True):
+    def __init__(self, path, volume, speed, balence, wait, remember=False, lowPass=False, highPass=False, play=True, sendFile=False):
         self.path = path
         self.volume = volume
         self.speed = speed
@@ -549,7 +612,7 @@ class playSoundWindow:
         self.remember = remember
         self.lowPass = lowPass
         self.highPass = highPass
-        self.run(play=play)
+        self.run(play=play, sendFile=sendFile)
         
     eventData = {}
     
@@ -559,7 +622,7 @@ class playSoundWindow:
         else:
             return self.volume
     
-    def run(self, play=True):
+    def run(self, play=True, sendFile=False):
         effects = []
         if self.lowPass:
             effects.append({
@@ -772,12 +835,24 @@ class playSoundWindow:
                             hosts.soundsf[puppet]["max"] = hosts.soundsf[puppet]["max"][0]
                         if hosts.soundsf[puppet]["max"] >= hosts.soundsf[puppet]["current"]:
                             hosts.soundsf[puppet]["play"] = True
-                    if hosts.soundsf.keys() != pytools.IO.getJson(".\\hostData.json").keys():
-                        pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
-                    randomInt = random.randint(0, len(hosts.listf) - 1)
-                    if random.random() < (1 - (1 / (hosts.soundsf[hosts.listf[randomInt]]["max"]) / 3)):
+                    error = True
+                    while error:
                         try:
-                            if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
+                            if hosts.soundsf.keys() != pytools.IO.getJson(".\\hostData.json").keys():
+                                pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
+                            error = False
+                        except:
+                            time.sleep(1)
+                    randomInt = -1
+                    while randomInt == -1:
+                        randomInt = tools.getRandomInt(hosts.soundsf)
+                        if randomInt != -1:
+                            break
+                        print("No hosts connected. Waiting for connection...")
+                        time.sleep(3)
+                    if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
+                        try:
+                            if not sendFile:
                                 def runSound():
                                     try:
                                         pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
@@ -788,12 +863,29 @@ class playSoundWindow:
                                         print(traceback.format_exc())
                                 threading.Thread(target=runSound).start()
                                 played = True
+                            else:
+                                def runSound():
+                                    try:
+                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                            "command": "fireEvent",
+                                            "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
+                                            "fileData": {
+                                                "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.path), isBytes=True),
+                                                "fileName": self.path.split("\\")[-1]
+                                            }
+                                        })))
+                                    except:
+                                        print(traceback.format_exc())
+                                threading.Thread(target=runSound).start()
+                                played = True
                         except:
                             print(traceback.format_exc())
                     time.sleep(0.3)
-    
+        if eventData["wait"]:
+            time.sleep(duration)
+
 class playSoundAll:
-    def __init__(self, path, volume, speed, balence, wait, remember=False, lowPass=False, highPass=False):
+    def __init__(self, path, volume, speed, balence, wait, remember=False, lowPass=False, highPass=False, sendFile=False):
         self.path = path
         self.volume = volume
         self.speed = speed
@@ -802,9 +894,9 @@ class playSoundAll:
         self.remember = remember
         self.lowPass = lowPass
         self.highPass = highPass
-        self.run()
+        self.run(sendFile=sendFile)
     
-    def run(self):
+    def run(self, sendFile=False):
         effects = []
         if self.lowPass:
             effects.append({
@@ -965,10 +1057,16 @@ class playSoundAll:
                 if hosts.soundsf.keys() != pytools.IO.getJson(".\\hostData.json").keys():
                     pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
                 
-                randomInt = random.randint(0, len(hosts.listf) - 1)
-                if random.random() < (1 - (1 / (hosts.soundsf[hosts.listf[randomInt]]["max"]) / 3)):
+                randomInt = -1
+                while randomInt == -1:
+                    randomInt = tools.getRandomInt(hosts.soundsf)
+                    if randomInt != -1:
+                        break
+                    print("No hosts connected. Waiting for connection...")
+                    time.sleep(3)
+                if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
                     try:
-                        if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
+                        if not sendFile:
                             def runSound():
                                 try:
                                     pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
@@ -979,9 +1077,27 @@ class playSoundAll:
                                     print(traceback.format_exc())
                             threading.Thread(target=runSound).start()
                             played = True
+                        else:
+                            def runSound():
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
+                                        "fileData": {
+                                            "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.path), isBytes=True),
+                                            "fileName": self.path.split("\\")[-1]
+                                        }
+                                    })))
+                                except:
+                                    print(traceback.format_exc())
+                            threading.Thread(target=runSound).start()
+                            played = True
                     except:
                         print(traceback.format_exc())
-                time.sleep(1)
+            time.sleep(1)
+        if eventData["wait"]:
+            time.sleep(duration)
+                
 class event:
     def __init__(self):
         self.eventData = {
@@ -1063,7 +1179,7 @@ class event:
                 self.duration = duration
             obj.activeSounds[uuid] = [path.split("\\")[-1], channel, pytools.clock.getDateTime(), duration]
     
-    def run(self, spawnChild=True):
+    def run(self, spawnChild=True, sendFile=False):
         if self.duration < 30:
             try:
                 try:
@@ -1103,7 +1219,13 @@ class event:
                         print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
                     time.sleep(1)
                 soundsf = pytools.IO.getJson(".\\hostData.json")
-                hosts.listf = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                while True:
+                    try:
+                        hosts.listf = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                        break
+                    except:
+                        pass
+                    time.sleep(1)
                 if str(soundsf)[0] != "{":
                     if str(hosts.soundsf)[0] != "{":
                         hosts.soundsf = {}
@@ -1143,10 +1265,16 @@ class event:
                         pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
                 except:
                     pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
-                randomInt = random.randint(0, len(hosts.listf) - 1)
-                if random.random() < (1 - (1 / (hosts.soundsf[hosts.listf[randomInt]]["max"]) / 3)):
+                randomInt = -1
+                while randomInt == -1:
+                    randomInt = tools.getRandomInt(hosts.soundsf)
+                    if randomInt != -1:
+                        break
+                    print("No hosts connected. Waiting for connection...")
+                    time.sleep(3)
+                if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
                     try:
-                        if hosts.soundsf[hosts.listf[randomInt]]["play"] == True:
+                        if not sendFile:
                             def runSound():
                                 try:
                                     pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
@@ -1157,15 +1285,100 @@ class event:
                                     print(traceback.format_exc())
                             threading.Thread(target=runSound).start()
                             played = True
+                        else:
+                            def runSound():
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
+                                        "fileData": {
+                                            "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.eventData["events"][0]["path"]), isBytes=True),
+                                            "fileName": self.eventData["events"][0]["path"].split("\\")[-1]
+                                        }
+                                    })))
+                                except:
+                                    print(traceback.format_exc())
+                            threading.Thread(target=runSound).start()
+                            played = True
                     except:
                         print(traceback.format_exc())
                 time.sleep(1)
-            
+        if self.eventData["wait"]:
+            time.sleep(self.duration)
+
+class command:
+    def sendStop(target=False):
+        do = True
+        loc = False
+        try:
+            hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+        except:
+            try:
+                hostsDataFile = pytools.IO.getJson(".\\hostData.json")
+                loc = True
+            except:
+                do = False
+        if do:
+            try:
+                for host in pytools.IO.getJson("hosts.json")["hosts"]:
+                    if (target == host) or not target:
+                        pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                            "command": "killEvents"
+                        })))
+                        hostsDataFile.pop(host)
+                if loc:
+                    pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
+                else:
+                    pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+            except:
+                print(traceback.format_exc())
+                
+    def setFlag(flagName, boolf, target=False):
+        do = True
+        loc = False
+        try:
+            hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+        except:
+            try:
+                hostsDataFile = pytools.IO.getJson(".\\hostData.json")
+                loc = True
+            except:
+                do = False
+        if do:
+            try:
+                for host in pytools.IO.getJson("hosts.json")["hosts"]:
+                    if (target == host) or not target:
+                        pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                            "command": "setFlag",
+                            "data": {
+                                "flagName": flagName,
+                                "bool": boolf
+                            }
+                        })))
+                        hostsDataFile.pop(host)
+                if loc:
+                    pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
+                else:
+                    pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+            except:
+                print(traceback.format_exc())
+
 class hosts:
-    listf = pytools.IO.getJson("hosts.json")["hosts"]
+    listf = False
     soundsf = {
         
     }
+    
+try:
+    hosts.listf = pytools.IO.getJson("hosts.json")["hosts"]
+except:
+    hosts.listf = []
+    pytools.IO.saveJson(".\\hosts.json", {
+        "hosts": []
+    })
+    pytools.IO.saveJson(".\\working\\hosts.json", {
+        "hosts": []
+    })
 
 for arg in sys.argv:
     if arg.split("=")[0] == "--event":

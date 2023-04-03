@@ -7,6 +7,8 @@ import time
 import hashlib
 import importlib
 import modules.defferedTools as defferedTools
+import modules.audio as audio
+import modules.logManager as log
 
 pytools.IO.saveFile(".\\errorlog.log", "")
 time.sleep(1)
@@ -212,6 +214,7 @@ def run():
     os.system("del .\\vars\\pluginVarsJson\\*.json /f /q")
     handlers.main.registerPlugins()
     handlers.main.loadPlugins()
+    audio.command.sendStop()
     handlers.main.launchPlugins()
     
     if flags.deffered:
@@ -281,15 +284,24 @@ for arg in sys.argv:
     if arg == "--deffered":
         flags.deffered = True
 
+
+
+
 try:
     run()
 except:
-    pytools.IO.saveFile("..\\crashlog.log", traceback.format_exc())
+    if os.path.exists(".\\working"):
+        pytools.IO.saveFile(".\\logs\\system\\crashlog.log", traceback.format_exc())
+    else:
+        pytools.IO.saveFile("..\\logs\\system\\crashlog.log", traceback.format_exc())
 
 allVars = dir()
 for name in allVars:
     myvalue = eval(name)
     try:
-        pytools.IO.appendFile("..\\crashlog.log", name + ", is" + ", " + type(myvalue) + ", and is equal to " + str(myvalue))
+        if os.path.exists(".\\working"):
+            pytools.IO.appendFile(".\\logs\\system\\crashlog.log", name + ", is" + ", " + type(myvalue) + ", and is equal to " + str(myvalue))
+        else:
+            pytools.IO.appendFile("..\\logs\\system\\crashlog.log", name + ", is" + ", " + type(myvalue) + ", and is equal to " + str(myvalue))
     except:
         pass

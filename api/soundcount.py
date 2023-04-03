@@ -4,6 +4,7 @@ import subprocess
 import json
 import urllib.parse
 import traceback
+import modules.audio as audio
 
 class status:
     apiKey = ""
@@ -37,17 +38,21 @@ def main():
                 puppetMax = hosts.soundsf[puppet]["max"]
                 if puppetMax == 0:
                     try:
+                        audio.command.sendStop(target=puppet)
+                        time.sleep(3)
                         puppetMax = pytools.net.getJsonAPI("http://" + puppet + ":4507?json=" + urllib.parse.quote(json.dumps({
                             "command": "getMaxSoundCount"
-                        })))["maxSoundCount"] * 0.8,
+                        })), timeout=30)["maxSoundCount"] * 0.6,
                     except:
                         puppetMax = 0
                         print(traceback.format_exc())
             except:
                 try:
+                    audio.command.sendStop(target=puppet)
+                    time.sleep(3)
                     puppetMax = pytools.net.getJsonAPI("http://" + puppet + ":4507?json=" + urllib.parse.quote(json.dumps({
                         "command": "getMaxSoundCount"
-                    })))["maxSoundCount"] * 0.8,
+                    })), timeout=30)["maxSoundCount"] * 0.6,
                 except:
                     puppetMax = 0
                     print(traceback.format_exc())
@@ -70,6 +75,13 @@ def main():
             except:
                 print(traceback.format_exc())
         try:
+            oldHostData = pytools.IO.getJson(".\\hostData.json")
+            removeHosts = []
+            for host in hosts.soundsf:
+                if host not in oldHostData:
+                    removeHosts.append(host)
+            for host in removeHosts:
+                hosts.soundsf.pop(host)
             pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
         except:
             print(traceback.format_exc())
@@ -101,6 +113,8 @@ def main():
             loopCount = 0
         loopCount = loopCount + 1
         time.sleep(1)
+        status.finishedLoop = True
+        status.vars["lastLoop"] = pytools.clock.getDateTime()
         
 def run():
     status.hasExited = False

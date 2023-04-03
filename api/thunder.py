@@ -30,7 +30,7 @@ class utils:
     def dataGrabber():
         out = pytools.IO.getList('.\\dataList.pyl')[1]
         if out == 1:
-            out = [[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+            out = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
         return out
 
     def dayTimesGrabber():
@@ -91,7 +91,10 @@ class storm:
         self.radius = (3 * random.random()) + 0.5
         self.electricalPower = 0
         
-        self.thread = threading.Thread(target=self.handler)
+        self.notDone = True
+        
+    def reInitThread(self):
+        return threading.Thread(target=self.handler)
         
     def getDistance(self, x, y, randRadius=False):
         if randRadius:
@@ -167,9 +170,8 @@ class storm:
             audio.playSoundAll("thunder_" + num + ".mp3", 50 + (volume / 2), speed, 0.0, 0, lowPass=lowPass)
     
     def handler(self):
-        notDone = True
-        error = ""
-        while notDone and not status.exit:
+        exitCount = 0
+        while self.notDone and (exitCount < 1000) and not status.exit:
             try:
                 self.setVelocity()
                 self.x = self.x + self.vx
@@ -194,11 +196,11 @@ class storm:
                     self.radius = self.radius + ((((self.strength / 100) / 3) - ((self.strength / 100) * random.random())) / 1000)
                     self.strength = self.strength - (self.cape / 1000) * random.random()
                     if self.strength < 0:
-                        notDone = False
+                        self.notDone = False
                 if self.radius > 25:
                     self.radius = 25
                 if self.radius < 0.1:
-                    notDone = False
+                    self.notDone = False
                 print("Storm with uuid " + str(self.uuid) + " info: {x: " + str(self.x) + ", y: " + str(self.y) + ", stage: " + str(self.stage) + ", strength: " + str(self.strength) + ", electricalPower: " + str(self.electricalPower) + ", radius: " + str(self.radius) + ", distance: " + str(self.getDistance(self.x, self.y)) + "}")
                 status.vars["storms"]["active"][self.uuid] = {
                     "x": self.x,
@@ -212,18 +214,39 @@ class storm:
                     "electricalPower": self.electricalPower,
                     "distance": self.getDistance(self.x, self.y) 
                 }
+                exitCount = 0
             except:
                 print(traceback.format_exc())
-                notDone = False
+                exitCount = exitCount + 1
             time.sleep(1)
         status.vars["storms"]["active"].pop(self.uuid)
+        storms.stormList.pop(self)
+        pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
         
 class storms:
     stormList = []
     
-def startStorm():
-    storms.stormList.append(storm(globals.dataArray[0][10]))
-    storms.stormList[-1].thread.start()
+    def start():
+        storms.stormList.append(storm(globals.dataArray[0][10]))
+        storms.stormList[-1].reInitThread().start()
+        pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
+        
+    def grab():
+        try:
+            stormList = pytools.IO.getList(".\\thunderStorms.pyl")[1]
+            try:
+                if len(stormList) != 0:
+                    storms.stormList = stormList
+                    for thunderStorm in storms.stormList:
+                        try:
+                            thunderStorm.reInitThread().start()
+                        except:
+                            pass
+            except:
+                print(traceback.format_exc())
+        except:
+            print(traceback.format_exc())
+            pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
 
 def main():
     dataTic = -1
@@ -233,16 +256,20 @@ def main():
         globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 3)
     else:
         globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
-    startStorm()
+    storms.grab()
+    if storms.stormList == []:
+        storms.start()
     while not status.exit:
         if dataTic != pytools.clock.getDateTime()[4]:
             dataTic = pytools.clock.getDateTime()[4]
             globals.dataArray = utils.dataGrabber()
-            if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
-                globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 3)
-            else:
-                globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
-        
+            try:
+                if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
+                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 3)
+                else:
+                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
+            except:
+                pass
         # https://www.desmos.com/calculator/hlkgdy60ii
         stormChance = (5.69235 ** (0.00398561 * globals.dataArray[0][10] - 1.59424)) ** 0.66
         if globals.dataArray[0][4] == "thunder":
@@ -251,8 +278,7 @@ def main():
         if (spawnTic != pytools.clock.getDateTime()[4]) and ((pytools.clock.getDateTime()[4] % 7) == 0):
             spawnTic = pytools.clock.getDateTime()[4]
             if (random.random() * 100) < stormChance:
-                storms.stormList.append(storm(globals.dataArray[0][10]))
-                storms.stormList[-1].thread.start()
+                storms.start()
         time.sleep(1)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
 
