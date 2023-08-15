@@ -3,6 +3,11 @@ import psutil
 import time
 import sys
 import modules.pytools as pytools
+import modules.logManager as log
+import os
+import traceback
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -86,6 +91,9 @@ def makeString(listf):
         i = i + 1
     return string[1:]
 
+def makeStringNew(strf):
+    return str(strf).replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
+
 def main():
     while not status.exit:
         clocksounds = ""
@@ -107,6 +115,58 @@ def main():
             outsidesounds = outsidesounds + newSystem["outside"]
         except:
             pass
+        try:
+            addedSoundsClock = []
+            addedSoundsFireplace = []
+            addedSoundsWindow = []
+            addedSoundsOutside = []
+            soundList = os.listdir("..\\vars\\pluginSounds")
+            for sound in soundList:
+                soundData = pytools.IO.getFile("..\\vars\\pluginSounds\\" + sound)
+                if (soundData.split(";")[1] == "clock"):
+                    if soundData not in addedSoundsClock:
+                        try:
+                            clocksounds = clocksounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsClock.append(soundData)
+                        except:
+                            continue
+                if (soundData.split(";")[1] == "fireplace"):
+                    if soundData not in addedSoundsFireplace:
+                        try:
+                            fireplacesounds = fireplacesounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsFireplace.append(soundData)
+                        except:
+                            continue
+                if (soundData.split(";")[1] == "window"):
+                    if soundData not in addedSoundsWindow:
+                        try:
+                            windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsWindow.append(soundData)
+                        except:
+                            continue
+                if (soundData.split(";")[1] == "outside"):
+                    if soundData not in addedSoundsOutside:
+                        try:
+                            outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsOutside.append(soundData)
+                        except:
+                            continue
+                if (soundData.split(";")[1] == "windown"):
+                    if soundData not in addedSoundsWindow:
+                        try:
+                            windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsWindow.append(soundData)
+                        except:
+                            continue
+                    if soundData not in addedSoundsOutside:
+                        try:
+                            outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
+                            addedSoundsOutside.append(soundData)
+                        except:
+                            continue
+        except:
+            print(traceback.format_exc())        
+                
         windowsounds = windowsounds + windownsounds
         outsidesounds = outsidesounds + windownsounds
         saveFile("..\\vars\\sounds\\clock.cxl", clocksounds)

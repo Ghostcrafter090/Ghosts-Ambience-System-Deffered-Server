@@ -9,6 +9,11 @@ import urllib.parse
 import json
 import traceback
 import modules.audio as audio
+import random
+
+import modules.logManager as log
+
+print = log.printLog
 
 class globals:
     instance = False
@@ -25,11 +30,16 @@ class server:
     class con:
         def arp():
             ipsDirty = subprocess.getoutput("arp -a -v").split("\n")
+            try:
+                interfaceBlacklist = pytools.IO.getJson("excludeInterfaces.json")["list"]
+            except:
+                interfaceBlacklist = []
             ips = {}
             for entry in ipsDirty:
                 if entry.find("Interface:") != -1:
                     interface = entry.split("Interface: ")[1].split(" ")[0]
-                    ips[interface] = []
+                    if not interface in interfaceBlacklist:
+                        ips[interface] = []
                 elif entry.find("Internet Address") != -1:
                     pass
                 else:
@@ -37,7 +47,8 @@ class server:
                         entryf = entry.split(" ")
                         while '' in entryf:
                             entryf.remove('')
-                        ips[interface].append(entryf[0])
+                        if not interface in interfaceBlacklist:
+                            ips[interface].append(entryf[0])
                     except:
                         pass
             return ips
@@ -143,6 +154,10 @@ class vm:
     def handler():
         while True:
             try:
+                configure.fixAudioDg()
+            except:
+                pass
+            try:
                 vm.checkStatus()
             except:
                 pass
@@ -150,6 +165,14 @@ class vm:
             
 
 class configure:
+    def fixAudioDg():
+        audioDgSize = float(subprocess.getoutput('tasklist /fi "IMAGENAME eq audiodg.exe" /fo csv').split("\n")[1].split("\",\"")[-1].replace(",", "").replace(" K\"", ""))
+        if audioDgSize > 1000000.0:
+            print("Oversized audiodg.exe detected. Resetting...")
+            os.system("taskkill /f /im audiodg.exe")
+            os.system("%windir%\\system32\\rundll32.exe advapi32.dll,ProcessIdleTasks")
+            os.system('"C:\Program Files (x86)\VB\Voicemeeter\voicemeeter8.exe" -r')
+    
     class local:
         def getOutputs():
             devices = sd.query_devices()
@@ -187,7 +210,7 @@ class configure:
                             "fireplace": ["VoiceMeeter Aux Input (VB-Audio", "MME"],
                             "window": ["VoiceMeeter VAIO3 Input (VB-Aud", "MME"],
                             "outside": [outFinal[0]["name"], "MME"],
-                            "windown": [outFinal[1]["name"], "MME"],
+                            "porch": [outFinal[1]["name"], "MME"],
                             "generic": [outFinal[2]["name"], "MME"],
                             "light": [outFinal[3]["name"], "MME"]
                         }
@@ -230,7 +253,7 @@ class configure:
                             "fireplace": ["VoiceMeeter Aux Input (VB-Audio", "MME"],
                             "window": ["VoiceMeeter VAIO3 Input (VB-Aud", "MME"],
                             "outside": [outFinal[0]["name"], "MME"],
-                            "windown": [outFinal[1]["name"], "MME"],
+                            "porch": [outFinal[1]["name"], "MME"],
                             "generic": [outFinal[2]["name"], "MME"],
                             "light": [outFinal[3]["name"], "MME"]
                         }
@@ -243,8 +266,8 @@ class configure:
             if outputs:
                 if globals.instance.inputs[0].device != configure.local.getInputs()["outside"][0]:
                     globals.instance.set("Strip[0].device.mme", configure.local.getInputs()["outside"][0])
-                if globals.instance.inputs[1].device != configure.local.getInputs()["windown"][0]:
-                    globals.instance.set("Strip[1].device.mme", configure.local.getInputs()["windown"][0])
+                if globals.instance.inputs[1].device != configure.local.getInputs()["porch"][0]:
+                    globals.instance.set("Strip[1].device.mme", configure.local.getInputs()["porch"][0])
                 if globals.instance.inputs[2].device != configure.local.getInputs()["generic"][0]:
                     globals.instance.set("Strip[2].device.mme", configure.local.getInputs()["generic"][0])
                 if globals.instance.inputs[3].device != configure.local.getInputs()["light"][0]:
@@ -285,7 +308,14 @@ class configure:
         
         def getDaisyChain():
             clients = server.grabOtherComputers()["hosts"]
-            sortedClients = sorted(clients, key = lambda s: sum(map(ord, s[1])), reverse=False)
+            permaClients = pytools.IO.getJson(".\\permaclients.json")
+            if permaClients["primary"] in clients:
+                clients.remove(permaClients["primary"])
+                # sortedClients = sorted(clients, key = lambda s: sum(map(ord, s[1])), reverse=False)
+                sortedClients = clients
+                sortedClients.append(permaClients["primary"])
+            else:
+                sortedClients = clients
             selfIndex = 0
             while selfIndex < len(sortedClients):
                 if sortedClients[selfIndex] == server.interface:
@@ -336,7 +366,7 @@ class configure:
                     globals.instance.set("vban.instream[3].route", 0)
                     globals.instance.set("vban.instream[3].on", 1)
                     
-                    globals.instance.set("vban.instream[4].name", "StreamWindown")
+                    globals.instance.set("vban.instream[4].name", "StreamPorch")
                     globals.instance.set("vban.instream[4].ip", clients[0])
                     globals.instance.set("vban.instream[4].port", 6980)
                     globals.instance.set("vban.instream[4].route", 1)
@@ -358,18 +388,21 @@ class configure:
                 globals.instance.set("vban.outstream[0].ip", clients[1])
                 globals.instance.set("vban.outstream[0].port", 6980)
                 globals.instance.set("vban.outstream[0].route", 1)
+                globals.instance.set("vban.outstream[0].channel", 8)
                 globals.instance.set("vban.outstream[0].on", 1)
                 
                 globals.instance.set("vban.outstream[1].name", "StreamFireplace")
                 globals.instance.set("vban.outstream[1].ip", clients[1])
                 globals.instance.set("vban.outstream[1].port", 6980)
                 globals.instance.set("vban.outstream[1].route", 2)
+                globals.instance.set("vban.outstream[1].channel", 8)
                 globals.instance.set("vban.outstream[1].on", 1)
                 
                 globals.instance.set("vban.outstream[2].name", "StreamWindow")
                 globals.instance.set("vban.outstream[2].ip", clients[1])
                 globals.instance.set("vban.outstream[2].port", 6980)
                 globals.instance.set("vban.outstream[2].route", 3)
+                globals.instance.set("vban.outstream[2].channel", 8)
                 globals.instance.set("vban.outstream[2].on", 1)
                 
                 globals.instance.set("vban.outstream[3].name", "StreamOutside")
@@ -378,7 +411,7 @@ class configure:
                 globals.instance.set("vban.outstream[3].route", 4)
                 globals.instance.set("vban.outstream[3].on", 1)
                 
-                globals.instance.set("vban.outstream[4].name", "StreamWindown")
+                globals.instance.set("vban.outstream[4].name", "StreamPorch")
                 globals.instance.set("vban.outstream[4].ip", clients[1])
                 globals.instance.set("vban.outstream[4].port", 6980)
                 globals.instance.set("vban.outstream[4].route", 5)
@@ -398,12 +431,187 @@ class configure:
                 
                 if globals.instance.get("vban.Enable") != 1:
                     globals.instance.set("vban.Enable", 1)
+    
+    outsideVolume = -30.0
+    outsideLimiter = -14.0
+               
+    def getOutsideVolumeBeforeHalloween():
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        return 0.100629 * dayOfYear - 50.5912
+    
+    def getOutsideVolumeAfterHalloween():
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        return (0.00547945 / 1.650000) * dayOfYear - 21.258
+    
+    def getLimiterModifierOnHalloween():
+        
+        try:
+            dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+            halloweenOfYear = (pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 10, 31, 0, 0, 0]) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
             
+            x = (dayOfYear - halloweenOfYear) * 24
+            
+            a = 3.1061
+            b = 0.292463
+            c = -0.923161
+            d = -0.0000066956
+            e = 2.71828182846
+            f = -80.5216
+            g = 16.7116
+            return a ** (b * (x + c)) + d * e ** ((((x - f) ** (2)) / (2 * g ** (2))))
+        except OverflowError:
+            return 0
+        except:
+            print(traceback.format_exc())
+            return 0
+    
+    def grabWeatherData():
+        try:
+            dataArray = pytools.IO.getList(".\\working\\dataList.pyl")[1]
+            lightningDanger = pytools.IO.getJson(".\\working\\lightningData.json")["dangerLevel"]
+            return [dataArray, lightningDanger]
+        except:
+            return False
+    
+    def getOutsideVolumeWeatherModifier(prevVal):
+        
+        dataf = configure.grabWeatherData()
+        
+        if dataf:
+            lightningModif = (1.14898 ** (0.997531 * (dataf[1] + 0.00708756)) - 0.000982331) * 2
+            windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5
+            windSpeedModif = 1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234
+            if windGustModif > windSpeedModif:
+                windModif = windGustModif
+            else:
+                windModif = windSpeedModif
+            weatherModif = 0
+            if dataf[0][0][4] == "mist":
+                weatherModif = 1.2
+            elif dataf[0][0][4] == "lightrain":
+                weatherModif = 1.5
+            elif dataf[0][0][4] == "rain":
+                weatherModif = 3
+            elif dataf[0][0][4] == "snow":
+                weatherModif = 3
+            elif dataf[0][0][4] == "thunder":
+                weatherModif = 4.5
+        else:
+            lightningModif = 0
+            windModif = 0
+            weatherModif = 0
+        
+        modif = lightningModif + windModif + weatherModif
+            
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+         
+        if dayOfYear < 304:
+            adderDivider = (((123 + 181 - dayOfYear) / 123) * 0.8) + 1
+        else:
+            adderDivier = 1
+            
+        adderModif = prevVal + 20
+        
+        if adderModif < 1:
+            adderModif = 1
+        
+        return prevVal + ((((-20 - prevVal) * (modif / 13.1)) + (modif / adderDivider)) / adderModif)
+    
+    def getOutsideVolumeOnHoliday(peakDateArray, peakModif=1, afterHour=False):
+        # https://www.desmos.com/calculator/esomopbiwk
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        peakDayOfYear = (pytools.clock.dateArrayToUTC(peakDateArray) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        if afterHour:
+            if dayOfYear > peakDayOfYear:
+                if (dayOfYear <= (peakDayOfYear + 0.041666666666666664)):
+                    return ((5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) * (1 - ((dayOfYear - peakDayOfYear) / 0.041666666666666664))) / peakModif
+                else:
+                    return 0
+            else:
+                return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / peakModif
+        else:
+            return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / peakModif
+    
+    def getOutsideVolume():
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        print(dayOfYear)
+        if dayOfYear > 304:
+            if configure.getOutsideVolumeAfterHalloween() <= -19:
+                return configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)
+            else:
+                return -19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)
+        else:
+            return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5))
+    
+    def getOutsideLimiter(volume):
+        # https://www.desmos.com/calculator/hgfrmpjpqs
+        
+        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        
+        a = 284.855
+        b = -1
+        c = 1.33358
+        d = 36.3134
+        g = -0.00000266904
+        i = 0.281673
+        j = 25.4979
+        k = 0.00987916
+        
+        x = volume
+        
+        l = 0.180879
+        m = -0.00532299
+        o = 9.25592
+        p = 6.62516
+        
+        if dayOfYear < 304:
+            y = - l ** (m * (dayOfYear - o)) + p
+        else:
+            y = -8
+        
+        if volume > -20:
+            y = -(-y + (y * ((volume + 20) / 5)))
+        elif volume > -25:
+            y = y * ((volume + 25) / 5)
+        else:
+            y = 0
+        
+        import math
+        
+        lim = (a * x ** (b) + (c * x) + d - (g * x ** (4) * math.sin((i * x) - j) + k)) + y
+        
+        lim = lim + configure.getLimiterModifierOnHalloween()
+        
+        if lim > 0:
+            lim = 0.0
+        
+        return lim
+    
+    def setOutsideVolume():
+        configure.outsideVolume = configure.getOutsideVolume()
+        configure.outsideLimiter = configure.getOutsideLimiter(configure.outsideVolume)
+        globals.instance.set("Strip[0].Limit", configure.outsideLimiter)
+        globals.instance.set("Strip[1].Limit", configure.outsideLimiter)
+        globals.instance.set("Bus[0].Gain", configure.outsideVolume)
+        pytools.IO.saveJson("outsideProperties.json", {
+            "volume": configure.outsideVolume,
+            "limiter": configure.outsideLimiter
+        })
+        
+        outputs = {
+            "clock": globals.instance.get("Bus[1].device.name", string=True),
+            "fireplace": globals.instance.get("Bus[2].device.name", string=True),
+            "window": globals.instance.get("Bus[3].device.name", string=True),
+            "outside": globals.instance.get("Bus[4].device.name", string=True)
+        }
+        pytools.IO.saveJson("serverOutputs.json", outputs)
+    
     def handler():
         while True:
             try:
                 configure.vban.setValues()
-                time.sleep(20)
+                configure.setOutsideVolume()
+                time.sleep(1 + (2 * random.random()))
             except:
                 print(traceback.format_exc())
                 time.sleep(1)

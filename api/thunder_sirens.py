@@ -1,6 +1,9 @@
 import modules.audio as audio
 import modules.pytools as pytools
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -21,12 +24,37 @@ class utils:
 
 def main():
     count = 0
+    alertLevel = 2.5
     while not status.exit:
         dataList = utils.dataGrabber()
         dateArray = pytools.clock.getDateTime()
-        if (dataList[1][5] > 4) or (dataList[0][4] == "thunder"):
+        try:
+            lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
+        except:
+            lightningDanger = 0
+        if lightningDanger > 3.5:
+            alertLevel = alertLevel + 1
+        else:
+            alertLevel = alertLevel - 1
+            
+        if alertLevel > 6:
+            alertLevel = 6
+        if alertLevel < 3.5:
+            alertLevel = 3.5
+        
+        if (dataList[1][5] > 4) or (lightningDanger > alertLevel):
             count = count + 1
-            audio.playSoundAll("tornado_sirens.mp3", 100, 1.0, 0.0, 0)
+            if dateArray[3] >= 22:
+                volume = 20
+            if dateArray[3] <= 6:
+                volume = 20
+            else:
+                volume = 80
+            audioEvent = audio.event()
+            audioEvent.registerWindow("tornado_sirens.mp3;tornado_sirens.mp3", volume, 1.0, 0.0, 0)
+            audioEvent.register("tornado_sirens.mp3", 0, volume, 1.0, 0.0, 0)
+            audioEvent.register("tornado_sirens.mp3", 1, volume, 1.0, 0.0, 0)
+            audioEvent.run()
             if count == 2:
                 audioEvent = audio.event()
                 audioEvent.register("radio_thunder_start.mp3", 0, 100, 1.0, 0.0, 0)
@@ -41,8 +69,12 @@ def main():
         if (dateArray[2] == 1) or (dateArray[2] == 15):
             if dateArray[3] == 12:
                 if dateArray[4] == 20:
-                    audio.playSoundAll("tornado_sirens_test.mp3", 100, 1.0, 0.0, 0)
-                    time.sleep(55)
+                    audioEvent = audio.event()
+                    audioEvent.registerWindow("tornado_sirens_test.mp3;tornado_sirens_test_nm.mp3", 100, 1.0, 0.0, 0)
+                    audioEvent.register("tornado_sirens_test.mp3", 0, 80, 1.0, 0.0, 0)
+                    audioEvent.register("tornado_sirens_test.mp3", 1, 80, 1.0, 0.0, 0)
+                    audioEvent.run()
+            time.sleep(55)
         time.sleep(10)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         status.finishedLoop = True

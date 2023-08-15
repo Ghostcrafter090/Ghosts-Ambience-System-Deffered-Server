@@ -1,6 +1,9 @@
 import modules.audio as audio
 import time
 import modules.pytools as pytools
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""

@@ -4,6 +4,9 @@ import random
 import math
 import os
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""

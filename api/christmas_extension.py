@@ -5,6 +5,9 @@ import time
 import traceback
 import os
 import threading
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -90,7 +93,7 @@ class sections:
                     if random.randrange(0, 35000) < bellsChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         if globals.playBells:
                             audioEvent = audio.event()
                             audioEvent.register('sleighbells_' + str(random.randrange(0, 5)) + ".mp3", ghSpeaker, 40, 1, 0, 0)
@@ -166,7 +169,7 @@ class sections:
                     if random.randrange(0, 35000) < musicBoxChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         if random.randrange(0, 2) == 1:
                             if globals.playBells:
                                 audioEvent = audio.event()

@@ -1,7 +1,6 @@
-from traceback import format_exc as traceback_format_exc, format_stack as traceback_format_stack
+from traceback import format_exc as traceback_format_exc
 class traceback:
     format_exc = traceback_format_exc
-    format_stack = traceback_format_stack
 
 import urllib.parse
 
@@ -72,48 +71,7 @@ from pyaudio import PyAudio
 from pydub import AudioSegment as pydub_AudioSegment
 from pydub.utils import make_chunks as pydub_utils_make_chunks
 
-doMuteOnTrue = True
-doMuteOnFalse = False
-
-if not os.path.exists(".\\logs"):
-    os.system("mkdir \".\\logs\"")
-    
-if not os.path.exists(".\\logs\\errors"):
-    os.system("mkdir \".\\logs\\errors\"")
-
-class log:
-    
-    data = []
-    hasLogged = False
-    dateString = ""
-    timeString = ""
-    
-    def crash(*strff):
-        for strf in strff:    
-            print(str(strf))
-            if not log.hasLogged:
-                if not (len(log.data) < 50):
-                    log.data.pop(0)
-                log.data.append([pytools.clock.getDateTime(), str(strf), str(traceback.format_stack())])
-                if ("Traceback" in str(strf)) or ("Error" in str(strf)) or ("error" in str(strf)) or ("Failed" in str(strf)) or ("failed" in str(strf)) or ("Unable" in str(strf)) or ("unable" in str(strf)) or ("WARNING" in str(strf)) or ("Warning" in str(strf)) or ("warning" in str(strf)):
-                    dateArray = pytools.clock.getDateTime()
-                    if log.dateString == "":
-                        log.dateString = str(dateArray[0]) + "-" + str(dateArray[1]) + "-" + str(dateArray[2])
-                        log.timeString =  str(dateArray[3]) + "."  + str(dateArray[4]) + "."  + str(dateArray[5]) + "_" + str(time.time() * 100000).split(".")[0]
-                    if not os.path.exists(".\\logs\\errors\\" + log.dateString):
-                        os.system("mkdir \".\\logs\\errors\\" + log.dateString + "\"")
-                    for data in log.data:
-                        dateArray = data[0]
-                        message = str(data[1])
-                        callStack = str(data[2])
-                        pytools.IO.appendFile(".\\logs\\errors\\" + log.dateString + "\\event_" + log.timeString + ".log", "\n" + str(dateArray) + " :;: " + message + " :;: " + callStack.replace("\n", "    \\n\t"))
-                    log.hasLogged = True
-            else:
-                dateArray = pytools.clock.getDateTime()
-                pytools.IO.appendFile(".\\logs\\errors\\" + log.dateString + "\\event_" + log.timeString + ".log", "\n" + str(dateArray) + " :;: " + str(strf) + " :;: " + str(traceback.format_stack()).replace("\n", "    \\n\t"))
-
-def printDebug(strf):
-    print(strf)
+import modules.logManager as log
 
 # print = log.printLog
 
@@ -179,6 +137,10 @@ del threading_Thread
 del sd_query_devices
 del pydub_AudioSegment, pydub_utils_make_chunks
 
+def printDebug(strf):
+    if False:
+        print(strf)
+
 # Sound Events
 # syncEvents = {
 #     "events": [
@@ -188,17 +150,12 @@ del pydub_AudioSegment, pydub_utils_make_chunks
 #             "speed": 1.0,
 #             "channel": "clock",
 #             "effects": [
-#                 {
-#                     "type": "<type>", # lowpass, highpass, remeberbypass
-#                     <highpass, lowpass> "freqency": <float>
-#                     <highpass, lowpass> "db": <float>
+#                  {
+#                      "type": "<type>", # lowpass, highpass, remeberbypass
+#                      <highpass, lowpass> "freqency": <float>
+#                      <highpass, lowpass> "db": <float>
 #                 }
-#             ],
-#             "mute_options": {
-#                  "flag_name": "<flagname>" # states the name of the flag
-#                  "do_mute": <bool> # states whether the flag being present causes mute or unmutes 0=normal, 1=reverse
-#                  "fade": <bool> # do a hard cut or fade the next chunks in and out
-#             }
+#             ]
 #         },
 #     ],
 #     "wait": <bool>
@@ -650,7 +607,6 @@ class tools:
                         return -1
                 i = i + 1
         except:
-            print(traceback.format_exc())
             return -1
         
 class reportSound:
@@ -663,10 +619,7 @@ class reportSound:
         pytools.IO.saveFile("..\\vars\\pluginSounds\\" + str(self.uuid) + ".cx", str(obj.activeSounds[self.uuid][0]) + ";" + str(obj.activeSounds[self.uuid][1]))
         time.sleep(obj.activeSounds[self.uuid][3])
         os.system("del \"" + "..\\vars\\pluginSounds\\" + str(self.uuid) + ".cx" + "\" /f /s /q")
-        try:
-            obj.activeSounds.pop(self.uuid)
-        except:
-            print("Could not pop uuid from activeSounds list.")
+        obj.activeSounds.pop(self.uuid)
  
 class playSoundWindow:
     def __init__(self, path, volume, speed, balence, wait, remember=False, lowPass=False, highPass=False, play=True, sendFile=False):
@@ -685,10 +638,8 @@ class playSoundWindow:
     def getVolume(self, intf):
         if str(self.volume)[0] == "[":
             if intf == 2:
-                if len(self.volume) == 3:
-                    return self.volume[intf]
-                else:
-                    return self.volume[1]
+                if len(self.volume) <= 2:
+                    return self.volume[-1]
             return self.volume[intf]
         else:
             return self.volume
@@ -712,156 +663,210 @@ class playSoundWindow:
                 "type": "rememberbypass",
             })
         
+        plugOutputs = pytools.IO.getJson("..\\plugOutputs.json")
+        
         if self.path.split(";")[0] != self.path:
-            eventData = {
-                "events": [
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path.split(";")[0],
-                        "volume": self.getVolume(0),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "window",
-                        "effects": effects,
-                        "mute_options": {
-                            "flag_name": "nomufflewn",
-                            "do_mute": doMuteOnTrue,
-                            "fade": True
-                        }
-                    },
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
-                        "volume": self.getVolume(1),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "window",
-                        "effects": effects,
-                        "mute_options": {
-                            "flag_name": "nomufflewn",
-                            "do_mute": doMuteOnFalse,
-                            "fade": True
-                        }
-                    },
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
-                        "volume": self.getVolume(1),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "outside",
-                        "effects": effects
-                    }
-                ],
-                "wait": self.wait
-            }
-            
-            if len(self.path.split(";")) > 2:
-                eventData["events"].append({
-                    "path": ".\\working\\sound\\assets\\" + self.path.split(";")[2],
-                    "volume": self.getVolume(2),
-                    "speed": self.speed,
-                    "balence": self.balence,
-                    "channel": "porch",
-                    "effects": effects
-                })
-            else:
-                eventData["events"].append({
-                    "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
-                    "volume": self.getVolume(2),
-                    "speed": self.speed,
-                    "balence": self.balence,
-                    "channel": "porch",
-                    "effects": effects
-                })
-            
-            uuid = random.random()
-            while uuid in obj.activeSounds:
+            if os.path.exists(".\\nomufflewn.derp"):
+                eventData = {
+                    "events": [
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
+                            "volume": self.getVolume(1),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "windown",
+                            "effects": effects
+                        },
+                    ],
+                    "wait": self.wait
+                }
+                if len(self.path.split(";")) > 2:
+                    eventData["events"].append({
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[2],
+                            "volume": self.getVolume(2),
+                            "speed": self.speed,
+                            "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                            "channel": plugOutputs["outputs"]["porch"][0],
+                            "effects": effects
+                    })
+                else:
+                    eventData["events"].append({
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
+                            "volume": self.getVolume(2),
+                            "speed": self.speed,
+                            "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                            "channel": plugOutputs["outputs"]["porch"][0],
+                            "effects": effects
+                    })
                 uuid = random.random()
-            if self.path.split(";")[1].find(".mp3") != -1:
-                duration = float(MP3(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.split(";")[1].find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split(";")[1].split("\\")[-1], "windown", pytools.clock.getDateTime(), duration]
             else:
-                duration = float(WAVE(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
-            obj.activeSounds[uuid] = [self.path.split(";")[1].split("\\")[-1], "outside", pytools.clock.getDateTime(), duration]
-            soundReportObj = reportSound(uuid)
-            threading.Thread(target=soundReportObj.run).start()
-            uuid = random.random()
-            while uuid in obj.activeSounds:
+                eventData = {
+                    "events": [
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[0],
+                            "volume": self.getVolume(0),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "window",
+                            "effects": effects
+                        },
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
+                            "volume": self.getVolume(1),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "outside",
+                            "effects": effects
+                        }
+                    ],
+                    "wait": self.wait
+                }
+                if len(self.path.split(";")) > 2:
+                    eventData["events"].append({
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[2],
+                            "volume": self.getVolume(2),
+                            "speed": self.speed,
+                            "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                            "channel": plugOutputs["outputs"]["porch"][0],
+                            "effects": effects
+                    })
+                else:
+                    eventData["events"].append({
+                            "path": ".\\working\\sound\\assets\\" + self.path.split(";")[1],
+                            "volume": self.getVolume(2),
+                            "speed": self.speed,
+                            "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                            "channel": plugOutputs["outputs"]["porch"][0],
+                            "effects": effects
+                    })
                 uuid = random.random()
-            if self.path.split(";")[0].find(".mp3") != -1:
-                duration = float(MP3(".\\sound\\assets\\" + self.path.split(";")[0]).info.length) / self.speed
-            else:
-                duration = float(WAVE(".\\sound\\assets\\" + self.path.split(";")[0]).info.length) / self.speed
-            obj.activeSounds[uuid] = [self.path.split(";")[0].split("\\")[-1], "window", pytools.clock.getDateTime(), duration]
-            soundReportObj = reportSound(uuid)
-            threading.Thread(target=soundReportObj.run).start()
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.split(";")[1].find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path.split(";")[1]).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split(";")[1].split("\\")[-1], "outside", pytools.clock.getDateTime(), duration]
+                soundReportObj = reportSound(uuid)
+                threading.Thread(target=soundReportObj.run).start()
+                uuid = random.random()
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.split(";")[0].find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path.split(";")[0]).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path.split(";")[0]).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split(";")[0].split("\\")[-1], "window", pytools.clock.getDateTime(), duration]
+                soundReportObj = reportSound(uuid)
+                threading.Thread(target=soundReportObj.run).start()
         else:
-            eventData = {
-                "events": [
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path,
-                        "volume": self.getVolume(0),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "window",
-                        "effects": effects,
-                        "mute_options": {
-                            "flag_name": "nomufflewn",
-                            "do_mute": doMuteOnTrue,
-                            "fade": True
-                        }
-                    },
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path,
-                        "volume": self.getVolume(1),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "window",
-                        "effects": effects,
-                        "mute_options": {
-                            "flag_name": "nomufflewn",
-                            "do_mute": doMuteOnFalse,
-                            "fade": True
-                        }
-                    },
-                    {
-                        "path": ".\\working\\sound\\assets\\" + self.path,
-                        "volume": self.getVolume(1),
-                        "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "outside",
-                        "effects": effects
-                    },
-                    {
+            if os.path.exists(".\\nomufflewn.derp"):
+                eventData = {
+                    "events": [
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path,
+                            "volume": self.getVolume(1),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "windown",
+                            "effects": effects
+                        },
+                    ],
+                    "wait": self.wait
+                }
+                eventData["events"].append({
                         "path": ".\\working\\sound\\assets\\" + self.path,
                         "volume": self.getVolume(2),
                         "speed": self.speed,
-                        "balence": self.balence,
-                        "channel": "porch",
+                        "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                        "channel": plugOutputs["outputs"]["porch"][0],
                         "effects": effects
-                    }
-                ],
-                "wait": self.wait
-            }
-            uuid = random.random()
-            while uuid in obj.activeSounds:
+                })
+                    
                 uuid = random.random()
-            if self.path.find(".mp3") != -1:
-                duration = float(MP3(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split("\\")[-1], "windown", pytools.clock.getDateTime(), duration]
+                soundReportObj = reportSound(uuid)
+                threading.Thread(target=soundReportObj.run).start()
             else:
-                duration = float(WAVE(".\\sound\\assets\\" + self.path).info.length) / self.speed
-            obj.activeSounds[uuid] = [self.path.split("\\")[-1], "outside", pytools.clock.getDateTime(), duration]
-            soundReportObj = reportSound(uuid)
-            threading.Thread(target=soundReportObj.run).start()
-            uuid = random.random()
-            while uuid in obj.activeSounds:
+                eventData = {
+                    "events": [
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path,
+                            "volume": self.getVolume(0),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "window",
+                            "effects": effects
+                        },
+                        {
+                            "path": ".\\working\\sound\\assets\\" + self.path,
+                            "volume": self.getVolume(1),
+                            "speed": self.speed,
+                            "balence": self.balence,
+                            "channel": "outside",
+                            "effects": effects
+                        }
+                    ],
+                    "wait": self.wait
+                }
+                eventData["events"].append({
+                        "path": ".\\working\\sound\\assets\\" + self.path,
+                        "volume": self.getVolume(2),
+                        "speed": self.speed,
+                        "balence": plugOutputs["outputs"]["porch"][1] * 200 - 200,
+                        "channel": plugOutputs["outputs"]["porch"][0],
+                        "effects": effects
+                })
                 uuid = random.random()
-            if self.path.find(".mp3") != -1:
-                duration = float(MP3(".\\sound\\assets\\" + self.path).info.length) / self.speed
-            else:
-                duration = float(WAVE(".\\sound\\assets\\" + self.path).info.length) / self.speed
-            obj.activeSounds[uuid] = [self.path.split("\\")[-1], "window", pytools.clock.getDateTime(), duration]
-            soundReportObj = reportSound(uuid)
-            threading.Thread(target=soundReportObj.run).start()
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split("\\")[-1], "outside", pytools.clock.getDateTime(), duration]
+                soundReportObj = reportSound(uuid)
+                threading.Thread(target=soundReportObj.run).start()
+                uuid = random.random()
+                while uuid in obj.activeSounds:
+                    uuid = random.random()
+                if self.path.find(".mp3") != -1:
+                    duration = float(MP3(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                else:
+                    duration = float(WAVE(".\\sound\\assets\\" + self.path).info.length) / self.speed
+                obj.activeSounds[uuid] = [self.path.split("\\")[-1], "window", pytools.clock.getDateTime(), duration]
+                soundReportObj = reportSound(uuid)
+                threading.Thread(target=soundReportObj.run).start()
         self.eventData = eventData
         if play:
+            if duration < 30:
+                try:
+                    try:
+                        test = int(pytools.IO.getFile("soundCount.cx"))
+                    except:
+                        test = globals.maxCount + 1
+                    if test > globals.maxCount:
+                        while test > globals.maxCount:
+                            try:
+                                test = int(pytools.IO.getFile("soundCount.cx"))
+                            except:
+                                test = globals.maxCount + 1
+                            time.sleep(1)
+                except:
+                    pass
             if False:
                 if self.wait:
                     os.system("start /low /d \"" + os.getcwd().replace("\\working", "") + "\" /b /wait "" .\\ambience.exe .\\modules\\audio.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
@@ -1038,28 +1043,24 @@ class playSoundAll:
                     "volume": self.volume,
                     "speed": self.speed,
                     "balence": self.balence,
-                    "channel": "window",
-                    "effects": effects
-                },
-                {
-                    "path": ".\\working\\sound\\assets\\" + self.path,
-                    "volume": self.volume,
-                    "speed": self.speed,
-                    "balence": self.balence,
-                    "channel": "outside",
-                    "effects": effects
-                },
-                {
-                    "path": ".\\working\\sound\\assets\\" + self.path,
-                    "volume": self.volume,
-                    "speed": self.speed,
-                    "balence": self.balence,
-                    "channel": "porch",
+                    "channel": "windown",
                     "effects": effects
                 },
             ],
             "wait": self.wait
         }
+        
+        plugOutputs = pytools.IO.getJson("..\\plugOutputs.json")
+        for output in plugOutputs["outputs"]:
+            eventData["events"].append({
+                    "path": ".\\working\\sound\\assets\\" + self.path,
+                    "volume": self.volume,
+                    "speed": self.speed,
+                    "balence": plugOutputs["outputs"][output][1] * 200 - 200,
+                    "channel": plugOutputs["outputs"][output][0],
+                    "effects": effects
+            })
+        
         uuid = random.random()
         while uuid in obj.activeSounds:
             uuid = random.random()
@@ -1100,6 +1101,21 @@ class playSoundAll:
         obj.activeSounds[uuid] = [self.path.split("\\")[-1], "windown", pytools.clock.getDateTime(), duration]
         soundReportObj = reportSound(uuid)
         threading.Thread(target=soundReportObj.run).start()
+        if duration < 30:
+            try:
+                try:
+                    test = int(pytools.IO.getFile("soundCount.cx"))
+                except:
+                    test = globals.maxCount + 1
+                if test > globals.maxCount:
+                    while test > globals.maxCount:
+                        try:
+                            test = int(pytools.IO.getFile("soundCount.cx"))
+                        except:
+                            test = globals.maxCount + 1
+                        time.sleep(1)
+            except:
+                pass
         if False:
             if self.wait:
                 os.system("start /low /d \"" + os.getcwd().replace("\\working", "") + "\" /b /wait "" .\\ambience.exe .\\modules\\audio.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
@@ -1236,7 +1252,7 @@ class event:
         threading.Thread(target=soundReportObj.run).start()
         
         
-    def register(self, path, speaker, volume, speed, balence, wait, clock=True, remember=False, lowPass=False, highPass=False, keepLoaded=False, muteFlag=False, defaultMuteState=False, muteFade=False):
+    def register(self, path, speaker, volume, speed, balence, wait, clock=True, remember=False, lowPass=False, highPass=False, keepLoaded=False):
         
         printDebug(path + ", " + str(volume))
         
@@ -1260,6 +1276,8 @@ class event:
             effects.append({
                 "type": "rememberbypass",
             })
+            
+        speakern = ["null"]
         
         if speaker == 0:
             if clock:
@@ -1277,11 +1295,18 @@ class event:
         elif speaker == 7:
             speakern = ["generic"]
         elif speaker == 8:
-            speakern = ["window", "outside", "porch"]
-        elif speaker == 9:
-            speakern = ["porch"]
-        else:
-            speakern = ["generic"]
+            speakern = ["windown"]
+        
+        plugOutputs = pytools.IO.getJson("..\\plugOutputs.json")
+        inf = 9
+        if speakern[0] == "null":
+            for output in plugOutputs["outputs"]:
+                if speaker == inf:
+                    speakern = [plugOutputs["outputs"][output][0]]
+                    balence = balence + (plugOutputs["outputs"][output][1] * 200 - 200)
+        
+        if speakern[0] == "null":
+            speakern = ["windown"]
         
         for channel in speakern:
             self.eventData["events"].append({
@@ -1292,13 +1317,6 @@ class event:
                 "balence": balence,
                 "effects": effects
             })
-            
-            if muteFlag !=False:
-                self.eventData["events"][-1]["mute_options"] = {}
-                self.eventData["events"][-1]["mute_options"]["flag_name"] = muteFlag
-                self.eventData["events"][-1]["mute_options"]["do_mute"] = defaultMuteState
-                self.eventData["events"][-1]["mute_options"]["fade"] = muteFade
-            
             uuid = random.random()
             while uuid in obj.activeSounds:
                 uuid = random.random()
@@ -1316,6 +1334,21 @@ class event:
             threading.Thread(target=soundReportObj.run).start()
     
     def run(self, spawnChild=True, sendFile=False):
+        if self.duration < 30:
+            try:
+                try:
+                    test = int(pytools.IO.getFile("soundCount.cx"))
+                except:
+                    test = globals.maxCount + 1
+                if test > globals.maxCount:
+                    while test > globals.maxCount:
+                        try:
+                            test = int(pytools.IO.getFile("soundCount.cx"))
+                        except:
+                            test = globals.maxCount + 1
+                        time.sleep(1)
+            except:
+                pass
         if False:
             if spawnChild:
                 if self.eventData["wait"]:
@@ -1479,22 +1512,14 @@ class command:
             try:
                 for host in pytools.IO.getJson("hosts.json")["hosts"]:
                     if (target == host) or not target:
-                        print("Setting flag " + flagName + " on host " + host + " to " + str(boolf) + '...')
-                        try:
-                            pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                "command": "setFlag",
-                                "data": {
-                                    "flagName": flagName,
-                                    "bool": boolf
-                                }
-                            })))
-                            print("Flag Set.")
-                        except:
-                            print("Error. Flag could not be set.")
-                        try:
-                            hostsDataFile.pop(host)
-                        except:
-                            pass
+                        pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                            "command": "setFlag",
+                            "data": {
+                                "flagName": flagName,
+                                "bool": boolf
+                            }
+                        })))
+                        hostsDataFile.pop(host)
                 if loc:
                     pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
                 else:

@@ -2,6 +2,9 @@ import modules.audio as audio
 import modules.pytools as pytools
 import random
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -45,10 +48,10 @@ def main():
             countb = 0
             while (randb <= 10) and (countb < 10):
                 waitTimeMax = (3092.86 * 0.915726 ** ( - 0.881507 * (dataList[0][7] - 0.997517)) - 12.1414) / 10
-                audio.playSoundWindow("treecr1.mp3;treecr1.mp3", [50, 100], 1.0, 0.0, 1, lowPass=[lowPass, lowPass * 3])
+                audio.playSoundWindow("treecr1.mp3;treecr1.mp3", [50, 100, 75], 1.0, 0.0, 1, lowPass=[lowPass, lowPass * 3])
                 countb = countb + 1
             treeNum = random.randint(1, 4)
-            audio.playSoundWindow("treeex" + str(treeNum) + ".mp3;treeex" + str(treeNum) + ".mp3", [50, 100], 1.0, 0.0, 1, lowPass=[lowPass, lowPass * 3])
+            audio.playSoundWindow("treeex" + str(treeNum) + ".mp3;treeex" + str(treeNum) + ".mp3", [50, 100, 75], 1.0, 0.0, 1, lowPass=[lowPass, lowPass * 3])
         else:
             time.sleep(60)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

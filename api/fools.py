@@ -3,6 +3,9 @@ import modules.pytools as pytools
 import random
 import time
 import os
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""

@@ -7,6 +7,9 @@ import threading
 import time
 import importlib
 import os
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -125,14 +128,17 @@ def main():
     while n < sr.Microphone.get_pyaudio().PyAudio().get_device_count():
         # if key == sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["name"]:
         if sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["hostApi"] == 0:
-            handlers.mics.append(["", ""])
-            handlers.mics[f][0] = [n, sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["name"]]
-            handlers.mics[f][1] = threading.Thread(target=runMic, args=str(f))
-            f = f + 1
+            if sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["name"].find("VoiceMeeter") == -1:
+                if sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["name"].find("CABLE") == -1:
+                    handlers.mics.append(["", ""])
+                    handlers.mics[f][0] = [n, sr.Microphone.get_pyaudio().PyAudio().get_device_info_by_index(n)["name"]]
+                    handlers.mics[f][1] = threading.Thread(target=runMic, args=str(f))
+                    f = f + 1
         n = n + 1
     print(handlers.mics)
     for n in handlers.mics:
         n[1].start()
+        pass
     while not status.exit:
         pytools.IO.saveFile("speechPerMinute.cx", "0")
         dateArray = pytools.clock.getDateTime()
@@ -145,6 +151,7 @@ def main():
                 i = 0
             status.vars['lastLoop'] = pytools.clock.getDateTime()
             status.finishedLoop = True
+        time.sleep(1)
             
 def run():
     status.hasExited = False

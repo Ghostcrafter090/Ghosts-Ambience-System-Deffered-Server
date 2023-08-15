@@ -3,6 +3,16 @@ import modules.pytools as pytools
 import time
 import traceback
 import math
+import modules.logManager as log
+import geopy.distance
+
+import websocket
+import threading
+import json
+import os
+import sys
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -107,6 +117,12 @@ class grabber:
                 except:
                     print("fuck")
                 r = r + 1
+            
+            try:
+                if grabber.lightning.currentDangerLevel > 4:
+                    weather = "thunder"
+            except:
+                pass
 
             try:
                 i = 0
@@ -180,8 +196,10 @@ class grabber:
     def getSuperFastData(url):
         try:
             data = pytools.net.getJsonAPI(url)
+            out = True
         except:
             data = globals.dataSuperOld
+            out = False
         globals.dataSuperOld = data
         try:
             rainRate = float(data['rainHour'])
@@ -207,7 +225,7 @@ class grabber:
             pressure = float(data['rainHour'])
         except:
             pressure = 0.0
-        return [temp, humidity, pressure, rainRate, windSpeeds, windGusts]
+        return [temp, humidity, pressure, rainRate, windSpeeds, windGusts, out]
 
     def getPrecipData(url):
         try:
@@ -228,6 +246,103 @@ class grabber:
             hail = 0.0
         precipDataOld = data
         return [snow, rain, hail]
+    
+    class lightning:
+        
+        closestStrike = {
+            "lat": 0,
+            "lon": 0,
+            "time": 0
+        }
+        
+        lastUpdate = [1, 1, 1, 0, 0, 0]
+        
+        currentDangerLevel = 0
+        
+        def getDistance(x, y):
+            coords_1 = (x, y)
+            coords_2 = (globals.lat, globals.lon)
+
+            return geopy.distance.geodesic(coords_1, coords_2).km
+        
+        def getDangerLevel(distance):
+            return 6 - (distance / 10)
+        
+            # tests
+            if distance < 10:
+                return 5
+            elif distance < 20:
+                return 4
+            elif distance < 30:
+                return 3
+            elif distance < 40:
+                return 2
+            elif distance < 50:
+                return 1
+            else:
+                return 0
+        
+        def on_message(wsapp, message):
+            messagea = '{"v":24,"i":{},"s":false,"x":0,"w":0,"tx":0,"tw":1,"a":6,"z":6,"b":true,"h":"","l":1,"t":1,"from_lightningmaps_org":true,"p":[51.7,-54.8,38.1,-73.1],"r":"A"}'
+            messageJson = json.loads(message)
+            if messageJson["time"]:
+                if len(messageJson) == 1:
+                    wsapp.send(messagea)
+                    globals.sysTmf = [messageJson["time"], time.time()]
+                    pytools.IO.saveJson(".\\webSocketTimeDelay.json", {
+                        "times": globals.sysTmf
+                    })
+                else:
+                    try:
+                        if messageJson["strokes"]:
+                            dateArray = pytools.clock.getDateTime()
+                            datef = str(dateArray[0]) + "-" + str(dateArray[1]) + "-" + str(dateArray[2])
+                            timef = str(dateArray[3]) + "." + str(dateArray[4]) + "." + str(dateArray[5])
+                            if not os.path.exists(".\\blitzData\\" + datef):
+                                os.system("mkdir \".\\blitzData\\" + datef + "\"")
+                            if os.path.exists(".\\blitzData\\" + datef + "\\strike_" + timef + ".wstrike"):
+                                jsonf = pytools.IO.getJson(".\\blitzData\\" + datef + "\\strike_" + timef + ".wstrike")
+                            else:
+                                jsonf = {}
+                            messageTime = messageJson["time"]
+                            messageJson.pop("time")
+                            messageJson["sysTmf"] = globals.sysTmf
+                            for strike in messageJson["strokes"]:
+                                print("Lightning Strike: " + str({
+                                        "lat": strike["lat"],
+                                        "lon": strike["lon"],
+                                        "time": strike["time"],
+                                        "distance": grabber.lightning.getDistance(strike["lat"], strike["lon"])
+                                    }))
+                                if (grabber.lightning.getDistance(strike["lat"], strike["lon"]) < grabber.lightning.getDistance(grabber.lightning.closestStrike["lat"], grabber.lightning.closestStrike["lon"])) or ((time.time() * 1000) > (grabber.lightning.closestStrike["time"] + 600000)):
+                                    grabber.lightning.closestStrike = {
+                                        "lat": strike["lat"],
+                                        "lon": strike["lon"],
+                                        "time": time.time() * 1000
+                                    }
+                                    grabber.lightning.currentDangerLevel = grabber.lightning.getDangerLevel(grabber.lightning.getDistance(strike["lat"], strike["lon"]))
+                                    print("Setting Lightning Danger: " + str(grabber.lightning.getDangerLevel(grabber.lightning.getDistance(strike["lat"], strike["lon"]))))
+                                    pytools.IO.saveJson(".\\lightningData.json", {
+                                        "dangerLevel": grabber.lightning.getDangerLevel(grabber.lightning.getDistance(strike["lat"], strike["lon"]))
+                                    })
+                    except:
+                        print(traceback.format_exc())
+            try:
+                if (pytools.clock.dateArrayToUTC(grabber.lightning.lastUpdate) + 300) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                    wsapp.close()
+            except:
+                wsapp.close()
+                        
+        def run():
+            while not status.exit:
+                try:
+                    print("Websocket reset detected. Reconnecting...")
+                    grabber.lightning.lastUpdate = pytools.clock.getDateTime()
+                    wsapp = websocket.WebSocketApp("wss://live2.lightningmaps.org/", on_message=grabber.lightning.on_message)
+                    wsapp.run_forever()
+                except:
+                    print(traceback.format_exc())
+                time.sleep(1)
         
 class bulk:
     def getData(oldBool: bool, oldData, bypass):
@@ -254,7 +369,7 @@ class bulk:
             dateNewSuper = oldData[6]
             dateNewPrecip = oldData[8]
             precipData = oldData[9]
-            if (dateArray[4] % 15) == 0:
+            if (dateArray[4] % 3) == 0:
                 if oldData[4] != dateArray[4]:
                     dateNewBase = dateArray[4]
                     baseData = grabber.getBaseData(globals.urlBase)
@@ -275,43 +390,54 @@ class bulk:
                     dateNewPrecip = dateArray[5]
                     precipData = grabber.getPrecipData(globals.urlPrecip)
         try:
-            baseData[6] = superData[2]
-            if baseData[7] > superData[0]:
+            if superData[6]:
+                baseData[6] = superData[2]
                 baseData[7] = superData[0]
-                if globals.doManual:
-                    baseData = doManual(baseData)
-            elif math.fabs(baseData[7] - superData[0]) > 5:
-                baseData[7] = superData[0]
-                if globals.doManual:
-                    baseData = doManual(baseData)
-            baseData[8] = superData[1]
-            if baseDataf[0] < superData[4]:
+                baseData[8] = superData[1]
                 baseData[0] = superData[4]
+            else:
+                if baseData[7] > superData[0]:
+                    baseData[7] = superData[0]
+                    if globals.doManual:
+                        baseData = doManual(baseData)
+                elif math.fabs(baseData[7] - superData[0]) > 5:
+                    baseData[7] = superData[0]
+                    if globals.doManual:
+                        baseData = doManual(baseData)
+                if baseDataf[0] < superData[4]:
+                    baseData[0] = superData[4]
             if baseDataf[1] < superData[5]:
                 baseData[1] = superData[5]
             if fastData == False:
                 fastData = [0, 0, baseData[6], baseData[7], baseData[8], 0]      
-            if (baseData[4] != "lightrain") and (baseData[4] != "rain") and (baseData[4] != "snow"):
-                if precipData[1] > 0:
-                    if baseData[7] <= -1:
-                        baseData[4] = "snow"
-                        if globals.doManual:
-                            baseData = doManual(baseData)
-                    else:
-                        baseData[4] = "lightrain"
-            if (baseData[4] != "rain") and (baseData[4] != "snow"):
-                if precipData[1] > 0.13:
-                    if baseData[7] <= -1:
-                        baseData[4] = "snow"
-                        if globals.doManual:
-                            baseData = doManual(baseData)
-                    else:
-                        baseData[4] = "rain"
-            if (baseData[4] != "snow"):
-                if precipData[0] > 0:
+                
+            pIf = 0
+            while pIf < len(precipData):
+                if precipData[pIf] < 0:
+                    precipData[pIf] = 0
+                pIf = pIf + 1
+                
+            if precipData[0] > 0:
+                h = baseData[8]
+                t = baseData[7]
+                w = t * math.atan(0.151977 * (h + 8.313659) ** (((1) / (2)))) + math.atan(t + h) - math.atan(h * 1.676331) + 0.00391838 * (h) ** (((3) / (2))) * math.atan(0.023101 * h) - 4.686035
+                if baseData[7] <= w:
                     baseData[4] = "snow"
-                    if globals.doManual:
-                        baseData = doManual(baseData)
+                else:
+                    if (precipData[0] + precipData[1] + precipData[2]) > 0.09:
+                        baseData[4] = "rain"
+                    elif (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+                        baseData[4] = "lightrain"
+                    elif (precipData[0] + precipData[1] + precipData[2]) > 0:
+                        baseData[4] = "mist"
+            elif (precipData[0] + precipData[1] + precipData[2]) > 0.09:
+                baseData[4] = "rain"
+            elif (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+                baseData[4] = "lightrain"
+            elif (precipData[0] + precipData[1] + precipData[2]) > 0:
+                baseData[4] = "mist"
+            if precipData[2] > 0.25:
+                baseData[4] = "rain"
         except:
             pass
 
@@ -346,6 +472,9 @@ def setCoords():
 
 def main():
     setCoords()
+    
+    lightningThread = threading.Thread(target=grabber.lightning.run)
+    lightningThread.start()
     
     if status.apiKey == "":
         status.apiKey = pytools.IO.getJson("access.key")["openweathermap"]

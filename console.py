@@ -38,6 +38,7 @@ class flags:
     timeout = 1000
     bypass = False
     unpack = True
+    webMode = False
     restart = False
     update = False
     enigma = False
@@ -666,15 +667,6 @@ def main():
                 n = n + 10
             i = i + 1
         while True:
-            try:
-                if os.path.exists(".\\systemLoop.json"):
-                    if (pytools.clock.dateArrayToUTC(pytools.IO.getJson(".\\systemLoop.json", False)["loopTime"]) + 20) < (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())):
-                        system.status.active = False
-                        # subprocess.getstatusoutput("echo {\"loopTime\":[9999, 0, 0, 0, 0, 0]} > \\\\" + tools.getRemote() + "\\ambience\\systemLoop.json")[0]
-                    else:
-                        system.status.active = True
-            except:
-                pass
             if flags.defaultSystemState == True:
                 if system.status.active != True:
                     if (pytools.clock.getDateTime()[5] % 5) == 0:
@@ -685,9 +677,24 @@ def main():
                         restartMod = 0
                 else:
                     restartMod = 0
+            try:
+                if (pytools.IO.getFile(".\\systemLoop.json", False) == "                                     "):
+                    system.status.active = False
+                else:
+                    try:
+                        if os.path.exists(".\\systemLoop.json"):
+                            if (pytools.clock.dateArrayToUTC(pytools.IO.getJson(".\\systemLoop.json", False)["loopTime"]) + 20) < (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())):
+                                system.status.active = False
+                                # subprocess.getstatusoutput("echo {\"loopTime\":[9999, 0, 0, 0, 0, 0]} > \\\\" + tools.getRemote() + "\\ambience\\systemLoop.json")[0]
+                            else:
+                                system.status.active = True
+                    except:
+                        system.status.active = False
+            except:
+                system.status.active = False
             if flags.exitf == True:
                 exit()
-            if flags.display == True:
+            if flags.display:
                 if (pytools.clock.getDateTime()[5] % 30) == 0:
                     # subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "mode con cols=200 lines=63")
                     i = 0
@@ -703,9 +710,19 @@ def main():
                 except:
                     gh = ""
                 if gh == 'Temperature (C)      : ':
+                    
+                    try:
+                        lightningDanger = pytools.IO.getJson("\\\\" + tools.getRemote() + "\\ambience\\working\\lightningData.json")["dangerLevel"]
+                    except:
+                        lightningDanger = 0
+                    
+                    weather = weather.replace("\nCondition", "\nLightning   (danger) : " + str(lightningDanger) + "\nCondition")
+                    
                     pytools.IO.console.printAt(0, 0, "Ambience System Console")
                     pytools.IO.console.printAt(0, 1, "-----------------------")
                     pytools.IO.console.printAt(0, 3, weather)
+                    if flags.webMode:
+                        pytools.IO.saveFile(flags.webMode + "\\conditions.txt", weather)
                     i = 4 + len(weather.split("\n"))
                     if os.path.exists("\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson") == False:
                         subprocess.getstatusoutput("pushd \"\\" + tools.getRemote() + "\\ambience\" & " + "mkdir \"" + "\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson" + "\"")[0]
@@ -754,11 +771,14 @@ def main():
                     try:
                         pytools.IO.console.printAt(50, 0, "Clock Speaker Sounds")
                         pytools.IO.console.printAt(50, 1, "--------------------")
+                        fileOutput = ""
                         i = 3
                         for f in soundsClock:
                             if system.status.active == True:
                                 pytools.IO.console.printAt(50, i, f + spaces[len(f):30])
+                                fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
+                        pytools.IO.saveFile(flags.webMode + "\\clockSounds.txt", fileOutput)
                         f = i
                         while i < (f + 10):
                             pytools.IO.console.printAt(50, i, spaces[0:30])
@@ -769,11 +789,14 @@ def main():
                     try:
                         pytools.IO.console.printAt(80, 0, "Fireplace Speaker Sounds")
                         pytools.IO.console.printAt(80, 1, "------------------------")
+                        fileOutput = ""
                         i = 3
                         for f in soundsFireplace:
                             if system.status.active == True:
                                 pytools.IO.console.printAt(80, i, f + spaces[len(f):30])
+                                fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
+                        pytools.IO.saveFile(flags.webMode + "\\fireplaceSounds.txt", fileOutput)
                         f = i
                         while i < (f + 10):
                             pytools.IO.console.printAt(80, i, spaces[0:30])
@@ -784,11 +807,14 @@ def main():
                     try:
                         pytools.IO.console.printAt(110, 0, "Window Speaker Sounds")
                         pytools.IO.console.printAt(110, 1, "--------------------")
+                        fileOutput = ""
                         i = 3
                         for f in soundsWindow:
                             if system.status.active == True:
                                 pytools.IO.console.printAt(110, i, f + spaces[len(f):30])
+                                fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
+                        pytools.IO.saveFile(flags.webMode + "\\windowSounds.txt", fileOutput)
                         f = i
                         while i < (f + 10):
                             pytools.IO.console.printAt(110, i, spaces[0:30])
@@ -799,11 +825,14 @@ def main():
                     try:
                         pytools.IO.console.printAt(140, 0, "Outside Speaker Sounds")
                         pytools.IO.console.printAt(140, 1, "--------------------")
+                        fileOutput = ""
                         i = 3
                         for f in soundsOutside:
                             if system.status.active == True:
                                 pytools.IO.console.printAt(140, i, f + spaces[len(f):30])
+                                fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
+                        pytools.IO.saveFile(flags.webMode + "\\outsideSounds.txt", fileOutput)
                         f = i
                         while i < (f + 10):
                             pytools.IO.console.printAt(140, i, spaces[0:30])
@@ -847,12 +876,20 @@ def main():
                             except:
                                 pass
                             i = i + 1
-                        pytools.IO.console.printAt(131, globals.maxY - 3 - i - 1, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
+                        
+                        try:
+                            outsideVolume = pytools.IO.getJson("outsideProperties.json")["volume"]
+                            outsideLimiter = pytools.IO.getJson("outsideProperties.json")["limiter"]
+                            pytools.IO.console.printAt(131, globals.maxY - 3 - i - 1, "Outside Volume/Limiter (V / L): " + str(round(outsideVolume, 3)) + "Db / " + str(round(outsideLimiter, 3)) + "Db")
+                        except:
+                            pass
+                        pytools.IO.console.printAt(131, globals.maxY - 3 - i - 2, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
                         pytools.IO.console.printAt(130, globals.maxY - 3 - i, "                                      ")
+
                         i = i + 2
                         fn = i
                         while i < (fn + 10):
-                            pytools.IO.console.printAt(130, globals.maxY - 3 - i, spaces[0:40])
+                            pytools.IO.console.printAt(130, globals.maxY - 3 - i - 1, spaces[0:40])
                             i = i + 1
                         i = 1
                         # while i < 10:
@@ -895,6 +932,8 @@ def main():
                                 printColor(50, globals.maxY - 3, "Current Section     : " + section + spaces[0:10], "red")
                     except:
                         pass             
+                else:
+                    system.status.active = False
                 if flash == 0:
                     flash = 1
                 else:
@@ -921,6 +960,8 @@ try:
                 flags.apiKey = n.split("=")[1]
             elif n.split("=")[0] == "--remote":
                 flags.remote = n.split("=")[1]
+            elif n.split("=")[0] == "--webMode":
+                flags.webMode = n.split("=")[1]
             elif n == "--startDefault":
                 flags.defaultSystemState = True
             elif n == "--server":
@@ -961,6 +1002,7 @@ try:
             print("--update: Updates the system.")
             print("   ^ --restart: Performs restart cycle after update. Use if the server in already online.")
             print("   ^ --noUnpack: disables the rerun of setup.py.")
+            print("--webMode=<location>: Tees console output to files in folder.")
             print("--help: Print this help text.")
 except:
     print("Unexpected error:", sys.exc_info())

@@ -7,6 +7,9 @@ import modules.pytools as pytools
 import time
 import threading
 import math
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -38,6 +41,14 @@ class data:
     dateArray = []
     minZ = 0
     hourZ = 0
+    
+    def grabWeatherData():
+        try:
+            dataArray = pytools.IO.getList(".\\dataList.pyl")[1]
+            lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
+            return [dataArray, lightningDanger]
+        except:
+            return False
     
     def grabSunData():
         while not status.exit:
@@ -85,7 +96,46 @@ class data:
         if data.minZ < 0:
             data.minZ = data.minZ + 60
             data.hourZ = data.hourZ - 1
-    
+            
+    # https://www.desmos.com/calculator/jertocumt3
+    def getWeatherHallowModifier():
+        
+        dataf = data.grabWeatherData()
+        
+        if dataf:
+            try:
+                lightningModif = (1.14898 ** (0.997531 * (dataf[1] + 0.00708756)) - 0.000982331) * 2
+            except:
+                lightningModif = 0
+            try:
+                windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5
+            except:
+                windGustModif = 0
+            try:
+                windSpeedModif = 1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234
+            except:
+                windSpeedModif = 0
+            if windGustModif > windSpeedModif:
+                windModif = windGustModif
+            else:
+                windModif = windSpeedModif
+            weatherModif = 0
+            try:
+                if dataf[0][0][4] == "lightrain":
+                    weatherModif = 1.5
+                elif dataf[0][0][4] == "rain":
+                    weatherModif = 3
+                elif dataf[0][0][4] == "snow":
+                    weatherModif = 3
+                elif dataf[0][0][4] == "thunder":
+                    weatherModif = 4.5
+            except:
+                pass
+        else:
+            return False
+        
+        return lightningModif + windModif + weatherModif
+            
     # https://www.desmos.com/calculator/sd674thhfq
     def getHallowIndex(timeStamp, noDay=False):
         u = math.floor(timeStamp / (365 * 24 * 60 * 60))
@@ -120,6 +170,9 @@ class data:
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
+        weatherModif = data.getWeatherHallowModifier()
+        if weatherModif:
+            m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
         if noDay:
@@ -222,7 +275,7 @@ class sections:
                                 if random.randrange(0, 37500) < (deathGhostChance / ((32 - data.dateArray[2]) / 3) + 1):
                                     ghSpeaker = 5
                                     while ghSpeaker == 5:
-                                        ghSpeaker = random.randrange(0, 8)
+                                        ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
                                     audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                     audioEvent.run()
@@ -234,7 +287,7 @@ class sections:
                                 if random.randrange(0, 37500) < (deathGhostChance / ((32 - data.dateArray[2]) / 3) + 1):
                                     ghSpeaker = 5
                                     while ghSpeaker == 5:
-                                        ghSpeaker = random.randrange(0, 8)
+                                        ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
                                     audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                     audioEvent.run()
@@ -246,7 +299,7 @@ class sections:
                             if random.randrange(0, 37500) < (dyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1):
                                 ghSpeaker = 5
                                 while ghSpeaker == 5:
-                                    ghSpeaker = random.randrange(0, 8)
+                                    ghSpeaker = random.randrange(0, 10)
                                 audioEvent = audio.event()
                                 audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                 audioEvent.run()
@@ -260,7 +313,7 @@ class sections:
                                 if random.randrange(0, 37500) < (dyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1):
                                     ghSpeaker = 5
                                     while ghSpeaker == 5:
-                                        ghSpeaker = random.randrange(0, 8)
+                                        ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
                                     audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                     audioEvent.run()
@@ -274,7 +327,7 @@ class sections:
                             if random.randrange(0, 37500) < (ghostChance / ((32 - data.dateArray[2]) / 9) + 1):
                                 ghSpeaker = 5
                                 while ghSpeaker == 5:
-                                    ghSpeaker = random.randrange(0, 8)
+                                    ghSpeaker = random.randrange(0, 10)
                                 audioEvent = audio.event()
                                 audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                 audioEvent.run()
@@ -288,7 +341,7 @@ class sections:
                                 if random.randrange(0, 37500) < (ghostChance / ((32 - data.dateArray[2]) / 9) + 1):
                                     ghSpeaker = 5
                                     while ghSpeaker == 5:
-                                        ghSpeaker = random.randrange(0, 8)
+                                        ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
                                     audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
                                     audioEvent.run()
@@ -330,7 +383,7 @@ class sections:
                     if random.randrange(0, 25000) < draftChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
                         audioEvent.register('draft_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, 20 * ((0.6 * random.random()) + 0.4), 1, 0, 0)
                         audioEvent.run()
@@ -354,7 +407,7 @@ class sections:
                     if random.randrange(0, 25000) < breathChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
                         audioEvent.register('h_breath_' + str(random.randrange(0, 4)) + ".mp3", ghSpeaker, 40 * ((0.6 * random.random()) + 0.4), 1, 0, 0)
                         audioEvent.run()
@@ -407,6 +460,7 @@ class sections:
                                 hGeneralSpeedModifier = 0
                             hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)) ** 0.1) - 1))
                             # if data.dateArray[1] != 11:
+                            print("Looping h_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
                             audio.playSoundAll('h_general.mp3', hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
                             # else:
                                 # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
@@ -484,7 +538,7 @@ class sections:
                     if random.randrange(0, 15000) < knockChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
                         audioEvent.register('h_knock_' + str(random.randrange(0, 6)) + ".mp3", ghSpeaker, 60 * ((0.3 * random.random()) + 0.7), 1, 0, 0)
                         audioEvent.run()
@@ -508,7 +562,7 @@ class sections:
                     if random.randrange(0, 15000) < chainChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 8)
+                            ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
                         audioEvent.register('h_chains_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, 40 * ((0.2 * random.random()) + 0.8), 1, 0, 0)
                         audioEvent.run()

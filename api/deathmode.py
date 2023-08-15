@@ -4,6 +4,10 @@ import random
 import time
 import os
 import math
+import modules.logManager as log
+import api.halloween_extension as hallow
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -76,6 +80,9 @@ class utils:
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
+        weatherModif = hallow.data.getWeatherHallowModifier()
+        if weatherModif:
+            m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
         if noDay:
@@ -167,7 +174,7 @@ class background:
                     while i < (int((random.random() * whisperChance / 20)) + 1):
                         ghSpeaker = 5
                         while ghSpeaker == 5:
-                            ghSpeaker = random.randint(0, 8)
+                            ghSpeaker = random.randint(0, 10)
                         audioEvent.register("whispering.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0, keepLoaded=True)
                         i = i + 1
                     audioEvent.run()
@@ -181,8 +188,8 @@ class background:
         endf = dayTimes[2]
         endf[4] = endf[4] - 11
         if endf[4] < 0:
-            end[4] = endf[4] + 60
-            end[3] = endf[3] - 1
+            endf[4] = endf[4] + 60
+            endf[3] = endf[3] - 1
         if dateArray[3] > 12:
             endf[2] = endf[2] + 1
             if endf[2] > pytools.clock.getMonthEnd(endf[1]):
@@ -201,18 +208,18 @@ class background:
         current = pytools.clock.dateArrayToUTC(dateArray)
         end = pytools.clock.dateArrayToUTC(endf)
         print(dateArray)
-        print(startf, dateArray, endf)
+        print([startf, dateArray, endf])
         print([start, current, end])
         if (start < current) and (current < end):
             globals.deathWind.run = 1
             if globals.deathWind.state != 1:
                 globals.deathWind.state = 1
                 globals.deathWind.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                audio.playSoundWindow("death_wind_fi.mp3;death_wind_fi.mp3", [10, 50], 1.0, 0.0, 0)
+                audio.playSoundWindow("death_wind_fi.mp3;death_wind_fi.mp3", [10, 50, 35], 1.0, 0.0, 0)
             if globals.deathWind.state == 1:
                 if globals.deathWind.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.deathWind.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    audio.playSoundWindow("death_wind.mp3;death_wind.mp3", [10, 50], 1.0, 0.0, 0)
+                    audio.playSoundWindow("death_wind.mp3;death_wind.mp3", [10, 50, 35], 1.0, 0.0, 0)
         status.vars["death_wind"]["nextPlay"] = globals.deathWind.nextPlay
         status.vars["death_wind"]["state"] = globals.deathWind.state
 
@@ -255,26 +262,19 @@ class background:
         if dateArray[1] == 10:
             wolfChance = wolfChance / ((31 / dateArray[2]) ** 4)
         if random.randrange(0, 100) < wolfChance:
-            if os.path.isfile('.\\nomufflewn.derp') == True:
-                audioEvent = audio.event()
-                audioEvent.register('wolf_howl_' + str(random.randrange(0, 3)) + ".mp3", 4, 40, 1, 0, 0)
-                audioEvent.run()
-            else:
-                audioEvent = audio.event()
-                audioEvent.register('wolf_howl_' + str(random.randrange(0, 3)) + "_m.mp3", 2, 40, 1, 0, 0)
-                audioEvent.register('wolf_howl_' + str(random.randrange(0, 3)) + ".mp3", 3, 40, 1, 0, 0)
-                audioEvent.run()
+            howlNumber = str(random.randrange(0, 3))
+            audio.playSoundWindow('wolf_howl_' + howlNumber + '_m.mp3;wolf_howl_' + howlNumber + ".mp3", [40, 40, 25], 1, 0, 0)
         status.vars['hallowedWolfIndex'] = wolfChance
         if (start < current) and (current < end):
             globals.monsters.run = 1
             if globals.monsters.state == 0:
                 globals.monsters.state = 1
                 globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                audio.playSoundWindow("monsters_fi.mp3;monsters_fi.mp3", [20, 50], 1.0, 0.0, 0)
+                audio.playSoundWindow("monsters_fi.mp3;monsters_fi.mp3", [20, 50, 35], 1.0, 0.0, 0)
             if globals.monsters.state == 1:
                 if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    audio.playSoundWindow("monsters.mp3;monsters.mp3", [20, 50], 1.0, 0.0, 0)
+                    audio.playSoundWindow("monsters.mp3;monsters.mp3", [20, 50, 35], 1.0, 0.0, 0)
         status.vars["monsters"]["nextPlay"] = globals.monsters.nextPlay
         status.vars["monsters"]["state"] = globals.monsters.state
     
@@ -303,11 +303,11 @@ class background:
             if globals.ghosts.state == 0:
                 globals.ghosts.state = 1
                 globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                audio.playSoundWindow("ghosts_fi.mp3;ghosts_fi.mp3", [20, 50], 1.0, 0.0, 0)
+                audio.playSoundWindow("ghosts_fi.mp3;ghosts_fi.mp3", [20, 50, 35], 1.0, 0.0, 0)
             if globals.ghosts.state == 1:
                 if globals.ghosts.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    audio.playSoundWindow("ghosts.mp3;ghosts.mp3", [20, 50], 1.0, 0.0, 0)
+                    audio.playSoundWindow("ghosts.mp3;ghosts.mp3", [20, 50, 35], 1.0, 0.0, 0)
         status.vars["ghosts"]["nextPlay"] = globals.ghosts.nextPlay
         status.vars["ghosts"]["state"] = globals.ghosts.state
     
@@ -316,17 +316,17 @@ class background:
             if globals.ghosts.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.ghosts.state == 1:
                     globals.ghosts.state = 0
-                    audio.playSoundWindow("ghosts_fo.mp3;ghosts_fo.mp3", [20, 50], 1.0, 0.0, 0)
+                    audio.playSoundWindow("ghosts_fo.mp3;ghosts_fo.mp3", [20, 50, 35], 1.0, 0.0, 0)
         if globals.monsters.run == 0:
             if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.monsters.state == 1:
                     globals.monsters.state = 0
-                    audio.playSoundWindow("monsters_fo.mp3;monsters_fo.mp3", [20, 50], 1.0, 0.0, 0)
+                    audio.playSoundWindow("monsters_fo.mp3;monsters_fo.mp3", [20, 50, 35], 1.0, 0.0, 0)
         if globals.deathWind.run == 0:
             if globals.deathWind.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.deathWind.state == 1:
                         globals.deathWind.state = 0
-                        audio.playSoundWindow("death_wind_fo.mp3;death_wind_fo.mp3", [20, 50], 1.0, 0.0, 0)
+                        audio.playSoundWindow("death_wind_fo.mp3;death_wind_fo.mp3", [20, 50, 35], 1.0, 0.0, 0)
 def main():
     while not status.exit:
         dateArray = pytools.clock.getDateTime()

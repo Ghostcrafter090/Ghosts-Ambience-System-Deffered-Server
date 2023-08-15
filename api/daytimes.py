@@ -1,6 +1,10 @@
 import modules.audio as audio
 import modules.pytools as pytools
 import time
+import os
+import modules.logManager as log
+
+print = log.printLog
 
 class globals:
     dateArray = [0, 0, 0, 0, 0, 0]
@@ -26,9 +30,13 @@ class tools:
         return outArray
 
 def main():
+    location = pytools.IO.getJson("location.json")
     while not status.exit:
         globals.dateArray = pytools.clock.getDateTime()
-        data = pytools.net.getJsonAPI('https://api.sunrise-sunset.org/json?lat=44.847075&lng=-63.604849&date=' + str(globals.dateArray[0]) + "-" + str(globals.dateArray[1]) + "-" + str(globals.dateArray[2]) + '&formatted=0')
+        url = 'https://api.sunrise-sunset.org/json?lat=' + str(location["coords"][0]) + '&lng=' + str(location["coords"][1]) + '&formatted=0'
+        if not os.path.exists("forceToday.derp"):
+            url = url + '&date=' + str(globals.dateArray[0]) + "-" + str(globals.dateArray[1]) + "-" + str(globals.dateArray[2])
+        data = pytools.net.getJsonAPI(url)
         sunrise = tools.returnDateArray(data['results']['sunrise'])
         sunset = tools.returnDateArray(data['results']['sunset'])
         cts = tools.returnDateArray(data['results']['civil_twilight_begin'])

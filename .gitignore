@@ -14,6 +14,10 @@
 *.obj
 *.cx
 *.cxl
+*.bl
+*.bm
+working\location.json
+location.json
 *.derp
 *.orig
 *.rej
@@ -60,6 +64,8 @@ Thumbs.db
 *.rc
 /.qmake.cache
 /.qmake.stash
+
+.\working\location.json
 
 # qtcreator generated files
 *.pro.user*

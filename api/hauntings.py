@@ -1,14 +1,17 @@
-import modules.audio as mainAudio
+import modules.audio as audio
 import modules.pytools as pytools
 import modules.floorplan as floorplan
 import random
 import math
 import time
-import modules.ghostAudio as audio
+import modules.ghostAudio as ghostAudio
 import speech_recognition as sr
 import os
 import traceback
 import threading
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -248,13 +251,13 @@ class ghost:
             if random.random() < (((0.000003 * self.activity * math.fabs(self.mood))) / (4 - self.prop["type"])):
                 ghSpeaker = 5
                 while ghSpeaker == 5:
-                    ghSpeaker = random.randrange(0, 8)
+                    ghSpeaker = random.randrange(0, 10)
                 if random.random() < 0.3:
-                    audioEvent = mainAudio.event()
+                    audioEvent = audio.event()
                     audioEvent.register("g_footsteps_" + str(random.randint(0, 2)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0)
                     audioEvent.run()
                 else:
-                    audioEvent = mainAudio.event()
+                    audioEvent = audio.event()
                     audioEvent.register("g_creak_" + "0" + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0)
                     audioEvent.run()
         if self.prop["type"] >= 1:
@@ -267,32 +270,32 @@ class ghost:
                         chance = chance * 1000
                     ghSpeaker = 5
                     while (ghSpeaker == 5) or ((300 < chance < 400) and (ghSpeaker == 2)) or ((400 < chance < 500) and ((ghSpeaker == 2) or (ghSpeaker == 0))):
-                        ghSpeaker = random.randrange(0, 8)
+                        ghSpeaker = random.randrange(0, 10)
                     print(chance)
                     if 0 < chance < 166:
-                        audioEvent = mainAudio.event()
+                        audioEvent = audio.event()
                         audioEvent.register("g_tap_" + str(random.randint(0, 7)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0, keepLoaded=True)
                         audioEvent.run()
                     if 166 < chance < 332:
-                        audioEvent = mainAudio.event()
+                        audioEvent = audio.event()
                         audioEvent.register("g_snap_" + str(random.randint(0, 8)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0, keepLoaded=True)
                         audioEvent.run()
                     if 332 < chance < 498:
-                        audioEvent = mainAudio.event()
+                        audioEvent = audio.event()
                         audioEvent.register("g_clap_" + str(random.randint(0, 1)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0, keepLoaded=True)
                         audioEvent.run()
                     if 498 < chance < 664:
-                        audioEvent = mainAudio.event()
+                        audioEvent = audio.event()
                         audioEvent.register("g_knock_" + str(random.randint(0, 4)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0, keepLoaded=True)
                         audioEvent.run()
                     if 664 < chance < 830:
-                        audioEvent = mainAudio.event()
+                        audioEvent = audio.event()
                         audioEvent.register("g_door_" + str(random.randint(0, 7)) + ".mp3", ghSpeaker, random.random() * 100, 1.0, 0.0, 0, keepLoaded=True)
                         audioEvent.run()
                     if 830 < chance:
                         fn = str(random.randint(0, 5))
                         vol = random.random() * 100
-                        mainAudio.playSoundWindow("g_window_" + fn + ".mp3;g_window_" + fn + ".mp3", [vol / 1.3, vol], 1.0, 0.0, 0, keepLoaded=True)                      
+                        audio.playSoundWindow("g_window_" + fn + ".mp3;g_window_" + fn + ".mp3", [vol / 1.3, vol], 1.0, 0.0, 0, keepLoaded=True)                      
 
     def move(self, x, y, r=False, d=1):
         # while self.rotation != r:
@@ -388,14 +391,14 @@ class ghost:
                     try:
                         try:
                             speechf = text.split("\n")[1:math.floor(int((((len(text.split("\n")) - 1) * random.random()) + 1)))]
-                            audio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
+                            ghostAudio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
                         except:
                             speechf = text.split("\n")[0]
-                            audio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
+                            ghostAudio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
                     except:
                         speechError = True
                         speechf = "I am the ghost of " + self.prop["name"] + "! And if you don't leave I'll kill you!"
-                        audio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
+                        ghostAudio.speak(speechf, self.prop["name"].replace(" ", ".").replace(".", "_"), type, self.mood, self.prop["details"]["voice"], self.activity, [self.x, self.y], 0)
                     status.vars["ghostInfo"][self.prop["name"]]["speech"] = {
                         "lastSpoke": pytools.clock.getDateTime(),
                         "text": speechf,

@@ -5,6 +5,10 @@ import math
 import threading
 import time
 import traceback
+import modules.logManager as log
+import api.halloween_extension as hallow
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -72,6 +76,9 @@ class utils:
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
+        weatherModif = hallow.data.getWeatherHallowModifier()
+        if weatherModif:
+            m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
         return z_2
@@ -167,7 +174,7 @@ class storm:
                 audioEvent.register("lightning_" + num + ".mp3", 5, volume, speed, 100, 0)
                 audioEvent.run()
             time.sleep(math.fabs((dis * 1000) / 343))
-            audio.playSoundAll("thunder_" + num + ".mp3", 50 + (volume / 2), speed, 0.0, 0, lowPass=lowPass)
+            audio.playSoundAll("thunder_" + num + ".mp3", 75 + (volume / 4), speed, 0.0, 0, lowPass=lowPass)
     
     def handler(self):
         exitCount = 0
@@ -176,7 +183,7 @@ class storm:
                 self.setVelocity()
                 self.x = self.x + self.vx
                 self.y = self.y + self.vy
-                self.electricalPower = self.electricalPower + (((self.strength / (500 / self.radius)) * random.random()) / 30)
+                self.electricalPower = self.electricalPower + (((self.strength / (500 / self.radius)) * random.random()) / 6)
                 if self.electricalPower > 100:
                     sound = threading.Thread(target=self.lightning)
                     sound.start()
@@ -219,12 +226,17 @@ class storm:
                 print(traceback.format_exc())
                 exitCount = exitCount + 1
             time.sleep(1)
-        status.vars["storms"]["active"].pop(self.uuid)
-        storms.stormList.pop(self)
-        pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
+        try:
+            status.vars["storms"]["active"].pop(self.uuid)
+        except:
+            pass
+        # storms.stormList.pop(self)
+        storms.popList.append(self)
+        # pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
         
 class storms:
     stormList = []
+    popList = []
     
     def start():
         storms.stormList.append(storm(globals.dataArray[0][10]))
@@ -253,7 +265,7 @@ def main():
     spawnTic = -1
     globals.dataArray = utils.dataGrabber()
     if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
-        globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 3)
+        globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
     else:
         globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
     storms.grab()
@@ -265,13 +277,21 @@ def main():
             globals.dataArray = utils.dataGrabber()
             try:
                 if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
-                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 3)
+                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
                 else:
                     globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
             except:
-                pass
+                print(traceback.format_exc())
+                
+        try:
+            lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
+            if lightningDanger < 0:
+                lightningDanger = 0
+        except:
+            lightningDanger = 0
+                
         # https://www.desmos.com/calculator/hlkgdy60ii
-        stormChance = (5.69235 ** (0.00398561 * globals.dataArray[0][10] - 1.59424)) ** 0.66
+        stormChance = (5.69235 ** (0.00398561 * (globals.dataArray[0][10] + (420 * lightningDanger)) - 1.59424)) ** 0.66
         if globals.dataArray[0][4] == "thunder":
             stormChance = stormChance + 100
         status.vars["storms"]["stormChance"] = stormChance
@@ -281,7 +301,15 @@ def main():
                 storms.start()
         time.sleep(1)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
-
+        nStart = storms.popList
+        changed = False
+        for n in nStart:
+            storms.stormList.remove(n)
+            storms.popList.remove(n)
+            changed = True
+        if changed:
+            pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)
+            
 def run():
     status.hasExited = False
     main()

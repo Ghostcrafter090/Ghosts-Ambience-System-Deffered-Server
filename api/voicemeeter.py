@@ -6,6 +6,9 @@ import psutil
 import voicemeeter
 import sounddevice as sd  
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class globals:
     instance = False

@@ -2,6 +2,9 @@ import modules.audio as audio
 import modules.pytools as pytools
 import random
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -158,40 +161,40 @@ def main():
         speed = dataList[0][7] / 20
         if dataList[0][7] > 7:
             if (random.random() * 32768) < chance[5]:
-                audio.playSoundWindow("slender_me_ka_m.mp3;slender_me_ka.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("slender_me_ka_m.mp3;slender_me_ka.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[1]:
-                audio.playSoundWindow("spahgnum_gr_cr_m.mp3;spahgnum_gr_cr.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("spahgnum_gr_cr_m.mp3;spahgnum_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[2]:
-                audio.playSoundWindow("striped_gr_cr_m.mp3;striped_gr_cr.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("striped_gr_cr_m.mp3;striped_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[3]:
-                audio.playSoundWindow("carolina_gr_cr_m.mp3;carolina_gr_cr.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("carolina_gr_cr_m.mp3;carolina_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[4]:
-                audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             
             if (random.random() * 32768) < chance[6]:
                 if dateArray[3] >= dayTimes[1][3]:
                     if dateArray[3] <= dayTimes[7][3]:
-                        audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", 50, speed, 0, 0)
+                        audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[6]:
                 if dateArray[3] >= dayTimes[2][3]:
                     if dateArray[3] <= dayTimes[2][3]:
-                        audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", 50, speed, 0, 0)
+                        audio.playSoundWindow("allards_gr_cr_m.mp3;allards_gr_cr.mp3", [50, 50, 25], speed, 0, 0)
             
             if (random.random() * 32768) < chance[7]:
-                audio.playSoundWindow("curvetail_bu_ka_m.mp3;curvetail_bu_ka.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("curvetail_bu_ka_m.mp3;curvetail_bu_ka.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[8]:
-                audio.playSoundWindow("forktail_bu_ka_m.mp3;forktail_bu_ka.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("forktail_bu_ka_m.mp3;forktail_bu_ka.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[0]:
-                audio.playSoundWindow("marsh_me_gr_m.mp3;marsh_me_gr.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("marsh_me_gr_m.mp3;marsh_me_gr.mp3", [50, 50, 25], speed, 0, 0)
             if (random.random() * 32768) < chance[9]:
-                audio.playSoundWindow("says_ci_m.mp3;says_ci.mp3", 50, speed, 0, 0)
+                audio.playSoundWindow("says_ci_m.mp3;says_ci.mp3", [50, 50, 25], speed, 0, 0)
         else:
             time.sleep(60)
         
         if (random.random() * 32768) < chance[10]:
             if dateArray[3] < dayTimes[6][3]:
                 if dateArray[3] >= dayTimes[2][3]:
-                    audio.playSoundWindow("cicada_windowclosed.mp3;cicada_windowopen.mp3", 50, speed, 0, 0)
+                    audio.playSoundWindow("cicada_windowclosed.mp3;cicada_windowopen.mp3", [50, 50, 25], speed, 0, 0)
         status.vars['locustChances'] = chance
         try:
             time.sleep(30 / speed)

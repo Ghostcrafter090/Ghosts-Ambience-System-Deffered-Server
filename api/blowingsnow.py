@@ -3,6 +3,10 @@ import modules.pytools as pytools
 import random
 import os
 import time
+import api.wind
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -32,7 +36,7 @@ class utils:
         return out
 
 def audio(dataList, depth):
-    volume = (((2500 / 30) * dataList[0][1]) / 100) + 25 + depth
+    volume = (((2500 / 30) * dataList[0][1] + api.wind.globals.windModif) / 100) + 25 + depth
     print(volume)
     volume = volume + (dataList[9][0] * 100)
     print(volume)

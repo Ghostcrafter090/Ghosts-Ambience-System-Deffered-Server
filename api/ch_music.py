@@ -2,6 +2,9 @@ import modules.audio as audio
 import modules.pytools as pytools
 import time
 import random
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""

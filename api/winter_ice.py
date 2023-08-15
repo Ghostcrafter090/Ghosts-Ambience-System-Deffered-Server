@@ -2,6 +2,9 @@ import modules.audio as audio
 import modules.pytools as pytools
 import os
 import time
+import modules.logManager as log
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -54,19 +57,11 @@ def main():
         if no != 1:
             if data[0][7] < 3:
                 print("Playing sound...")
-                if utils.testWindow() == 1:
-                    audioEvent = audio.event()
-                    audioEvent.register('ice_wall.mp3', 0, vol / 2, speed, 0, 0)
-                    audioEvent.register('ice_wall.mp3', 1, vol / 2, speed, 0, 0)
-                    audioEvent.register('ice_nm.mp3', 6, vol, speed, 0, 0)
-                    audioEvent.run()
-                else:
-                    audioEvent = audio.event()
-                    audioEvent.register('ice_wall.mp3', 0, vol / 2, speed, 0, 0)
-                    audioEvent.register('ice_wall.mp3', 1, vol / 2, speed, 0, 0)
-                    audioEvent.register('ice_wn.mp3', 2, vol, speed, 0, 0)
-                    audioEvent.register('ice_nm.mp3', 3, vol, speed, 0, 0)
-                    audioEvent.run()
+                audioEvent = audio.event()
+                audioEvent.register('ice_wall.mp3', 0, vol / 3, speed, 0, 0)
+                audioEvent.register('ice_wall.mp3', 1, vol / 3, speed, 0, 0)
+                audioEvent.registerWindow('ice_wn.mp3;ice_nm.mp3', [vol / 2, vol, vol], speed, 0, 0)
+                audioEvent.run()
             time.sleep(300 / speed)
         time.sleep(1)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

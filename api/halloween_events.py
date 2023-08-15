@@ -3,6 +3,10 @@ import modules.pytools as pytools
 import os
 import time
 import math
+import modules.logManager as log
+import api.halloween_extension as hallow
+
+print = log.printLog
 
 class status:
     apiKey = ""
@@ -54,6 +58,10 @@ class utils:
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
+        print(m)
+        weatherModif = hallow.data.getWeatherHallowModifier()
+        if weatherModif:
+            m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
         return z_2
@@ -78,6 +86,10 @@ def main():
                     if os.path.isfile("deathmode.derp") == False:
                         pytools.IO.saveFile('deathmode.derp', "1")
         if halloweenMode or (utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) > 0):
+            if os.path.exists(".\\doDarkRumble.derp"):
+                audio.playSoundAll("darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                os.system("del .\\doDarkRumble.derp /f /q")
+                time.sleep(60)
             if dateArray[3] == dayTimes[5][3]:
                 if dateArray[4] == dayTimes[5][4]:
                     audio.playSoundAll("darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
