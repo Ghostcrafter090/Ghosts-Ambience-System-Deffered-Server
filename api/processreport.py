@@ -124,44 +124,44 @@ def main():
             for sound in soundList:
                 soundData = pytools.IO.getFile("..\\vars\\pluginSounds\\" + sound)
                 if (soundData.split(";")[1] == "clock"):
-                    if soundData not in addedSoundsClock:
+                    if soundData.split(";")[0] not in addedSoundsClock:
                         try:
                             clocksounds = clocksounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsClock.append(soundData)
+                            addedSoundsClock.append(soundData.split(";")[0])
                         except:
                             continue
                 if (soundData.split(";")[1] == "fireplace"):
-                    if soundData not in addedSoundsFireplace:
+                    if soundData.split(";")[0] not in addedSoundsFireplace:
                         try:
                             fireplacesounds = fireplacesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsFireplace.append(soundData)
+                            addedSoundsFireplace.append(soundData.split(";")[0])
                         except:
                             continue
                 if (soundData.split(";")[1] == "window"):
-                    if soundData not in addedSoundsWindow:
+                    if soundData.split(";")[0] not in addedSoundsWindow:
                         try:
                             windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsWindow.append(soundData)
+                            addedSoundsWindow.append(soundData.split(";")[0])
                         except:
                             continue
                 if (soundData.split(";")[1] == "outside"):
-                    if soundData not in addedSoundsOutside:
+                    if soundData.split(";")[0] not in addedSoundsOutside:
                         try:
                             outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsOutside.append(soundData)
+                            addedSoundsOutside.append(soundData.split(";")[0])
                         except:
                             continue
                 if (soundData.split(";")[1] == "windown"):
-                    if soundData not in addedSoundsWindow:
+                    if soundData.split(";")[0] not in addedSoundsWindow:
                         try:
                             windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsWindow.append(soundData)
+                            addedSoundsWindow.append(soundData.split(";")[0])
                         except:
                             continue
-                    if soundData not in addedSoundsOutside:
+                    if soundData.split(";")[0] not in addedSoundsOutside:
                         try:
                             outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsOutside.append(soundData)
+                            addedSoundsOutside.append(soundData.split(";")[0])
                         except:
                             continue
         except:

@@ -9,6 +9,8 @@ import importlib
 import modules.defferedTools as defferedTools
 import modules.audio as audio
 import modules.logManager as log
+import modules.speed as speed
+speed.run()
 
 print = log.printLog
 
@@ -175,6 +177,19 @@ class handlers:
             print(str(pytools.clock.getDateTime()) + ' ::: ' + str(plugin) + "; " + strf)
 
 def soundsReporter():
+    
+    while True:
+        try:
+            soundsList = os.listdir("..\\vars\\pluginSounds")
+            for sound in soundsList:
+                soundCsv = pytools.IO.getFile("..\\vars\\pluginSounds\\" + sound).split(";")
+                if (float(soundCsv[2]) + 10) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                    print("[Sounds Garbage Collector] ::: Deleting Sound Report File " + sound + "...")
+                    os.system("del \"..\\vars\\pluginSounds\\" + sound + "\" /f /q")
+        except:
+            print(traceback.format_exc())
+        time.sleep(10)
+    
     while False:
         try:
             window = "\n"
@@ -266,6 +281,12 @@ def run():
     soundsReport.start()
     
     while True:
+        
+        pytools.IO.saveJson("..\gil.json", {
+            "prevTic": speed.vars.prevTic,
+            "switchInterval": sys.getswitchinterval()
+        })
+        
         try:
             i = 0
             for pluginf in plugins.list:

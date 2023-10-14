@@ -71,7 +71,7 @@ class secs:
         randf = random.random() * 32768
         print(randf)
         if dataList[0][1] > 20 - api.wind.globals.windModif:
-            if randf < rand:
+            if randf < (rand / 3):
                 if globals.windowBroken == 0:
                     audioEvent = audio.event()
                     audioEvent.register("windowsmash.mp3", 2, 50, 1.0, 0.0, 0)

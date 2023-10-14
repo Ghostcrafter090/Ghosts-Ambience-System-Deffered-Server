@@ -173,7 +173,7 @@ class main:
                 minN = int(dateArray[5] / 10)
             try:
                 if random.randrange(0, int(illumChance)) / 300000 < ((wolfChance) / monthn):
-                    howlInt = str(random.randrange(0, 3))
+                    howlInt = str(random.randrange(0, 6))
                     volume = (30 * random.random()) + 0.5
                     audio.playSoundWindow('wolf_howl_' + howlInt + "_m.mp3;wolf_howl_" + howlInt + ".mp3;wolf_howl_" + howlInt + ".mp3", [volume, volume * 1.5, volume], 0.95 + (random.random() / 10), 0, 0)
             except:

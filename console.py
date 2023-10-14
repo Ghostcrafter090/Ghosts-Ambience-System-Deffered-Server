@@ -11,6 +11,84 @@ import ctypes
 import msvcrt
 import subprocess
 
+import urllib.parse
+import json
+import random
+
+def getNewJson(path, doPrint=True):
+    import traceback
+    error = 0
+    try:
+        if path[0:2] == "\\\\":
+            jsonData = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                "command": "getJson",
+                "data": {
+                    "path": ".\\" + path.split("\\ambience\\")[1]
+                }
+            })))["data"]
+        else:
+            file = open(path, "r")
+            jsonData = json.loads(file.read())
+            file.close()
+    except:
+        if doPrint:
+            print(traceback.format_exc())
+            print("Unexpected error:", sys.exc_info())
+            print(path)
+        error = 1
+    if error != 0:
+        jsonData = error
+    return jsonData
+
+def getMultiFile(listf):
+    try:
+        return pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+            "command": "getMultiFile",
+            "data": {
+                "list": listf.values()
+            }
+        })))["data"]
+    except:
+        return {}
+
+def getMultiJson(listf):
+    try:
+        return pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+            "command": "getMultiJson",
+            "data": {
+                "list": list(listf.values())
+            }
+        })))["data"]
+    except:
+        print(traceback.format_exc())
+        return {}
+
+def getNewFile(path, doPrint=True):
+    import traceback
+    error = 0
+    try:
+        if path[0:2] == "\\\\":
+            jsonData = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                "command": "getFile",
+                "data": {
+                    "path": ".\\" + path.split("\\ambience\\")[1]
+                }
+            })))["data"]
+        else:
+            file = open(path, "r")
+            jsonData = file.read()
+            file.close()
+    except:
+        if doPrint:
+            print("Unexpected error:", traceback.format_exc())
+        error = 1
+    if error != 0:
+        jsonData = error
+    return jsonData
+
+pytools.IO.getFile = getNewFile
+pytools.IO.getJson = getNewJson
+
 import traceback
 
 from ctypes import wintypes
@@ -40,6 +118,7 @@ class flags:
     unpack = True
     webMode = False
     restart = False
+    displayOnScreen = True
     update = False
     enigma = False
     enigmaSettings = {
@@ -92,20 +171,20 @@ class comm:
     def wait(timeout):
         n = 0
         try:
-            executef = pytools.IO.getJson("serverCommands.json", False)["execute"]
+            executef = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", False)["execute"]
         except:
             executef = 0
         while (executef != 0) and (timeout > n):
             n = n + 1
             time.sleep(0.001)
-            executef = pytools.IO.getJson("serverCommands.json", False)["execute"]
+            executef = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", False)["execute"]
         if timeout <= n:
             return False
         else:
             return True
     
     def sendStart():
-        pytools.IO.saveJson("serverCommands.json", {
+        pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
             "commands": [
                 "--run --start --apiKey=" + flags.apiKey
             ],
@@ -115,14 +194,14 @@ class comm:
     
     def sendUpdate():
         if flags.unpack:
-            pytools.IO.saveJson("serverCommands.json", {
+            pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
                 "commands": [
                     "--run --update"
                 ],
                 "execute": 1
             })
         else:
-            pytools.IO.saveJson("serverCommands.json", {
+            pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
                 "commands": [
                     "--run --update --noUnpack"
                 ],
@@ -132,14 +211,14 @@ class comm:
     
     def sendUpdateRestart():
         if flags.unpack:
-            pytools.IO.saveJson("serverCommands.json", {
+            pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
                 "commands": [
                     "--run --stop --start --update --apiKey=" + flags.apiKey
                 ],
                 "execute": 1
             })
         else:
-            pytools.IO.saveJson("serverCommands.json", {
+            pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
                 "commands": [
                     "--run --stop --start --update --noUnpack --apiKey=" + flags.apiKey
                 ],
@@ -148,7 +227,7 @@ class comm:
         return comm.wait(flags.timeout)
 
     def sendStop():
-        pytools.IO.saveJson("serverCommands.json", {
+        pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
             "commands": [
                 "--run --stop"
             ],
@@ -157,7 +236,7 @@ class comm:
         return comm.wait(flags.timeout)
     
     def ping():
-        pytools.IO.saveJson("serverCommands.json", {
+        pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "serverCommands.json", {
             "commands": [
                 "--run --ping"
             ],
@@ -233,7 +312,7 @@ class system:
         if flags.remote == False:
             if restart:
                 system.stop()
-            noUpdate = pytools.IO.getJson("noUpdate.json", False)
+            noUpdate = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "noUpdate.json", False)
             print("reading noUpdate...")
             for n in noUpdate["list"]:
                 fileName = n.split("\\")[-1]
@@ -295,7 +374,7 @@ class system:
         
     def changeCred():
         if os.path.exists("server.json"):
-            cred = pytools.IO.getJson("server.json", False)
+            cred = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "server.json", False)
         else:
             cred = {
                 "username": "",
@@ -321,7 +400,7 @@ class system:
                 exitn = False
             else:
                 print("Please password username issues.")
-        pytools.IO.saveJson("server.json", cred)
+        pytools.IO.saveJson("\\\\" + flags.remote + "\\ambience\\" + "server.json", cred)
         print("changed.")
         
     def checkCred(bypass=False):
@@ -334,10 +413,10 @@ class system:
             i = i + 1
         if bypass == False:
             if os.path.exists("server.json"):
-                cred = pytools.IO.getJson("server.json", False)
+                cred = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "server.json", False)
             else:
                 system.changeCred()
-                cred = pytools.IO.getJson("server.json", False)
+                cred = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "server.json", False)
             if cred["username"] == "":
                 if cred["password"] == "":
                     system.changeCred()
@@ -374,8 +453,8 @@ class system:
             subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "taskkill /f /im outside.exe")[0]
             subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "taskkill /f /im windown.exe")[0]
             subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "taskkill /f /im light.exe")[0]
-            pytools.IO.saveFile(".\\working\\clocks\\running\\gwcont.derp", "derp")
-            pytools.IO.saveFile(".\\working\\clocks\\running\\wcont.derp", "derp")
+            pytools.IO.saveFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\clocks\\running\\gwcont.derp", "derp")
+            pytools.IO.saveFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\clocks\\running\\wcont.derp", "derp")
             system.status.active = False
         else:
             while comm.connect() == False:
@@ -528,7 +607,7 @@ class menu:
                 menu.plugN = 2
                 menu.plugI = 0
                 printColor(40, 0, plugin, "green")
-                json = pytools.IO.getJson(".\\vars\\pluginVarsJson\\" + plugin, False)
+                json = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\" + plugin, False)
                 for key in json:
                     menu.readInfo(json[key], key)
                     menu.plugN = menu.plugN + 1
@@ -544,7 +623,7 @@ class menu:
                         # print(os.listdir())
                         # print(os.listdir(".\\working"))
                         # print(".\\working\\plugin." + plugin + ".run()_errorlog.log")
-                        f = pytools.IO.getFile(".\\working\\" + plugin.split("_keys.json")[0] + "_errorlog.log", False).split("\n")
+                        f = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\" + plugin.split("_keys.json")[0] + "_errorlog.log", False).split("\n")
                         printColor(40 + menu.plugI, menu.plugN + 3, "", "green")
                         menu.plugN = menu.plugN + 1
                         menu.plugN = menu.plugN + 1
@@ -618,15 +697,15 @@ def getSection():
         if dateArray[3] > 12:
             if dateArray[3] < 22:
                 try:
-                    if pytools.IO.getJson(".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["death_wind"]["state"] == 0:
+                    if pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["death_wind"]["state"] == 0:
                         return phases[1]
                     else:
                         try:
-                            if pytools.IO.getJson(".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["monsters"]["state"] == 0:
+                            if pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["monsters"]["state"] == 0:
                                 return phases[2]
                             else:
                                 try:
-                                    if pytools.IO.getJson(".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["ghosts"]["state"] == 0:
+                                    if pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["ghosts"]["state"] == 0:
                                         return phases[3]
                                     else:
                                         return phases[4]
@@ -678,16 +757,15 @@ def main():
                 else:
                     restartMod = 0
             try:
-                if (pytools.IO.getFile(".\\systemLoop.json", False) == "                                     "):
+                if (pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\systemLoop.json", False) == "                                     "):
                     system.status.active = False
                 else:
                     try:
-                        if os.path.exists(".\\systemLoop.json"):
-                            if (pytools.clock.dateArrayToUTC(pytools.IO.getJson(".\\systemLoop.json", False)["loopTime"]) + 20) < (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())):
-                                system.status.active = False
-                                # subprocess.getstatusoutput("echo {\"loopTime\":[9999, 0, 0, 0, 0, 0]} > \\\\" + tools.getRemote() + "\\ambience\\systemLoop.json")[0]
-                            else:
-                                system.status.active = True
+                        if (pytools.clock.dateArrayToUTC(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\systemLoop.json", False)["loopTime"]) + 20) < (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())):
+                            system.status.active = False
+                            # subprocess.getstatusoutput("echo {\"loopTime\":[9999, 0, 0, 0, 0, 0]} > \\\\" + tools.getRemote() + "\\ambience\\systemLoop.json")[0]
+                        else:
+                            system.status.active = True
                     except:
                         system.status.active = False
             except:
@@ -701,10 +779,11 @@ def main():
                     while i < globals.maxY:
                         n = 0
                         while n < 200:
-                            pytools.IO.console.printAt(n, i, "          ")
+                            if flags.displayOnScreen:
+                                pytools.IO.console.printAt(n, i, "          ")
                             n = n + 10
                         i = i + 1
-                weather = pytools.IO.getFile(".\\vars\\dispstring.cx", False)
+                weather = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\dispstring.cx", False)
                 try:
                     gh = weather[0:23]
                 except:
@@ -718,180 +797,223 @@ def main():
                     
                     weather = weather.replace("\nCondition", "\nLightning   (danger) : " + str(lightningDanger) + "\nCondition")
                     
-                    pytools.IO.console.printAt(0, 0, "Ambience System Console")
-                    pytools.IO.console.printAt(0, 1, "-----------------------")
-                    pytools.IO.console.printAt(0, 3, weather)
+                    if flags.displayOnScreen:
+                        pytools.IO.console.printAt(0, 0, "Ambience System Console")
+                        pytools.IO.console.printAt(0, 1, "-----------------------")
+                        pytools.IO.console.printAt(0, 3, weather)
                     if flags.webMode:
                         pytools.IO.saveFile(flags.webMode + "\\conditions.txt", weather)
                     i = 4 + len(weather.split("\n"))
                     if os.path.exists("\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson") == False:
                         subprocess.getstatusoutput("pushd \"\\" + tools.getRemote() + "\\ambience\" & " + "mkdir \"" + "\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson" + "\"")[0]
-                    for plugin in os.listdir("\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson"):
-                        pytools.IO.console.printAt(2, i, plugin.split("_keys")[0][0:19])
-                        pInfo = pytools.IO.getJson(".\\vars\\pluginVarsJson\\" + plugin, False)
-                        if system.status.active == True:
-                            if os.path.exists(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"):
-                                pError = pytools.IO.getFile(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx", False)
-                                if flash == 0:
-                                    try:
-                                        if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC(pInfo["lastLoop"])) > 600:
-                                            printColor(0, i, "!", "red")
+                    if flags.displayOnScreen:
+                        getList = {}
+                        getErrorList = {}
+                        for plugin in os.listdir("\\\\" + tools.getRemote() + "\\ambience\\vars\\pluginVarsJson"):
+                            getList[plugin] = ".\\vars\\pluginVarsJson\\" + plugin
+                            getErrorList[plugin] = ".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"
+                        outList = getMultiJson(getList)
+                        outErrorList = getMultiFile(getErrorList)
+                        for plugin in getList:
+                            
+                            if plugin[-6:] != "_error":
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(2, i, plugin.split("_keys")[0][0:19])
+                                pInfo = outList[".\\vars\\pluginVarsJson\\" + plugin]
+                                if system.status.active == True:
+                                    if flags.displayOnScreen:
+                                        if (os.path.exists(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx")) and (".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx" in outErrorList):
+                                            pError = outErrorList[".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"]
+                                            if flash == 0:
+                                                try:
+                                                    if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC(pInfo["lastLoop"])) > 600:
+                                                        printColor(0, i, "!", "red")
+                                                    else:
+                                                        printColor(0, i, "!", "yellow")
+                                                except:
+                                                    printColor(0, i, "!", "red")
+                                            else:
+                                                pytools.IO.console.printAt(0, i, " ")
+                                            printColor(37, i, " ;;; " + pError, "yellow")
                                         else:
-                                            printColor(0, i, "!", "yellow")
-                                    except:
-                                        printColor(0, i, "!", "red")
-                                else:
-                                    pytools.IO.console.printAt(0, i, " ")
-                                printColor(37, i, " ;;; " + pError, "yellow")
-                            else:
-                                pytools.IO.console.printAt(0, i, " ")
-                        if system.status.active == True:
-                            try:
-                                pytools.IO.console.printAt(20, i, " : ")
-                                if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC(pInfo["lastLoop"])) > 600:
-                                    printColor(23, i, "Inactive." + spaces[len("Inactive."):14], "yellow")
-                                else:
-                                    printColor(23, i, "Active." + spaces[len("Active."):14], "green")
-                            except:
-                                printColor(23, i, "Nonresponsive.", "red")
-                        else:
-                            printColor(23, i, "Offline." + spaces[len("Offline."):14], "magenta")
-                        i = i + 1
+                                            pytools.IO.console.printAt(0, i, " ")
+                                if flags.displayOnScreen:
+                                    if system.status.active == True:
+                                        try:
+                                            pytools.IO.console.printAt(20, i, " : ")
+                                            if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC(pInfo["lastLoop"])) > 600:
+                                                printColor(23, i, "Inactive." + spaces[len("Inactive."):14], "yellow")
+                                            else:
+                                                printColor(23, i, "Active." + spaces[len("Active."):14], "green")
+                                        except:
+                                            printColor(23, i, "Nonresponsive.", "red")
+                                    else:
+                                        printColor(23, i, "Offline." + spaces[len("Offline."):14], "magenta")
+                                i = i + 1
                     
                     y = i
                     
                     try:
-                        soundsClock = pytools.IO.getFile(".\\vars\\sounds\\clock.cxl", False).split("\n")
-                        soundsFireplace = pytools.IO.getFile(".\\vars\\sounds\\fireplace.cxl", False).split("\n")
-                        soundsOutside = pytools.IO.getFile(".\\vars\\sounds\\outside.cxl", False).split("\n")
-                        soundsWindow = pytools.IO.getFile(".\\vars\\sounds\\window.cxl", False).split("\n")
+                        soundsClock = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\sounds\\clock.cxl", False).split("\n")
+                        soundsFireplace = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\sounds\\fireplace.cxl", False).split("\n")
+                        soundsOutside = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\sounds\\outside.cxl", False).split("\n")
+                        soundsWindow = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\sounds\\window.cxl", False).split("\n")
                     except:
                         pass
                     
                     try:
-                        pytools.IO.console.printAt(50, 0, "Clock Speaker Sounds")
-                        pytools.IO.console.printAt(50, 1, "--------------------")
+                        if flags.displayOnScreen:
+                            pytools.IO.console.printAt(50, 0, "Clock Speaker Sounds")
+                            pytools.IO.console.printAt(50, 1, "--------------------")
                         fileOutput = ""
                         i = 3
                         for f in soundsClock:
                             if system.status.active == True:
-                                pytools.IO.console.printAt(50, i, f + spaces[len(f):30])
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(50, i, f + spaces[len(f):30])
                                 fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
-                        pytools.IO.saveFile(flags.webMode + "\\clockSounds.txt", fileOutput)
-                        f = i
-                        while i < (f + 10):
-                            pytools.IO.console.printAt(50, i, spaces[0:30])
-                            i = i + 1
+                        if flags.webMode:
+                            pytools.IO.saveFile(flags.webMode + "\\clockSounds.txt", fileOutput)
+                        if flags.displayOnScreen:
+                            f = i
+                            while i < (f + 10):
+                                pytools.IO.console.printAt(50, i, spaces[0:30])
+                                i = i + 1
                     except:
                         pass
                     
                     try:
-                        pytools.IO.console.printAt(80, 0, "Fireplace Speaker Sounds")
-                        pytools.IO.console.printAt(80, 1, "------------------------")
+                        if flags.displayOnScreen:
+                            pytools.IO.console.printAt(80, 0, "Fireplace Speaker Sounds")
+                            pytools.IO.console.printAt(80, 1, "------------------------")
                         fileOutput = ""
                         i = 3
                         for f in soundsFireplace:
                             if system.status.active == True:
-                                pytools.IO.console.printAt(80, i, f + spaces[len(f):30])
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(80, i, f + spaces[len(f):30])
                                 fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
-                        pytools.IO.saveFile(flags.webMode + "\\fireplaceSounds.txt", fileOutput)
-                        f = i
-                        while i < (f + 10):
-                            pytools.IO.console.printAt(80, i, spaces[0:30])
-                            i = i + 1
+                        if flags.webMode:
+                            pytools.IO.saveFile(flags.webMode + "\\fireplaceSounds.txt", fileOutput)
+                        if flags.displayOnScreen:
+                            f = i
+                            while i < (f + 10):
+                                pytools.IO.console.printAt(80, i, spaces[0:30])
+                                i = i + 1
                     except:
                         pass
                     
                     try:
-                        pytools.IO.console.printAt(110, 0, "Window Speaker Sounds")
-                        pytools.IO.console.printAt(110, 1, "--------------------")
+                        if flags.displayOnScreen:
+                            pytools.IO.console.printAt(110, 0, "Window Speaker Sounds")
+                            pytools.IO.console.printAt(110, 1, "--------------------")
                         fileOutput = ""
                         i = 3
                         for f in soundsWindow:
                             if system.status.active == True:
-                                pytools.IO.console.printAt(110, i, f + spaces[len(f):30])
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(110, i, f + spaces[len(f):30])
                                 fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
-                        pytools.IO.saveFile(flags.webMode + "\\windowSounds.txt", fileOutput)
-                        f = i
-                        while i < (f + 10):
-                            pytools.IO.console.printAt(110, i, spaces[0:30])
-                            i = i + 1
+                        if flags.webMode:
+                            pytools.IO.saveFile(flags.webMode + "\\windowSounds.txt", fileOutput)
+                        if flags.displayOnScreen:
+                            f = i
+                            while i < (f + 10):
+                                pytools.IO.console.printAt(110, i, spaces[0:30])
+                                i = i + 1
                     except:
                         pass
                     
                     try:
-                        pytools.IO.console.printAt(140, 0, "Outside Speaker Sounds")
-                        pytools.IO.console.printAt(140, 1, "--------------------")
+                        if flags.displayOnScreen:
+                            pytools.IO.console.printAt(140, 0, "Outside Speaker Sounds")
+                            pytools.IO.console.printAt(140, 1, "--------------------")
                         fileOutput = ""
                         i = 3
                         for f in soundsOutside:
                             if system.status.active == True:
-                                pytools.IO.console.printAt(140, i, f + spaces[len(f):30])
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(140, i, f + spaces[len(f):30])
                                 fileOutput = fileOutput + "\n" + f + spaces[len(f):30]
                                 i = i + 1
-                        pytools.IO.saveFile(flags.webMode + "\\outsideSounds.txt", fileOutput)
-                        f = i
-                        while i < (f + 10):
-                            pytools.IO.console.printAt(140, i, spaces[0:30])
-                            i = i + 1
+                        if flags.webMode:
+                            pytools.IO.saveFile(flags.webMode + "\\outsideSounds.txt", fileOutput)
+                        if flags.displayOnScreen:
+                            f = i
+                            while i < (f + 10):
+                                pytools.IO.console.printAt(140, i, spaces[0:30])
+                                i = i + 1
                     except:
                         pass
                     
                     try:
-                        clients = pytools.IO.getJson(".\\hosts.json", doPrint=False)
-                        clientsData = pytools.IO.getJson(".\\working\\hostData.json", doPrint=False)
+                        if flags.displayOnScreen:
+                            clients = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\hosts.json", doPrint=False)
+                            clientsData = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\hostData.json", doPrint=False)
                         
-                        pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information            ")
-                        pytools.IO.console.printAt(130, globals.maxY - 2, "---------------------------------------")
-                        pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR OPEN ")
-                        pytools.IO.console.printAt(130, globals.maxY - 4, "                                      ")
+                        if flags.displayOnScreen:
+                            pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information            ")
+                            pytools.IO.console.printAt(130, globals.maxY - 2, "---------------------------------------")
+                            pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR OPEN ")
+                            pytools.IO.console.printAt(130, globals.maxY - 4, "                                      ")
                         
                         totalSounds = 0
                         maxSounds = 0
                         i = 2
-                        for client in clients["hosts"]:
-                            try:
-                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
-                                if clientsData[client]["current"] > clientsData[client]["max"] + 1:
-                                    printColor(145, globals.maxY - 3 - i, "overload", "red")
-                                    if flash == 0:
-                                        printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                        if flags.displayOnScreen:
+                            for client in clients["hosts"]:
+                                try:
+                                    pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                    if clientsData[client]["current"] > clientsData[client]["max"] + 1:
+                                        if flags.displayOnScreen:
+                                            printColor(145, globals.maxY - 3 - i, "overload", "red")
+                                            if flash == 0:
+                                                printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                            else:
+                                                printColor(130, globals.maxY - 3 - i, " ", "yellow")
                                     else:
-                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
-                                else:
-                                    printColor(130, globals.maxY - 3 - i, " ", "yellow")
-                                    printColor(145, globals.maxY - 3 - i, "connected", "green")
-                            except:
-                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
-                                if flash == 0:
-                                    printColor(130, globals.maxY - 3 - i, "!", "red")
-                                else:
-                                    printColor(130, globals.maxY - 3 - i, " ", "red")
+                                        if flags.displayOnScreen:
+                                            printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                            printColor(145, globals.maxY - 3 - i, "connected", "green")
+                                except:
+                                    if flags.displayOnScreen:
+                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
+                                        if flash == 0:
+                                            printColor(130, globals.maxY - 3 - i, "!", "red")
+                                        else:
+                                            printColor(130, globals.maxY - 3 - i, " ", "red")
+                                try:
+                                    totalSounds = totalSounds + clientsData[client]["current"]
+                                    maxSounds = maxSounds + clientsData[client]["max"]
+                                except:
+                                    pass
+                                i = i + 1
+                        
+                        if flags.displayOnScreen:
                             try:
-                                totalSounds = totalSounds + clientsData[client]["current"]
-                                maxSounds = maxSounds + clientsData[client]["max"]
+                                outsideVolume = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "outsideProperties.json")["volume"]
+                                outsideLimiter = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "outsideProperties.json")["limiter"]
+                                gilTic = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "gil.json")["prevTic"]
+                                gilInterval = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + "gil.json")["switchInterval"]
+                                
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(131, globals.maxY - 3 - i - 1, "Outside Volume/Limiter (V / L): " + str(round(outsideVolume, 3)) + "Db / " + str(round(outsideLimiter, 3)) + "Db")
+                                    pytools.IO.console.printAt(131, globals.maxY - 3 - i - 2, "GIL Information (prevTic / switchInterval): " + str(round(gilTic, 4)) + " / " + str(gilInterval))
                             except:
                                 pass
-                            i = i + 1
-                        
-                        try:
-                            outsideVolume = pytools.IO.getJson("outsideProperties.json")["volume"]
-                            outsideLimiter = pytools.IO.getJson("outsideProperties.json")["limiter"]
-                            pytools.IO.console.printAt(131, globals.maxY - 3 - i - 1, "Outside Volume/Limiter (V / L): " + str(round(outsideVolume, 3)) + "Db / " + str(round(outsideLimiter, 3)) + "Db")
-                        except:
-                            pass
-                        pytools.IO.console.printAt(131, globals.maxY - 3 - i - 2, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
-                        pytools.IO.console.printAt(130, globals.maxY - 3 - i, "                                      ")
+                            pytools.IO.console.printAt(131, globals.maxY - 3 - i - 3, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
+                            pytools.IO.console.printAt(130, globals.maxY - 3 - i, "                                      ")
 
-                        i = i + 2
-                        fn = i
-                        while i < (fn + 10):
-                            pytools.IO.console.printAt(130, globals.maxY - 3 - i - 1, spaces[0:40])
-                            i = i + 1
-                        i = 1
+                            i = i + 2
+                            fn = i
+                            while i < (fn + 10):
+                                if flags.displayOnScreen:
+                                    pytools.IO.console.printAt(130, globals.maxY - 3 - i - 3, spaces[0:40])
+                                i = i + 1
+                        # i = 1
                         # while i < 10:
                         #     pytools.IO.console.printAt(140, globals.maxY - len(clients["hosts"]) - len(clients["hosts"]) - len(clients["hosts"]) - i, spaces[0:30])
                         #     i = i + 1
@@ -900,36 +1022,59 @@ def main():
                         
                     try:
                         if system.status.active == True:
-                            if os.path.exists(".\\working\\halloweenmode.derp"):
+                            if os.path.exists(".\\working\\halloweenmode.derp") or os.path.exists(".\\working\\deathmode.derp"):
                                 if flash == 0:
-                                    printColor(30, globals.maxY - 11, "        X", "red")
-                                    printColor(30, globals.maxY - 10, "       X X", "red")
-                                    printColor(30, globals.maxY - 9, "      X   X", "red")
-                                    printColor(30, globals.maxY - 8, "     X  X  X", "red")
-                                    printColor(30, globals.maxY - 7, "    X   X   X", "red")
-                                    printColor(30, globals.maxY - 6, "   X    X    X", "red")
-                                    printColor(30, globals.maxY - 5, "  X           X", "red")
-                                    printColor(30, globals.maxY - 4, " X      X      X", "red")
-                                    printColor(30, globals.maxY - 3, "X               X", "red")
-                                    printColor(30, globals.maxY - 2, "XXXXXXXXXXXXXXXXX", "red")
+                                    if flags.displayOnScreen:
+                                        printColor(30, globals.maxY - 11, "        X", "red")
+                                        printColor(30, globals.maxY - 10, "       X X", "red")
+                                        printColor(30, globals.maxY - 9, "      X   X", "red")
+                                        printColor(30, globals.maxY - 8, "     X  X  X", "red")
+                                        printColor(30, globals.maxY - 7, "    X   X   X", "red")
+                                        printColor(30, globals.maxY - 6, "   X    X    X", "red")
+                                        printColor(30, globals.maxY - 5, "  X           X", "red")
+                                        printColor(30, globals.maxY - 4, " X      X      X", "red")
+                                        printColor(30, globals.maxY - 3, "X               X", "red")
+                                        printColor(30, globals.maxY - 2, "XXXXXXXXXXXXXXXXX", "red")
                                 else:
                                     r = 0
                                     while r < 14:
                                         pytools.IO.console.printAt(30, globals.maxY - r, "                  ")
                                         r = r + 1
                                 section = getSection()
-                                printColor(50, globals.maxY - 9, "DEATH NIGHT ACTIVITY", "red")
-                                printColor(50, globals.maxY - 8, "--------------------", "red")
-                                printColor(50, globals.maxY - 6, "Horror Index        : " + pytools.IO.getFile(".\\working\\horrorIndex.cx", False) + "Hi" + spaces[0:10], "red")
-                                try:
-                                    printColor(50, globals.maxY - 5, "Whispering Index    : " + str(pytools.IO.getJson(".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["whisperIndex"]) + "Hi" + spaces[0:10], "red")
-                                except:
-                                    printColor(50, globals.maxY - 5, "Whispering Index    : " + "0" + "Hi" + spaces[0:10], "red")
-                                try:
-                                    printColor(50, globals.maxY - 4, "Hallowed Wolf Index : " + str(pytools.IO.getJson(".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["hallowedWolfIndex"]) + "Hi" + spaces[0:10], "red")
-                                except:
-                                    printColor(50, globals.maxY - 4, "Hallowed Wolf Index : " + "0" + "Hi" + spaces[0:10], "red")
-                                printColor(50, globals.maxY - 3, "Current Section     : " + section + spaces[0:10], "red")
+                                if flags.displayOnScreen:
+                                    printColor(50, globals.maxY - 9, "DEATH NIGHT ACTIVITY", "red")
+                                    printColor(50, globals.maxY - 8, "--------------------", "red")
+                                    printColor(50, globals.maxY - 6, "Horror Index        : " + pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\horrorIndex.cx", False) + "Hi" + spaces[0:10], "red")
+                                    try:
+                                        printColor(50, globals.maxY - 5, "Whispering Index    : " + str(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["whisperIndex"]) + "Hi" + spaces[0:10], "red")
+                                    except:
+                                        printColor(50, globals.maxY - 5, "Whispering Index    : " + "0" + "Hi" + spaces[0:10], "red")
+                                    try:
+                                        printColor(50, globals.maxY - 4, "Hallowed Wolf Index : " + str(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["hallowedWolfIndex"]) + "Hi" + spaces[0:10], "red")
+                                    except:
+                                        printColor(50, globals.maxY - 4, "Hallowed Wolf Index : " + "0" + "Hi" + spaces[0:10], "red")
+                                    printColor(50, globals.maxY - 3, "Current Section     : " + section + spaces[0:10], "red")
+                                if flags.webMode:
+                                    
+                                    webModeDeathString = ""
+                                    
+                                    webModeDeathString = webModeDeathString + "DEATH NIGHT ACTIVITY"
+                                    webModeDeathString = webModeDeathString + "\n" + "--------------------"
+                                    webModeDeathString = webModeDeathString + "\n" + "Horror Index        : " + pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\horrorIndex.cx", False) + "Hi" + spaces[0:10]
+                                    try:
+                                        webModeDeathString = webModeDeathString + "\n" + "Whispering Index    : " + str(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["whisperIndex"]) + "Hi" + spaces[0:10]
+                                    except:
+                                        webModeDeathString = webModeDeathString + "\n" + "Whispering Index    : " + "0" + "Hi" + spaces[0:10]
+                                    try:
+                                        webModeDeathString = webModeDeathString + "\n" + "Hallowed Wolf Index : " + str(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\vars\\pluginVarsJson\\deathmode_keys.json", False)["hallowedWolfIndex"]) + "Hi" + spaces[0:10]
+                                    except:
+                                        webModeDeathString = webModeDeathString + "\n" + "Hallowed Wolf Index : " + "0" + "Hi" + spaces[0:10]
+                                    webModeDeathString = webModeDeathString + "\n" + "Current Section     : " + section + spaces[0:10]
+                                    pytools.IO.saveFile(flags.webMode + "\\deathMode.txt", webModeDeathString)
+                            else:
+                                pytools.IO.saveFile(flags.webMode + "\\deathMode.txt", "")
+                        else:
+                            pytools.IO.saveFile(flags.webMode + "\\deathMode.txt", "")
                     except:
                         pass             
                 else:
@@ -966,6 +1111,8 @@ try:
                 flags.defaultSystemState = True
             elif n == "--server":
                 flags.server = True
+            elif n =="--noDisplay":
+                flags.displayOnScreen = False
             elif n == "--monitor":
                 flags.monitor = True
             elif n == "--update":
@@ -1003,6 +1150,7 @@ try:
             print("   ^ --restart: Performs restart cycle after update. Use if the server in already online.")
             print("   ^ --noUnpack: disables the rerun of setup.py.")
             print("--webMode=<location>: Tees console output to files in folder.")
+            print("--noDisplay: Doesn't print output onto screen, only monitors.")
             print("--help: Print this help text.")
 except:
     print("Unexpected error:", sys.exc_info())
@@ -1010,6 +1158,7 @@ except:
 if flags.remote != False:
     en = comm.connect(en)
     if en:
+        pass
         os.chdir("\\\\" + flags.remote + "\\ambience")
 
 if stopf:
@@ -1029,7 +1178,7 @@ if startf:
                             
 if runf:
     if en:
-        if flags.server == False:
+        if flags.server == False:            
             tools.max_window()
             time.sleep(1)
             thread0 = threading.Thread(target=main)

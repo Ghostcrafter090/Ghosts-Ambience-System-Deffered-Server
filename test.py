@@ -2,6 +2,13 @@ import modules.pytools as pytools
 import sys
 import os
 
+import time
+
+import threading
+
+import modules.speed as speed
+speed.run()
+
 pl = False
 
 class plugin:
@@ -42,6 +49,12 @@ if __name__ == "__main__":
     except:
         print("Invalid syntax.")
         print("To test plugin: py testplugin.py --run <plugin_name>")
-    
+
+def printTic():
+    while True:
+        print("GIL Timing Info: " + str((speed.vars.prevTic, sys.getswitchinterval())))
+        time.sleep(1)
+        
 if runf:
+    threading.Thread(target=printTic).start()
     debug(sys.argv[2], run=True)

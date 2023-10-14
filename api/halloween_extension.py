@@ -34,6 +34,7 @@ class status:
     
 class globals:
     run = False
+    runUncanny = False
     
 class data:
     sunJson = {}
@@ -108,7 +109,11 @@ class data:
             except:
                 lightningModif = 0
             try:
-                windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5
+                baseIndex = data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()), noModif=True)
+                if baseIndex > 0:
+                    windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * (150 - baseIndex) ** 0.35
+                else:
+                    windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 2.5
             except:
                 windGustModif = 0
             try:
@@ -137,7 +142,7 @@ class data:
         return lightningModif + windModif + weatherModif
             
     # https://www.desmos.com/calculator/sd674thhfq
-    def getHallowIndex(timeStamp, noDay=False):
+    def getHallowIndex(timeStamp, noDay=False, noModif=False):
         u = math.floor(timeStamp / (365 * 24 * 60 * 60))
         w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
         q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
@@ -170,7 +175,10 @@ class data:
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
-        weatherModif = data.getWeatherHallowModifier()
+        if not noModif:
+            weatherModif = data.getWeatherHallowModifier()
+        else:
+            weatherModif = 0
         if weatherModif:
             m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
@@ -277,7 +285,8 @@ class sections:
                                     while ghSpeaker == 5:
                                         ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
-                                    audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
                                     audioEvent.run()
                         elif data.dateArray[3] == data.hourZ:
                             if data.dateArray[4] >= data.minZ:
@@ -289,7 +298,8 @@ class sections:
                                     while ghSpeaker == 5:
                                         ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
-                                    audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
                                     audioEvent.run()
                     if data.dateArray[2] > 19:
                         if data.dateArray[3] > data.hourZ:
@@ -301,7 +311,8 @@ class sections:
                                 while ghSpeaker == 5:
                                     ghSpeaker = random.randrange(0, 10)
                                 audioEvent = audio.event()
-                                audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
                                 audioEvent.run()
                         elif data.dateArray[3] == data.hourZ:
                             if data.dateArray[4] >= data.minZ:
@@ -315,7 +326,8 @@ class sections:
                                     while ghSpeaker == 5:
                                         ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
-                                    audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
                                     audioEvent.run()
                     if data.dateArray[2] > 9:
                         if data.dateArray[3] > data.hourZ:
@@ -329,7 +341,8 @@ class sections:
                                 while ghSpeaker == 5:
                                     ghSpeaker = random.randrange(0, 10)
                                 audioEvent = audio.event()
-                                audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, speed, 0, 0)
                                 audioEvent.run()
                         elif data.dateArray[3] == data.hourZ:
                             if data.dateArray[4] >= data.minZ:
@@ -343,7 +356,8 @@ class sections:
                                     while ghSpeaker == 5:
                                         ghSpeaker = random.randrange(0, 10)
                                     audioEvent = audio.event()
-                                    audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, 1, 0, 0)
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, speed, 0, 0)
                                     audioEvent.run()
                     time.sleep(0.1)
                     sections.ghostsChance = [(deathGhostChance / ((32 - data.dateArray[2]) / 3) + 1), (dyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1), (ghostChance / ((32 - data.dateArray[2]) / 9) + 1)]
@@ -351,6 +365,111 @@ class sections:
                     pass
             wait = True
             for n in sections.ghostsChance:
+                if n > 1:
+                    wait = False
+            if wait:
+                time.sleep(1)
+    
+    uncannyGhostsChance = [0, 0, 0]
+             
+    def testGhostsUncanny():
+        uncannyGhostsChance = [0, 0, 0]
+        while not status.exit:
+            if globals.runUncanny:
+                try:
+                    uncannyDeathGhostChance = 0
+                    uncannyDyingGhostChance = 0
+                    uncannyGhostChance = 0
+                    if data.dateArray[2] > 24:
+                        if data.dateArray[3] > data.hourZ:
+                                uncannyDeathGhostChance = (data.dateArray[3] - (int(data.hourZ + 2))) * data.dateArray[4]
+                                uncannyDeathGhostChance = uncannyDeathGhostChance / (32 - data.dateArray[2])
+                                uncannyDeathGhostChance = uncannyDeathGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                                if random.randrange(0, 37500) < (uncannyDeathGhostChance / ((32 - data.dateArray[2]) / 3) + 1):
+                                    ghSpeaker = 5
+                                    while ghSpeaker == 5:
+                                        ghSpeaker = random.randrange(0, 10)
+                                    audioEvent = audio.event()
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('hu_death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
+                                    audioEvent.run()
+                        elif data.dateArray[3] == data.hourZ:
+                            if data.dateArray[4] >= data.minZ:
+                                uncannyDeathGhostChance = (data.dateArray[3] - (int(data.hourZ + 2))) * data.dateArray[4]
+                                uncannyDeathGhostChance = uncannyDeathGhostChance / (32 - data.dateArray[2])
+                                uncannyDeathGhostChance = uncannyDeathGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                                if random.randrange(0, 37500) < (uncannyDeathGhostChance / ((32 - data.dateArray[2]) / 3) + 1):
+                                    ghSpeaker = 5
+                                    while ghSpeaker == 5:
+                                        ghSpeaker = random.randrange(0, 10)
+                                    audioEvent = audio.event()
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('hu_death_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
+                                    audioEvent.run()
+                    if data.dateArray[2] > 19:
+                        if data.dateArray[3] > data.hourZ:
+                            uncannyDyingGhostChance = (data.dateArray[3] - (int(data.hourZ + 1))) * data.dateArray[4]
+                            uncannyDyingGhostChance = uncannyDyingGhostChance / (32 - data.dateArray[2])
+                            uncannyDyingGhostChance = uncannyDyingGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                            if random.randrange(0, 37500) < (uncannyDyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1):
+                                ghSpeaker = 5
+                                while ghSpeaker == 5:
+                                    ghSpeaker = random.randrange(0, 10)
+                                audioEvent = audio.event()
+                                speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                audioEvent.register('hu_dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
+                                audioEvent.run()
+                        elif data.dateArray[3] == data.hourZ:
+                            if data.dateArray[4] >= data.minZ:
+                                uncannyDyingGhostChance = 0
+                                if data.dateArray[3] < (24):
+                                    uncannyDyingGhostChance = (data.dateArray[3] - (int(data.hourZ + 1))) * data.dateArray[4]
+                                    uncannyDyingGhostChance = uncannyDyingGhostChance / (32 - data.dateArray[2])
+                                    uncannyDyingGhostChance = uncannyDyingGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                                if random.randrange(0, 37500) < (uncannyDyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1):
+                                    ghSpeaker = 5
+                                    while ghSpeaker == 5:
+                                        ghSpeaker = random.randrange(0, 10)
+                                    audioEvent = audio.event()
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('hu_dying_ghost_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, ((0.5 + random.random()) * 40) / ((ghSpeaker == 3) + 1), speed, 0, 0)
+                                    audioEvent.run()
+                    if data.dateArray[2] > 9:
+                        if data.dateArray[3] > data.hourZ:
+                            uncannyGhostChance = 0
+                            if data.dateArray[3] < (24):
+                                uncannyGhostChance = (data.dateArray[3] - (int(data.hourZ))) * data.dateArray[4]
+                                uncannyGhostChance = uncannyGhostChance / (32 - data.dateArray[2])
+                                uncannyGhostChance = uncannyGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                            if random.randrange(0, 37500) < (uncannyGhostChance / ((32 - data.dateArray[2]) / 9) + 1):
+                                ghSpeaker = 5
+                                while ghSpeaker == 5:
+                                    ghSpeaker = random.randrange(0, 10)
+                                audioEvent = audio.event()
+                                speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                audioEvent.register('hu_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, speed, 0, 0)
+                                audioEvent.run()
+                        elif data.dateArray[3] == data.hourZ:
+                            if data.dateArray[4] >= data.minZ:
+                                uncannyGhostChance = 0
+                                if data.dateArray[3] < (24):
+                                    uncannyGhostChance = (data.dateArray[3] - (int(data.hourZ))) * data.dateArray[4]
+                                    uncannyGhostChance = uncannyGhostChance / (32 - data.dateArray[2])
+                                    uncannyGhostChance = uncannyGhostChance * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 170)
+                                if random.randrange(0, 37500) < (uncannyGhostChance / ((32 - data.dateArray[2]) / 9) + 1):
+                                    ghSpeaker = 5
+                                    while ghSpeaker == 5:
+                                        ghSpeaker = random.randrange(0, 10)
+                                    audioEvent = audio.event()
+                                    speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                                    audioEvent.register('hu_ghost_' + str(random.randrange(0, 2)) + ".mp3", ghSpeaker, (0.5 + random.random()) * 40, speed, 0, 0)
+                                    audioEvent.run()
+                    time.sleep(0.1)
+                    sections.uncannyGhostsChance = [(uncannyDeathGhostChance / ((32 - data.dateArray[2]) / 3) + 1), (uncannyDyingGhostChance / ((32 - data.dateArray[2]) / 5) + 1), (uncannyGhostChance / ((32 - data.dateArray[2]) / 9) + 1)]
+                except:
+                    pass
+            wait = True
+            for n in sections.uncannyGhostsChance:
                 if n > 1:
                     wait = False
             if wait:
@@ -385,13 +504,41 @@ class sections:
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
-                        audioEvent.register('draft_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, 20 * ((0.6 * random.random()) + 0.4), 1, 0, 0)
+                        speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                        audioEvent.register('draft_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (20 * ((0.6 * random.random()) + 0.4)) / ((ghSpeaker == 3) + 1), speed, 0, 0)
                         audioEvent.run()
                     sections.draftChance = draftChance
                     time.sleep(0.1)
                 except:
                     pass
             if sections.draftChance <= 0:
+                time.sleep(1)
+                
+    uncannyDraftChance = 0
+    
+    def runUncannyDrafts():
+        while not status.exit:
+            if globals.runUncanny:
+                try:
+                    uncannyDraftChance = 0
+                    if data.dateArray[3] < 24:
+                        uncannyDraftChance = (data.dateArray[3] - (int(data.sunJson['cesth']))) * data.dateArray[4] * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)
+                    if data.dateArray[3] < (int(data.sunJson['csth'])):
+                        uncannyDraftChance = ((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4] * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)
+
+                    if random.randrange(0, 25000) < uncannyDraftChance:
+                        ghSpeaker = 5
+                        while ghSpeaker == 5:
+                            ghSpeaker = random.randrange(0, 10)
+                        audioEvent = audio.event()
+                        speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                        audioEvent.register('hu_draft_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, (20 * ((0.6 * random.random()) + 0.4)) / ((ghSpeaker == 3) + 1), speed, 0, 0)
+                        audioEvent.run()
+                    sections.uncannyDraftChance = uncannyDraftChance
+                    time.sleep(0.1)
+                except:
+                    pass
+            if sections.uncannyDraftChance <= 0:
                 time.sleep(1)
         
     breathChance = 0
@@ -409,7 +556,8 @@ class sections:
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
-                        audioEvent.register('h_breath_' + str(random.randrange(0, 4)) + ".mp3", ghSpeaker, 40 * ((0.6 * random.random()) + 0.4), 1, 0, 0)
+                        speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                        audioEvent.register('h_breath_' + str(random.randrange(0, 4)) + ".mp3", ghSpeaker, 40 * ((0.6 * random.random()) + 0.4), speed, 0, 0)
                         audioEvent.run()
                     sections.breathChance = breathChance
                     time.sleep(0.1)
@@ -417,7 +565,32 @@ class sections:
                     pass
             if sections.draftChance <= 0:
                 time.sleep(1)
-
+                
+    uncannyBreathChance = 0
+    
+    def runUncannyBreaths():
+        while not status.exit:
+            if globals.runUncanny:
+                try:
+                    uncannyBreathChance = 0
+                    if data.dateArray[3] < (int(data.sunJson['csth'])):
+                        uncannyBreathChance = ((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4]
+                    uncannyBreathChance = (uncannyBreathChance / (32 - data.dateArray[2])) * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)
+                    if random.randrange(0, 25000) < uncannyBreathChance:
+                        ghSpeaker = 5
+                        while ghSpeaker == 5:
+                            ghSpeaker = random.randrange(0, 10)
+                        audioEvent = audio.event()
+                        speed = 0.96 + (random.random() / 12.5) + (0.983577 ** ( - 0.400303 * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray)) - 492.654)) - 0.0531709)
+                        audioEvent.register('hu_breath_' + str(random.randrange(0, 4)) + ".mp3", ghSpeaker, 40 * ((0.6 * random.random()) + 0.4), speed, 0, 0)
+                        audioEvent.run()
+                    sections.uncannyBreathChance = uncannyBreathChance
+                    time.sleep(0.1)
+                except:
+                    pass
+            if sections.draftChance <= 0:
+                time.sleep(1)
+                
     moodChance = [0, 0, 0, 0, 0, 0]
 
     def runMood():
@@ -425,7 +598,7 @@ class sections:
         while not status.exit:
             if globals.run:
                 try:
-                    if (os.path.isfile('deathmode.derp') == True) or (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0):
+                    if ((os.path.isfile('deathmode.derp') == True) and (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0)) or (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0):
                         if prevMin != data.dateArray[4]:
                             monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
                             monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
@@ -523,6 +696,116 @@ class sections:
                     wait = False
             if wait:
                 time.sleep(1)
+
+    uncannyMoodChance = [0, 0, 0, 0, 0, 0]
+
+    def runUncannyMood():
+        prevMin = -1
+        while not status.exit:
+            if globals.runUncanny:
+                try:
+                    if (os.path.isfile('deathmode.derp') and (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0)):
+                        if prevMin != data.dateArray[4]:
+                            monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
+                            monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
+                            monthC = pytools.clock.dateArrayToUTC(data.dateArray) - monthS
+                            
+                            hGeneralVol = (42 * (0.5 + (monthC / (monthE - monthS))))
+                            if hGeneralVol > 35:
+                                hGeneralVol = 35
+                            hGeneralVol = hGeneralVol * (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)
+                            hGeneralSpeedModifier = 0.08
+                            midnight = pytools.clock.dateArrayToUTC(pytools.clock.getMidnight(data.dateArray))
+                            sunset = pytools.clock.dateArrayToUTC(data.dayTimes[5])
+                            civil = pytools.clock.dateArrayToUTC(data.dayTimes[2])
+                            sunrise = pytools.clock.dateArrayToUTC(data.dayTimes[3])
+                            current = pytools.clock.dateArrayToUTC(data.dateArray)
+                            try:
+                                if current > sunset:
+                                    hGeneralSpeedModifier = 0.08 * (((midnight - sunset) - (midnight - current)) / (midnight - sunset))
+                                elif (midnight - current) > 82800:
+                                    hGeneralSpeedModifier = 0.08 * (1 - ((midnight - current - 83160) / 3600))
+                                elif current < civil:
+                                    hGeneralSpeedModifier = 0.1
+                                elif current < sunrise:
+                                    hGeneralSpeedModifier =  0.1 * (((sunrise - civil) / ((sunrise - civil + 1) - (sunrise - current))) - 1)
+                                else:
+                                    hGeneralSpeedModifier = 0
+                            except:
+                                pass
+                            if hGeneralSpeedModifier > 0.4:
+                                hGeneralSpeedModifier = 0.4
+                            elif hGeneralSpeedModifier < 0:
+                                hGeneralSpeedModifier = 0
+                            hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + ((((-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True)) / 100)) ** 0.1) - 1))
+                            
+                            if type(hGeneralSpeedModifier) == complex:
+                                hGeneralSpeedModifier = hGeneralSpeedModifier.real
+                            
+                            # if data.dateArray[1] != 11:
+                            print("Looping hu_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
+                            audio.playSoundAll('hu_general.mp3', hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
+                            # else:
+                                # audio.playSoundAll('hu_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                            prevMin = data.dateArray[4]
+                        
+                        uncannyMoodChance = [0, 0, 0, 0, 0, 0]
+                        
+                        uncannyMoodChance[0] = (data.dateArray[3] - (int(data.sunJson['cesth']))) * data.dateArray[4]
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[0] = ((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4]
+                        
+                        uncannyMoodChance[1] = ((data.dateArray[3] - (int(data.sunJson['ceth']))) * data.dateArray[4] / 3) / (32 - data.dateArray[2])
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[1] = (((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4] / 3) / (32 - data.dateArray[2])
+                        
+                        uncannyMoodChance[2] = ((data.dateArray[3] - (int(data.sunJson['neth']))) * data.dateArray[4] / 4) / (32 - data.dateArray[2])
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[2] = (((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4] / 4) / (32 - data.dateArray[2])
+                        
+                        uncannyMoodChance[3] = ((data.dateArray[3] - (int(data.sunJson['aeth']))) * data.dateArray[4] / 5) / (32 - data.dateArray[2])
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[3] = (((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4] / 5) / (32 - data.dateArray[2])
+                        
+                        uncannyMoodChance[4] = ((data.dateArray[3] - (int(data.sunJson['aeth']) + 1)) * data.dateArray[4]) / ((32 - data.dateArray[2]) / 2)
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[4] = (((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4]) / ((32 - data.dateArray[2]) / 2)
+                        
+                        uncannyMoodChance[5] = ((data.dateArray[3] - (int(data.sunJson['aeth']) + 2)) * data.dateArray[4]) / ((32 - data.dateArray[2]) / 4)
+                        if data.dateArray[3] < (int(data.sunJson['csth'])):
+                            uncannyMoodChance[5] = (((int(data.sunJson['csth'])) - data.dateArray[3]) * data.dateArray[4]) / ((32 - data.dateArray[2]) / 4)
+                            
+                        uncannyMoodChanceModif = (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 150)
+                        if uncannyMoodChanceModif > 0.95:
+                            uncannyMoodChanceModif = 0.95
+                        
+                        i = 0
+                        while i < len(uncannyMoodChance):
+                            uncannyMoodChance[i] = uncannyMoodChance[i] * uncannyMoodChanceModif
+                            i = i + 1
+                        
+                        if random.randrange(0, 25000) < uncannyMoodChance[0]:
+                            audio.playSoundAll('hu_general_mood.mp3', hGeneralVol, 1, 0, 0)
+                        if random.randrange(0, 25000) < uncannyMoodChance[1]:
+                            audio.playSoundAll('hu_general_dark.mp3', hGeneralVol, 1, 0, 0)
+                        if random.randrange(0, 25000) < uncannyMoodChance[2]:
+                            audio.playSoundAll('hu_general_evil.mp3', hGeneralVol, 1, 0, 0)
+                        if random.randrange(0, 25000) < uncannyMoodChance[3]:
+                            audio.playSoundAll('hu_general_sinister.mp3', hGeneralVol, 1, 0, 0)
+                        if random.randrange(0, 25000) < uncannyMoodChance[4]:
+                            audio.playSoundAll('hu_general_dying.mp3', hGeneralVol, 1, 0, 0)
+                        if random.randrange(0, 25000) < uncannyMoodChance[5]:
+                            audio.playSoundAll('hu_general_death.mp3', hGeneralVol * (1 + (random.random() / 5)), 1, 0, 0)
+                    sections.uncannyMoodChance = uncannyMoodChance
+                except:
+                    pass
+                time.sleep(0.1)
+            wait = True
+            for n in sections.uncannyMoodChance:
+                if n > 0:
+                    wait = False
+            if wait:
+                time.sleep(1)
         
         
     knockChance = 0
@@ -540,7 +823,8 @@ class sections:
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
-                        audioEvent.register('h_knock_' + str(random.randrange(0, 6)) + ".mp3", ghSpeaker, 60 * ((0.3 * random.random()) + 0.7), 1, 0, 0)
+                        speed = 0.96 + (random.random() / 12.5)
+                        audioEvent.register('h_knock_' + str(random.randrange(0, 6)) + ".mp3", ghSpeaker, 60 * ((0.3 * random.random()) + 0.7), speed, 0, 0)
                         audioEvent.run()
                     sections.knockChance = knockChance
                 except:
@@ -564,7 +848,8 @@ class sections:
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         audioEvent = audio.event()
-                        audioEvent.register('h_chains_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, 40 * ((0.2 * random.random()) + 0.8), 1, 0, 0)
+                        speed = 0.96 + (random.random() / 12.5)
+                        audioEvent.register('h_chains_' + str(random.randrange(0, 3)) + ".mp3", ghSpeaker, 40 * ((0.2 * random.random()) + 0.8), speed, 0, 0)
                         audioEvent.run()
                     sections.chainChance = chainChance
                 except:
@@ -585,26 +870,42 @@ def main():
     
     calcGrabber = threading.Thread(target=data.grabSunData)
     ghostsRunner = threading.Thread(target=sections.testGhosts)
+    uncannyGhostsRunner = threading.Thread(target=sections.testGhostsUncanny)
     closeToMidTester = threading.Thread(target=sections.closeMidTestRun)
     draftsRunner = threading.Thread(target=sections.runDrafts)
+    uncannyDraftsRunner = threading.Thread(target=sections.runUncannyDrafts)
     breathsRunner = threading.Thread(target=sections.runBreaths)
+    uncannyBreathsRunner = threading.Thread(target=sections.runUncannyBreaths)
     moodRunner = threading.Thread(target=sections.runMood)
+    uncannyMoodRunner = threading.Thread(target=sections.runUncannyMood)
     knocksRunner = threading.Thread(target=sections.runKnocks)
     chainsRunner = threading.Thread(target=sections.runChains)
     
     calcGrabber.start()
     ghostsRunner.start()
+    uncannyGhostsRunner.start()
     closeToMidTester.start()
     draftsRunner.start()
+    uncannyDraftsRunner.start()
     breathsRunner.start()
+    uncannyBreathsRunner.start()
     moodRunner.start()
+    uncannyMoodRunner.start()
     knocksRunner.start()
     chainsRunner.start()
 
     while not status.exit:
         data.dateArray = pytools.clock.getDateTime()
         
-        globals.run = (data.dateArray[1] == 10) or ((data.dateArray[1] == 11) and (data.dateArray[2] == 1) and (data.dateArray[3] < data.sunJson["csth"])) or ((data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100) > 0)
+        globals.run = (data.dateArray[1] == 10) or ((data.dateArray[1] == 11) and (data.dateArray[2] == 1) and (data.dateArray[3] < data.sunJson["csth"])) or ((data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100) > 0) or ((data.dateArray[1] == 9) and (data.dateArray[2] == 30) and (data.dateArray[3] > 11))
+        
+        if globals.run and (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) < 0):
+            globals.run = False
+            globals.runUncanny = True
+        else:
+            globals.runUncanny = False
+            
+        print(globals.run)
         
         if globals.run:
             
@@ -652,19 +953,70 @@ def main():
                     noG = 0
             else:
                 noG = 0
+        
+        if globals.runUncanny:     
+            if data.dateArray[2] > 19:
+                if data.dateArray[4] == 35:
+                    if noE != 1:
+                        if random.random() < (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
+                            if random.randrange(data.dateArray[3], 24) == 23:
+                                rumbleNum = random.randrange(0, 2)
+                                audio.playSoundAll('hu_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
+                            noE = 1
+                else:
+                    noE = 0
+            else:
+                noE = 0
             
+            if data.dateArray[2] > 24:
+                if data.dateArray[4] == 20:
+                    if noF != 1:
+                        if random.random() < (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
+                            if random.randrange(data.dateArray[3], 24) == 23:
+                                rumbleNum = random.randrange(0, 2)
+                                audio.playSoundAll('hu_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
+                        noF = 1
+                elif data.dateArray[4] == 40:
+                    if noF != 1:
+                        if random.randrange(data.dateArray[3], 24) == 23:
+                            rumbleNum = random.randrange(0, 2)
+                            audio.playSoundAll('hu_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
+                        noF = 1
+                else:
+                    noF = 0
+            else:
+                noF = 0
+            
+            if data.dateArray[3] == int(data.sunJson['cesth']):
+                if data.dateArray[4] == int(data.sunJson['cestm']):
+                    if noG != 1:
+                        if (random.randint(data.dateArray[2], 31) == 31) or ((random.random() * 180) < -data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True)):
+                            audio.playSoundWindow('hu_sunset.mp3;hu_sunset.mp3', [40, 80], 1, 0, 0)
+                        noG = 1
+                else:
+                    noG = 0
+            else:
+                noG = 0
+        
+        if globals.run or globals.runUncanny:  
             if sections.breathChance < 0:
                 sections.breathChance = 0
             horrorIndex = sections.ghostsChance[0] + sections.ghostsChance[1] + sections.ghostsChance[2] + sections.draftChance + sections.breathChance + sections.moodChance[0] + sections.moodChance[1] + sections.moodChance[2] + sections.moodChance[3] + sections.moodChance[4] + sections.moodChance[5] + sections.knockChance + sections.chainChance
-            
+                
             time.sleep(1)
             
             status.vars["horrorStats"]["sections.ghostsChance-0"] = sections.ghostsChance[0]
             status.vars["horrorStats"]["sections.ghostsChance-1"] = sections.ghostsChance[1]
             status.vars["horrorStats"]["sections.ghostsChance-2"] = sections.ghostsChance[2]
+            status.vars["horrorStats"]["sections.uncannyGhostsChance-0"] = sections.uncannyGhostsChance[0]
+            status.vars["horrorStats"]["sections.uncannyGhostsChance-1"] = sections.uncannyGhostsChance[1]
+            status.vars["horrorStats"]["sections.uncannyGhostsChance-2"] = sections.uncannyGhostsChance[2]
             status.vars["horrorStats"]["sections.draftChance"] = sections.draftChance
+            status.vars["horrorStats"]["sections.uncannyDraftChance"] = sections.uncannyDraftChance
             status.vars["horrorStats"]["sections.breathChance"] = sections.breathChance
+            status.vars["horrorStats"]["sections.uncannyBreathChance"] = sections.uncannyBreathChance
             status.vars["horrorStats"]["sections.moodChance"] = sections.moodChance
+            status.vars["horrorStats"]["sections.uncannyMoodChance"] = sections.uncannyMoodChance
             status.vars["horrorStats"]["sections.knockChance"] = sections.knockChance
             status.vars["horrorStats"]["sections.chainChance"] = sections.chainChance
             

@@ -75,7 +75,7 @@ def main():
         if utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) > 0:
             if os.path.isfile("halloweenmode.derp") == False:
                 pytools.IO.saveFile('halloweenmode.derp', "1")
-        if (dateArray[1] == 10) or ((dateArray[1] == 11) and (dateArray[2] == 1) and (dateArray[3] < 12)):
+        if ((dateArray[1] == 10) or ((dateArray[1] == 11) and (dateArray[2] == 1) and (dateArray[3] < 12))) or ((dateArray[1] == 9) and (dateArray[2] == 30) and (dateArray[3] > 11)):
             halloweenMode = True
             if os.path.isfile("deathmode.derp") == False:
                 pytools.IO.saveFile('deathmode.derp', "1")
@@ -126,6 +126,31 @@ def main():
                     if dateArray[3] == 3:
                         if dateArray[4] == 11:
                             audio.playSoundWindow("comelittlechildren.mp3;comelittlechildren.mp3", [50, 100], 1.0, 0.0, 0)               
+        elif halloweenMode and (utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) < 0):
+            if os.path.exists(".\\doDarkRumble.derp"):
+                audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                os.system("del .\\doDarkRumble.derp /f /q")
+                time.sleep(60)
+            if dateArray[3] == dayTimes[5][3]:
+                if dateArray[4] == dayTimes[5][4]:
+                    audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                    time.sleep(60)
+            if dateArray[3] == cestj:
+                if dateArray[4] == dayTimes[5][4]:
+                    audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                    time.sleep(60)
+            if dateArray[3] == dayTimes[6][3]:
+                if dateArray[4] == dayTimes[6][4]:
+                    audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                    time.sleep(60)
+            if dateArray[3] == dayTimes[7][3]:
+                if dateArray[4] == dayTimes[7][4]:
+                    audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                    time.sleep(60)
+            if dateArray[3] == dayTimes[8][3]:
+                if dateArray[4] == dayTimes[8][4]:
+                    audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
+                    time.sleep(60)
         else:
             time.sleep(55)
         if halloweenMode == False:

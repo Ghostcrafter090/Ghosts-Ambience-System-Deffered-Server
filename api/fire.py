@@ -15,7 +15,11 @@ class status:
     hasExited = False
     finishedLoop = False
     vars = {
-        "lastLoop": []
+        "lastLoop": [],
+        "fireplace": {
+            "isLit": False,
+            "fireplaceStage": "out"
+        }
     }
 
 class globals:
@@ -39,12 +43,13 @@ class sounds:
     def playMatch():
         print("Lighting fireplace...")
         globals.fireplaceStage = "match"
+        status.vars["fireplace"]["fireplaceStage"] = "match"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
             pass
         audioEvent = audio.event()
-        audioEvent.register('match_light.mp3', 5, 50, 1, 0, 0)
+        audioEvent.register('match_light.mp3', 5, 50, 1, -100, 0)
         audioEvent.register('match.mp3', 1, 35, 1, 0, 1)
         audioEvent.run()
 
@@ -55,6 +60,7 @@ class sounds:
         audioEvent.register('fire.mp3', 5, 100, 1, -100, 0)   
         audioEvent.run()
         globals.fireplaceStage = "fire"
+        status.vars["fireplace"]["fireplaceStage"] = "fire"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -67,6 +73,7 @@ class sounds:
         audioEvent.register('fire_start.mp3', 5, 100, 1, -100, 0)
         audioEvent.run()
         globals.fireplaceStage = "fireStart"
+        status.vars["fireplace"]["fireplaceStage"] = "fireStart"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -79,6 +86,7 @@ class sounds:
         audioEvent.register('fire_end.mp3', 5, 100, 1, -100, 0)
         audioEvent.run()
         globals.fireplaceStage = "fireEnd"
+        status.vars["fireplace"]["fireplaceStage"] = "fireEnd"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -91,6 +99,7 @@ class sounds:
         audioEvent.register('fire_ilog.mp3', 5, 100, 1, -100, 0)
         audioEvent.run()
         globals.fireplaceStage = "fireIlog"
+        status.vars["fireplace"]["fireplaceStage"] = "fireIlog"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -120,6 +129,7 @@ class sounds:
     
     def prepFireplace():
         globals.fireplaceStage = "firePrep"
+        status.vars["fireplace"]["fireplaceStage"] = "firePrep"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -130,6 +140,7 @@ class sounds:
 
     def loadFireplace():
         globals.fireplaceStage = "fireLoad"
+        status.vars["fireplace"]["fireplaceStage"] = "fireLoad"
         try:
             pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
         except:
@@ -183,6 +194,7 @@ class handlers:
                             sounds.enterRoom()
                             sounds.prepFireplace()
                             globals.fireplaceStage = "out"
+                            status.vars["fireplace"]["fireplaceStage"] = "out"
                             try:
                                 pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
                             except:
@@ -200,6 +212,7 @@ class handlers:
                         if globals.hasGoneOut:
                             sounds.loadFireplace()
                             globals.fireplaceStage = "out"
+                            status.vars["fireplace"]["fireplaceStage"] = "out"
                             try:
                                 pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
                             except:
@@ -207,13 +220,14 @@ class handlers:
                         sounds.playMatch()
                         sounds.exitRoom(False)
                         globals.fireLit = 1
+                        status.vars["fireplace"]["isLit"] = True
                 elif justPreped:
                     sounds.exitRoom()
                     justPreped = False
             if globals.fireLit == True:
                 if justLit:
                     sounds.playFireStart()
-                    time.sleep(194)
+                    time.sleep(300)
                 tic = 0
                 while tic < 5:
                     sounds.playFire()
@@ -227,12 +241,14 @@ class handlers:
                     sounds.playFireEnd()
                     time.sleep(505)
                     globals.fireplaceStage = "out"
+                    status.vars["fireplace"]["fireplaceStage"] = "out"
                     try:
                         pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
                     except:
                         pass
                     globals.hasGoneOut = True
                     globals.fireLit = False
+                    status.vars["fireplace"]["isLit"] = False
             else:
                 time.sleep(10)
             if (globals.fireLit == False) and (globals.dataArray[0][7] > 12):
@@ -244,6 +260,9 @@ class handlers:
                 pass
 
 def main():
+    
+    globals.dataArray = utils.dataGrabber()
+    
     numberOfLogs = pytools.IO.getJson("fireplace.json")
     try:
         globals.woodCount = numberOfLogs["count"]
@@ -251,8 +270,6 @@ def main():
         pytools.IO.saveJson("fireplace.json", {"count": 0})
         globals.woodCount = 0
     globals.logs = globals.woodCount % 10
-    
-    globals.dataArray = utils.dataGrabber()
     
     logManager = threading.Thread(target=handlers.logManager)
     fireTender = threading.Thread(target=handlers.fireTender)

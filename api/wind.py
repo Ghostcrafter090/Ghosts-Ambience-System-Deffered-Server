@@ -74,7 +74,7 @@ class sounds:
             if status.vars["nextPlays"]["lightChimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 status.vars["nextPlays"]["lightChimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
                 audioEvent = audio.event()
-                audioEvent.register("light_chimney_wind.wav", 1, volume, speed, 0.0, 0)    
+                audioEvent.register("light_chimney_wind.mp3", 1, volume, speed, 0.0, 0)    
                 audioEvent.run()
         
     def lightWind(xGust, xSpeed):
@@ -343,7 +343,7 @@ class sounds:
             if status.vars["nextPlays"]["chimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 status.vars["nextPlays"]["chimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
                 audioEvent = audio.event()
-                audioEvent.register("chimney_wind.wav", 1, volume, speed, 0.0, 0)
+                audioEvent.register("chimney_wind.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.run()
 
     def hurricaneWind(xGust, xSpeed):

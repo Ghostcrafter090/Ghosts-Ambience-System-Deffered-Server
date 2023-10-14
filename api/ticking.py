@@ -25,11 +25,11 @@ def main():
         dateArray = pytools.clock.getDateTime()
         if dateArray[4] == diaa:
             audioEvent = audio.event() 
-            audioEvent.register("ticking.mp3", 0, 100, 1.0, 0.0, 0, clock=False)
+            audioEvent.register("ticking.mp3", 0, 50, 1.0, 0.0, 0, clock=False)
             audioEvent.run()
         if dateArray[4] == diab:
             audioEvent = audio.event() 
-            audioEvent.register("ticking.mp3", 0, 100, 1.0, 0.0, 0, clock=False)
+            audioEvent.register("ticking.mp3", 0, 50, 1.0, 0.0, 0, clock=False)
             audioEvent.run()
         time.sleep(60)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

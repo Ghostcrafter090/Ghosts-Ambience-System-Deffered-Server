@@ -13,6 +13,8 @@ import traceback
 import threading
 import subprocess
 
+import random
+
 try:
     from wakeonlan import send_magic_packet as wakeComputer
 except:
@@ -139,7 +141,7 @@ class client:
                         if not os.path.exists(".\\working\\host-" + host + ".bm"):
                             if pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
                                 "command": "ping"
-                            })), timeout=2)["status"] == "success":
+                            })), timeout=16)["status"] == "success":
                                 print("Host " + host + " still active.")
                             else:
                                 try:
@@ -159,7 +161,7 @@ class client:
                         errorCounts[host] = 0
                     except:
                         errorCounts[host] = errorCounts[host] + 1
-                        if errorCounts[host] > 2:
+                        if errorCounts[host] > 5:
                             if not os.path.exists(".\\working\\host-" + host + ".bm"):
                                 try:
                                     print("Host went offline. Removing host " + host + "...")
@@ -222,14 +224,69 @@ class puppet:
                 "hosts": []
             }
         if data["ipAddress"] not in hosts["hosts"]:
+            hosts["hosts"].reverse()
             hosts["hosts"].append(data["ipAddress"])
+            hosts["hosts"].reverse()
             pytools.IO.saveJson(".\\hosts.json", hosts)
             pytools.IO.saveJson(".\\working\\hosts.json", hosts)
-            client(data["ipAddress"]).thread.start()
+            # client(data["ipAddress"]).thread.start()
     
     def getOthers():
         return pytools.IO.getJson('.\\hosts.json')["hosts"]
     
+    def getPluginInfo(name):
+        if os.path.exists(".\\vars\\pluginVarsJson\\" + name + "_keys.json"):
+            return pytools.IO.getJson(".\\vars\\pluginVarsJson\\" + name + "_keys.json")
+        else:
+            return {"found": False}
+        
+    def getMultiFile(listf):
+        out = {}
+        for item in listf:
+            out[item] = pytools.IO.getFile(item)
+        return out
+    
+    def getMultiJson(listf):
+        out = {}
+        for item in listf:
+            out[item] = pytools.IO.getJson(item)
+        return out
+    
+    def transferEvent(eventBytes, fileData):
+        hosts = puppet.getOthers()
+        hostData = pytools.IO.getJson(".\\working\\hostData.json")
+        random.shuffle(hosts)
+        if "0.0.0.0" in hosts:
+            hosts.remove("0.0.0.0")
+        sent = False
+        for host in hosts:
+            if host in hostData:
+                current = hostData[host]["current"]
+                maxf = hostData[host]["max"]
+                if current < maxf:
+                    if not fileData:
+                        try:
+                            pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                "command": "fireEvent",
+                                "data": eventBytes
+                            })))
+                            sent = True
+                            break
+                        except:
+                            print(traceback.format_exc())
+                    else:
+                        try:
+                            pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                "command": "fireEvent",
+                                "data": eventBytes,
+                                "fileData": fileData
+                            })))
+                            sent = True
+                            break
+                        except:
+                            print(traceback.format_exc())
+        return sent
+            
     def getLoad():
         hostData = pytools.IO.getJson('.\\working\\hostData.json')
         hostList = pytools.IO.getJson('.\\hosts.json')["hosts"]
@@ -242,6 +299,54 @@ class puppet:
             if current == 0:
                 return [10, 0]
         return [max, current]
+    
+class comMulti:
+    def __init__(self, port):
+        # Python 3 server example
+        self.serverPort = port
+    
+    hostName = "0.0.0.0"
+    serverPort = 5597
+    
+    webServer = False
+    
+    # Structure
+    # ---------
+    # {
+    #     "command": "<command>"
+    #     "data": {}
+    # }
+
+    def start(self):
+        self.webServer = HTTPServer((self.hostName, self.serverPort), com.MyServer)
+        print("Server started http://%s:%s" % (self.hostName, self.serverPort))
+
+        try:
+            self.webServer.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+        self.webServer.server_close()
+        print("Server stopped.")
+        
+    def run(self):
+        while True:
+            threadf = threading.Thread(target=self.start)
+            threadf.start()
+            time.sleep(1)
+            try:
+                while pytools.net.getJsonAPI("http://localhost:" + str(self.serverPort) + "?json=" + urllib.parse.quote(json.dumps({
+                    "command": "ping"
+                })), timeout=1)["status"] == "success":
+                    time.sleep(15)
+                threadf = threading.Thread(target=self.start)
+                threadf.start()
+                time.sleep(1)
+            except:
+                threadf = threading.Thread(target=self.start)
+                threadf.start()
+                time.sleep(1)
+   
 
 class com:
     # Python 3 server example
@@ -286,9 +391,38 @@ class com:
                     self.wfile.write(bytes(json.dumps({
                         "status": "success"
                     }), "utf-8"))
+                if request["command"] == "getFile":
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success",
+                        "data": pytools.IO.getFile(request["data"]["path"])
+                    }), "utf-8"))
+                if request["command"] == "getMultiFile":
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success",
+                        "data": puppet.getMultiFile(request["data"]["list"])
+                    }), "utf-8"))
+                if request["command"] == "getMultiJson":
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success",
+                        "data": puppet.getMultiJson(request["data"]["list"])
+                    }), "utf-8"))
+                
+                if request["command"] == "getJson":
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success",
+                        "data": pytools.IO.getJson(request["data"]["path"])
+                    }), "utf-8"))
                 if request["command"] == "getLoad":
                     self.wfile.write(bytes(json.dumps({
                         "data": puppet.getLoad()
+                    }), "utf-8"))
+                if request["command"] == "getPluginInfo":
+                    self.wfile.write(bytes(json.dumps({
+                        "data": puppet.getPluginInfo(request["data"]["pluginName"])
+                    }), "utf-8"))
+                if request["command"] == "transferEvent":
+                    self.wfile.write(bytes(json.dumps({
+                        "status": puppet.transferEvent(request["data"], request["fileData"])
                     }), "utf-8"))
                 if request["command"] == "getData":
                     dataToSend = {
@@ -403,7 +537,19 @@ class com:
                 threadf = threading.Thread(target=com.start)
                 threadf.start()
                 time.sleep(1)
-
+    
+    multiThreaders = []
+        
+    def runMultithreader(portRange=[6000, 6030]):
+        i = portRange[0]
+        while i < portRange[1]:
+            com.multiThreaders.append([comMulti(i), False])
+            com.multiThreaders[-1][1] = threading.Thread(target=com.multiThreaders[-1][0].run)
+            i = i + 1
+            
+        for thread in com.multiThreaders:
+            thread[1].start()
+            
 class hosts:
     hostList = []
 
@@ -442,5 +588,6 @@ try:
         if n == "--run":
             threading.Thread(target=main).start()
             threading.Thread(target=com.run).start()
+            threading.Thread(target=com.runMultithreader).start()
 except:
     pass

@@ -12,7 +12,8 @@ class status:
     hasExited = False
     finishedLoop = False
     vars = {
-        "lastLoop": []
+        "lastLoop": [],
+        "alertLevel": 3
     }
 
 class utils:
@@ -24,7 +25,7 @@ class utils:
 
 def main():
     count = 0
-    alertLevel = 2.5
+    alertLevel = 3
     while not status.exit:
         dataList = utils.dataGrabber()
         dateArray = pytools.clock.getDateTime()
@@ -32,15 +33,19 @@ def main():
             lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
         except:
             lightningDanger = 0
-        if lightningDanger > 3.5:
+        if (lightningDanger > 3) and (lightningDanger > alertLevel):
             alertLevel = alertLevel + 1
         else:
             alertLevel = alertLevel - 1
+            if lightningDanger > alertLevel:
+                alertLevel = alertLevel + 1
             
         if alertLevel > 6:
             alertLevel = 6
         if alertLevel < 3.5:
             alertLevel = 3.5
+            
+        status.vars["alertLevel"] = alertLevel
         
         if (dataList[1][5] > 4) or (lightningDanger > alertLevel):
             count = count + 1

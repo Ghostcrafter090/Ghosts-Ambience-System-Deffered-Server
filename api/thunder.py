@@ -22,7 +22,9 @@ class status:
             "active": {
                 
             },
-            "stormChance": 0
+            "stormChance": 0,
+            "stormSpawnMinute": 1,
+            "canSpawnMoreStorms": True
         }
     }
 
@@ -85,8 +87,8 @@ class utils:
 
 class storm:
     def __init__(self, cape):
-        self.x = 100 - (random.random() * 200)
-        self.y = 100 - (random.random() * 200)
+        self.x = 50 - (random.random() * 100)
+        self.y = 50 - (random.random() * 100)
         self.vx = 0
         self.vy = 0
         self.stage = 0
@@ -141,15 +143,18 @@ class storm:
         if distance == False:
             distance = (((math.fabs(x) ** 2) + (math.fabs(y) ** 2)) ** 0.5) - (self.radius - ((self.radius * 2) * random.random()))
             
-        if distance < 0.0001:
-            distance = 0.0001
+        if distance < 0.1:
+            distance = 0.1
         
-        a = 2.1064 * (10 ** 17)
-        b = 39.8951
-        c = 29.4434
-        d = -8.36855
+        # a = 2.1064 * (10 ** 17)
+        # b = 39.8951
+        # c = 29.4434
+        # d = -8.36855
 
-        return a ** ( - 0.0001 * b * (distance - c)) + d
+        # return a ** ( - 0.0001 * b * (distance - c)) + d
+        
+        # https://www.desmos.com/calculator/zqlrjk377n
+        return 10525451083000 ** ( - 0.00399851 * (distance - 43.3264)) + 0.999944
     
     def setVelocity(self):
         pi = 3.14159265359
@@ -262,12 +267,15 @@ class storms:
 
 def main():
     dataTic = -1
-    spawnTic = -1
+    spawnTic = pytools.clock.getDateTime()[4] - 1
+    spawnRandom = pytools.clock.getDateTime()[4]
+    if spawnRandom >= 60:
+        spawnRandom = spawnRandom - 60
     globals.dataArray = utils.dataGrabber()
     if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
-        globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
+        globals.dataArray[0][10] = globals.dataArray[0][10] + (hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
     else:
-        globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
+        globals.dataArray[0][10] = globals.dataArray[0][10] + (hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
     storms.grab()
     if storms.stormList == []:
         storms.start()
@@ -277,35 +285,57 @@ def main():
             globals.dataArray = utils.dataGrabber()
             try:
                 if utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 0:
-                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
-                else:
-                    globals.dataArray[0][10] = globals.dataArray[0][10] + (utils.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
+                    globals.dataArray[0][10] = globals.dataArray[0][10] + (((hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) ** 0.16) - 1) * 2200)
             except:
                 print(traceback.format_exc())
                 
         try:
             lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
-            if lightningDanger < 0:
-                lightningDanger = 0
+            if lightningDanger < -8.7:
+                lightningDanger = -8.7
         except:
-            lightningDanger = 0
-                
+            lightningDanger = -8.7
+        
+        def powDecimal(n, d):
+            if n < 0:
+                return -(abs(n) ** d)
+            else:
+                return abs(n) ** d
+        
         # https://www.desmos.com/calculator/hlkgdy60ii
-        stormChance = (5.69235 ** (0.00398561 * (globals.dataArray[0][10] + (420 * lightningDanger)) - 1.59424)) ** 0.66
+        # https://www.desmos.com/calculator/fu1lww6yqy
+        
+        stormChance = (5.69235 ** (0.00398561 * (globals.dataArray[0][10] + (420 * (1.41604 * (powDecimal((lightningDanger + 3), 1/3)) + 2.53986))) - 1.59424)) ** 0.66
         if globals.dataArray[0][4] == "thunder":
             stormChance = stormChance + 100
         status.vars["storms"]["stormChance"] = stormChance
-        if (spawnTic != pytools.clock.getDateTime()[4]) and ((pytools.clock.getDateTime()[4] % 7) == 0):
+        status.vars["storms"]["stormCount"] = len(status.vars["storms"]["active"])
+        status.vars['storms']["stormSpawnMinute"] = spawnRandom
+        if (spawnTic != pytools.clock.getDateTime()[4]) and (pytools.clock.getDateTime()[4] == spawnRandom):
             spawnTic = pytools.clock.getDateTime()[4]
+            spawnRandom = random.randint(1, 9) + pytools.clock.getDateTime()[4]
+            if spawnRandom > 59:
+                spawnRandom = spawnRandom - 60
             if (random.random() * 100) < stormChance:
-                storms.start()
+                if len(status.vars["storms"]["active"]) < 3:
+                    status.vars["storms"]["canSpawnMoreStorms"] = True
+                    storms.start()
+                else:
+                    status.vars["storms"]["canSpawnMoreStorms"] = False
         time.sleep(1)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         nStart = storms.popList
         changed = False
         for n in nStart:
-            storms.stormList.remove(n)
-            storms.popList.remove(n)
+            try:
+                storms.stormList.remove(n)
+            except:
+                pass
+            try:
+                storms.popList.remove(n)
+            except:
+                pass
+            
             changed = True
         if changed:
             pytools.IO.saveList(".\\thunderStorms.pyl", storms.stormList)

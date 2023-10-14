@@ -243,9 +243,13 @@ class grabber:
         try:
             hail = data["data"]["main"]["precipitation"]["type"]["hail"]
         except:
-            hail = 0.0
+            hail = 0.0     
+        try:
+            lightLevel = data["data"]["main"]["sensorReadings"]["laserOffAmbientReading"]
+        except:
+            lightLevel = 0
         precipDataOld = data
-        return [snow, rain, hail]
+        return [snow, rain, hail, lightLevel]
     
     class lightning:
         
@@ -424,20 +428,24 @@ class bulk:
                 if baseData[7] <= w:
                     baseData[4] = "snow"
                 else:
-                    if (precipData[0] + precipData[1] + precipData[2]) > 0.09:
+                    if (precipData[0] + precipData[1] + precipData[2]) > 0.06:
                         baseData[4] = "rain"
-                    elif (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+                    elif (precipData[0] + precipData[1] + precipData[2]) > 0.03:
                         baseData[4] = "lightrain"
                     elif (precipData[0] + precipData[1] + precipData[2]) > 0:
                         baseData[4] = "mist"
-            elif (precipData[0] + precipData[1] + precipData[2]) > 0.09:
-                baseData[4] = "rain"
             elif (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+                baseData[4] = "rain"
+            elif (precipData[0] + precipData[1] + precipData[2]) > 0.03:
                 baseData[4] = "lightrain"
             elif (precipData[0] + precipData[1] + precipData[2]) > 0:
                 baseData[4] = "mist"
             if precipData[2] > 0.25:
                 baseData[4] = "rain"
+            if precipData[3] > 700:
+                baseData[4] = "clear"
+            elif precipData[3] > 600:
+                baseData[4] = "clouds"
         except:
             pass
 

@@ -270,11 +270,11 @@ class background:
             if globals.monsters.state == 0:
                 globals.monsters.state = 1
                 globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                audio.playSoundWindow("monsters_fi.mp3;monsters_fi.mp3", [20, 50, 35], 1.0, 0.0, 0)
+                audio.playSoundWindow("monsters_fi.mp3;monsters_fi.mp3", [20, 35, 28], 1.0, 0.0, 0)
             if globals.monsters.state == 1:
                 if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    audio.playSoundWindow("monsters.mp3;monsters.mp3", [20, 50, 35], 1.0, 0.0, 0)
+                    audio.playSoundWindow("monsters.mp3;monsters.mp3", [20, 35, 28], 1.0, 0.0, 0)
         status.vars["monsters"]["nextPlay"] = globals.monsters.nextPlay
         status.vars["monsters"]["state"] = globals.monsters.state
     
@@ -303,11 +303,11 @@ class background:
             if globals.ghosts.state == 0:
                 globals.ghosts.state = 1
                 globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                audio.playSoundWindow("ghosts_fi.mp3;ghosts_fi.mp3", [20, 50, 35], 1.0, 0.0, 0)
+                audio.playSoundWindow("ghosts_fi.mp3;ghosts_fi.mp3", [20, 40, 35], 1.0, 0.0, 0)
             if globals.ghosts.state == 1:
                 if globals.ghosts.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    audio.playSoundWindow("ghosts.mp3;ghosts.mp3", [20, 50, 35], 1.0, 0.0, 0)
+                    audio.playSoundWindow("ghosts.mp3;ghosts.mp3", [20, 40, 35], 1.0, 0.0, 0)
         status.vars["ghosts"]["nextPlay"] = globals.ghosts.nextPlay
         status.vars["ghosts"]["state"] = globals.ghosts.state
     
@@ -321,7 +321,7 @@ class background:
             if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.monsters.state == 1:
                     globals.monsters.state = 0
-                    audio.playSoundWindow("monsters_fo.mp3;monsters_fo.mp3", [20, 50, 35], 1.0, 0.0, 0)
+                    audio.playSoundWindow("monsters_fo.mp3;monsters_fo.mp3", [20, 35, 28], 1.0, 0.0, 0)
         if globals.deathWind.run == 0:
             if globals.deathWind.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.deathWind.state == 1:
@@ -391,6 +391,11 @@ def main():
             if (utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) > 145):
                 background.ghosts(dateArray, dayTimes)
                 dateArray = pytools.clock.getDateTime()
+        
+        elif ((dateArray[1] == 9) and (dateArray[2] == 30) and (dateArray[3] > 11)):
+            background.whispers.run(dateArray, dayTimes)
+            wait = 1
+            dateArray = pytools.clock.getDateTime()
             
         background.end()
         time.sleep(wait)

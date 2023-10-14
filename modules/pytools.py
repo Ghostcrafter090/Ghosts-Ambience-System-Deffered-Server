@@ -35,6 +35,14 @@ import time
 import gtts
 import base64
 
+from ctypes.wintypes import *
+
+import encodings
+import ctypes
+from collections.abc import ByteString
+from typing import Tuple, Optional
+import locale
+
 class globals:
     class sound:
         soundArray = [[], 0]
@@ -63,6 +71,7 @@ class system:
 
 class IO:
     def getJson(path, doPrint=True):
+        import traceback
         error = 0
         try:
             file = open(path, "r")
@@ -70,7 +79,9 @@ class IO:
             file.close()
         except:
             if doPrint:
+                print(traceback.format_exc())
                 print("Unexpected error:", sys.exc_info())
+                print(path)
             error = 1
         if error != 0:
             jsonData = error
@@ -128,14 +139,72 @@ class IO:
             pass
  
         COORD._fields_ = [("X", c_short), ("Y", c_short)]
+        
+        class textUtils:
+            def getTextFromRawBytes(buf: bytes, numChars: int, encoding: Optional[str] = None, errorsFallback: str = "replace"):
+                """
+                Gets a string from a raw bytes object, decoded using the specified L{encoding}.
+                In most cases, the bytes object is fetched by passing the raw attribute of a ctypes.c_char-Array to this function.
+                If L{encoding} is C{None}, the bytes object is inspected on whether it contains single byte or multi byte characters.
+                As a first attempt, the bytes are encoded using the surrogatepass error handler.
+                This handler behaves like strict for all encodings without surrogates,
+                while making sure that surrogates are properly decoded when using UTF-16.
+                If that fails, the exception is logged and the bytes are decoded
+                according to the L{errorsFallback} error handler.
+                """
+                if encoding is None:
+                    # If the buffer we got contains any non null characters from numChars to the buffer's end,
+                    # the buffer most likely contains multibyte characters.
+                    # Note that in theory, it could also be a multibyte character string
+                    # with nulls taking up the second half of the string.
+                    # Unfortunately, there isn't a good way to detect those cases.
+                    if numChars > 1 and any(buf[numChars:]):
+                        encoding = "utf_16_le"
+                    else:
+                        encoding = locale.getpreferredencoding()
+                else:
+                    encoding = encodings.normalize_encoding(encoding).lower()
+                if encoding.startswith("utf_16"):
+                    numBytes = numChars * 2
+                elif encoding.startswith("utf_32"):
+                    numBytes = numChars * 4
+                else: # All other encodings are single byte.
+                    numBytes = numChars
+                rawText: bytes = buf[:numBytes]
+                if not any(rawText):
+                    # rawText is empty or only contains null characters.
+                    # If this is a range with only null characters in it, there's not much we can do about this.
+                    return ""
+                try:
+                    text = rawText.decode(encoding, errors="surrogatepass")
+                except UnicodeDecodeError:
+                    text = rawText.decode(encoding, errors=errorsFallback)
+                return text
 
         def printAt(c, r, s):
-            h = windll.kernel32.GetStdHandle(IO.console.STD_OUTPUT_HANDLE)
-            windll.kernel32.SetConsoleCursorPosition(h, IO.console.COORD(c, r))
+            
+            if IO.console.readAt(len(s), c, r) != s:
+            
+                h = windll.kernel32.GetStdHandle(IO.console.STD_OUTPUT_HANDLE)
+                windll.kernel32.SetConsoleCursorPosition(h, IO.console.COORD(c, r))
+            
+                c = s.encode("windows-1252")
+                windll.kernel32.WriteConsoleA(h, c_char_p(c), len(c), None, None)
         
-            c = s.encode("windows-1252")
-            windll.kernel32.WriteConsoleA(h, c_char_p(c), len(c), None, None)
-
+        # wincon tools https://github.com/nvaccess/nvda/blob/master/source/wincon.py
+         
+        def readAt(length, x, y):
+            
+            handle = windll.kernel32.GetStdHandle(IO.console.STD_OUTPUT_HANDLE)
+            
+            # Use a string buffer, as from an unicode buffer, we can't get the raw data.
+            buf=create_string_buffer(length * 2)
+            numCharsRead=c_int()
+            if windll.kernel32.ReadConsoleOutputCharacterW(handle, buf, length, IO.console.COORD(x,y), byref(numCharsRead)) == 0:
+                raise WinError()
+            return IO.console.textUtils.getTextFromRawBytes(buf.raw, numChars=numCharsRead.value, encoding="utf_16_le")
+            
+            
     def saveFile(path, jsonData):
         error = 0
         try:
@@ -208,6 +277,8 @@ class IO:
 
     def pack(path, dir):
         shutil.make_archive(path, 'zip', dir)
+        
+
 
 class winAPI:
     def getWallpaper():
@@ -1123,9 +1194,26 @@ class clock:
                     outArray[i - 1] = outArray[i - 1] - 1
             i = i - 1
         return outArray
+    
+    def UTCToDateArray(utc):
+        yearFloat = utc / (365 * 24 * 60 * 60)
+        year = mather.floor(yearFloat)
+        dayOfYear = 365 * (yearFloat - year)
+        month = 1
+        while clock.getMonthEnd(month) < dayOfYear:
+            dayOfYear = dayOfYear - clock.getMonthEnd(month)
+            month = month + 1
+        day = mather.floor(dayOfYear)
+        hour = mather.floor((dayOfYear - day) * 24)
+        minute = mather.floor((((dayOfYear - day) * 24) - mather.floor((dayOfYear - day) * 24)) * 60)
+        second  = (((((dayOfYear - day) * 24) - mather.floor((dayOfYear - day) * 24)) * 60) - mather.floor((((dayOfYear - day) * 24) - mather.floor((dayOfYear - day) * 24)) * 60)) * 60
+        return [int(year), int(month), int(day), int(hour), int(minute), int(second)]
 
-    def getDayOfWeek():
-        out = datetime.today().weekday() + 1
+    def getDayOfWeek(dateArray=False):
+        if not dateArray:
+            out = datetime.today().weekday() + 1
+        else:
+            out = datetime(*dateArray).weekday() + 1
         if out == 7:
             out = 0
         return out

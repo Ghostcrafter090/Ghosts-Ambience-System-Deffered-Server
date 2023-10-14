@@ -337,111 +337,129 @@ class configure:
         def setValues():
             clients = configure.vban.getDaisyChain()
             
-            if clients != configure.vban.clientsOld:
-                
-                configure.vban.clientsOld = clients
-            
-                if clients[0]:
+            if clients[0] != False:
+                if globals.instance.get("vban.instream[0].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[0].name", "StreamClock")
                     globals.instance.set("vban.instream[0].ip", clients[0])
                     globals.instance.set("vban.instream[0].port", 6980)
                     globals.instance.set("vban.instream[0].route", 5)
                     globals.instance.set("vban.instream[0].on", 1)
-                    
+                
+                if globals.instance.get("vban.instream[1].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[1].name", "StreamFireplace")
                     globals.instance.set("vban.instream[1].ip", clients[0])
                     globals.instance.set("vban.instream[1].port", 6980)
                     globals.instance.set("vban.instream[1].route", 6)
                     globals.instance.set("vban.instream[1].on", 1)
                     
+                if globals.instance.get("vban.instream[2].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[2].name", "StreamWindow")
                     globals.instance.set("vban.instream[2].ip", clients[0])
                     globals.instance.set("vban.instream[2].port", 6980)
                     globals.instance.set("vban.instream[2].route", 7)
                     globals.instance.set("vban.instream[2].on", 1)
-                    
+                
+                if globals.instance.get("vban.instream[3].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[3].name", "StreamOutside")
                     globals.instance.set("vban.instream[3].ip", clients[0])
                     globals.instance.set("vban.instream[3].port", 6980)
                     globals.instance.set("vban.instream[3].route", 0)
                     globals.instance.set("vban.instream[3].on", 1)
-                    
+                
+                if globals.instance.get("vban.instream[4].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[4].name", "StreamPorch")
                     globals.instance.set("vban.instream[4].ip", clients[0])
                     globals.instance.set("vban.instream[4].port", 6980)
                     globals.instance.set("vban.instream[4].route", 1)
                     globals.instance.set("vban.instream[4].on", 1)
-                    
+                
+                if globals.instance.get("vban.instream[5].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[5].name", "StreamGeneric")
                     globals.instance.set("vban.instream[5].ip", clients[0])
                     globals.instance.set("vban.instream[5].port", 6980)
                     globals.instance.set("vban.instream[5].route", 2)
                     globals.instance.set("vban.instream[5].on", 1)
-                    
+                
+                if globals.instance.get("vban.instream[6].ip", string=True) != clients[0]:
                     globals.instance.set("vban.instream[6].name", "StreamLight")
                     globals.instance.set("vban.instream[6].ip", clients[0])
                     globals.instance.set("vban.instream[6].port", 6980)
                     globals.instance.set("vban.instream[6].route", 3)
                     globals.instance.set("vban.instream[6].on", 1)
+            
+            if clients[1] != False:
+                if globals.instance.get("vban.outstream[0].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[0].name", "StreamClock")
+                    globals.instance.set("vban.outstream[0].ip", clients[1])
+                    globals.instance.set("vban.outstream[0].port", 6980)
+                    globals.instance.set("vban.outstream[0].route", 1)
+                    globals.instance.set("vban.outstream[0].channel", 8)
+                    globals.instance.set("vban.outstream[0].on", 1)
                 
-                globals.instance.set("vban.outstream[0].name", "StreamClock")
-                globals.instance.set("vban.outstream[0].ip", clients[1])
-                globals.instance.set("vban.outstream[0].port", 6980)
-                globals.instance.set("vban.outstream[0].route", 1)
-                globals.instance.set("vban.outstream[0].channel", 8)
-                globals.instance.set("vban.outstream[0].on", 1)
+                if globals.instance.get("vban.outstream[1].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[1].name", "StreamFireplace")
+                    globals.instance.set("vban.outstream[1].ip", clients[1])
+                    globals.instance.set("vban.outstream[1].port", 6980)
+                    globals.instance.set("vban.outstream[1].route", 2)
+                    globals.instance.set("vban.outstream[1].channel", 8)
+                    globals.instance.set("vban.outstream[1].on", 1)
                 
-                globals.instance.set("vban.outstream[1].name", "StreamFireplace")
-                globals.instance.set("vban.outstream[1].ip", clients[1])
-                globals.instance.set("vban.outstream[1].port", 6980)
-                globals.instance.set("vban.outstream[1].route", 2)
-                globals.instance.set("vban.outstream[1].channel", 8)
-                globals.instance.set("vban.outstream[1].on", 1)
+                if globals.instance.get("vban.outstream[2].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[2].name", "StreamWindow")
+                    globals.instance.set("vban.outstream[2].ip", clients[1])
+                    globals.instance.set("vban.outstream[2].port", 6980)
+                    globals.instance.set("vban.outstream[2].route", 3)
+                    globals.instance.set("vban.outstream[2].channel", 8)
+                    globals.instance.set("vban.outstream[2].on", 1)
                 
-                globals.instance.set("vban.outstream[2].name", "StreamWindow")
-                globals.instance.set("vban.outstream[2].ip", clients[1])
-                globals.instance.set("vban.outstream[2].port", 6980)
-                globals.instance.set("vban.outstream[2].route", 3)
-                globals.instance.set("vban.outstream[2].channel", 8)
-                globals.instance.set("vban.outstream[2].on", 1)
+                if globals.instance.get("vban.outstream[3].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[3].name", "StreamOutside")
+                    globals.instance.set("vban.outstream[3].ip", clients[1])
+                    globals.instance.set("vban.outstream[3].port", 6980)
+                    globals.instance.set("vban.outstream[3].route", 4)
+                    globals.instance.set("vban.outstream[3].on", 1)
                 
-                globals.instance.set("vban.outstream[3].name", "StreamOutside")
-                globals.instance.set("vban.outstream[3].ip", clients[1])
-                globals.instance.set("vban.outstream[3].port", 6980)
-                globals.instance.set("vban.outstream[3].route", 4)
-                globals.instance.set("vban.outstream[3].on", 1)
+                if globals.instance.get("vban.outstream[4].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[4].name", "StreamPorch")
+                    globals.instance.set("vban.outstream[4].ip", clients[1])
+                    globals.instance.set("vban.outstream[4].port", 6980)
+                    globals.instance.set("vban.outstream[4].route", 5)
+                    globals.instance.set("vban.outstream[4].on", 1)
                 
-                globals.instance.set("vban.outstream[4].name", "StreamPorch")
-                globals.instance.set("vban.outstream[4].ip", clients[1])
-                globals.instance.set("vban.outstream[4].port", 6980)
-                globals.instance.set("vban.outstream[4].route", 5)
-                globals.instance.set("vban.outstream[4].on", 1)
+                if globals.instance.get("vban.outstream[5].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[5].name", "StreamGeneric")
+                    globals.instance.set("vban.outstream[5].ip", clients[1])
+                    globals.instance.set("vban.outstream[5].port", 6980)
+                    globals.instance.set("vban.outstream[5].route", 6)
+                    globals.instance.set("vban.outstream[5].on", 1)
                 
-                globals.instance.set("vban.outstream[5].name", "StreamGeneric")
-                globals.instance.set("vban.outstream[5].ip", clients[1])
-                globals.instance.set("vban.outstream[5].port", 6980)
-                globals.instance.set("vban.outstream[5].route", 6)
-                globals.instance.set("vban.outstream[5].on", 1)
+                if globals.instance.get("vban.outstream[6].ip", string=True) != clients[1]:
+                    globals.instance.set("vban.outstream[6].name", "StreamLight")
+                    globals.instance.set("vban.outstream[6].ip", clients[1])
+                    globals.instance.set("vban.outstream[6].port", 6980)
+                    globals.instance.set("vban.outstream[6].route", 7)
+                    globals.instance.set("vban.outstream[6].on", 1)
                 
-                globals.instance.set("vban.outstream[6].name", "StreamLight")
-                globals.instance.set("vban.outstream[6].ip", clients[1])
-                globals.instance.set("vban.outstream[6].port", 6980)
-                globals.instance.set("vban.outstream[6].route", 7)
-                globals.instance.set("vban.outstream[6].on", 1)
+            if globals.instance.get("vban.Enable") != 1:
+                globals.instance.set("vban.Enable", 1)
                 
-                if globals.instance.get("vban.Enable") != 1:
-                    globals.instance.set("vban.Enable", 1)
+            configure.vban.clientsOld = clients
     
     outsideVolume = -30.0
     outsideLimiter = -14.0
                
-    def getOutsideVolumeBeforeHalloween():
-        dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
+    def getOutsideVolumeBeforeHalloween(dateArray=False):
+        
+        if not dateArray:
+            dateArray = pytools.clock.getDateTime()
+        
+        dayOfYear = (pytools.clock.dateArrayToUTC(dateArray) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
         return 0.100629 * dayOfYear - 50.5912
     
     def getOutsideVolumeAfterHalloween():
+        # For second function: https://www.desmos.com/calculator/hj309myssw
         dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
-        return (0.00547945 / 1.650000) * dayOfYear - 21.258
+        return ((0.00547945 / 1.650000) * dayOfYear - 21.258) + (7.02591 ** ( - 1.64709 * dayOfYear + 500.001) - 0.0000162749)
     
     def getLimiterModifierOnHalloween():
         
@@ -458,7 +476,13 @@ class configure:
             e = 2.71828182846
             f = -80.5216
             g = 16.7116
-            return a ** (b * (x + c)) + d * e ** ((((x - f) ** (2)) / (2 * g ** (2))))
+            
+            out = a ** (b * (x + c)) + d * e ** ((((x - f) ** (2)) / (2 * g ** (2))))
+
+            if out > 0:
+                return out
+            else:
+                return 0
         except OverflowError:
             return 0
         except:
@@ -508,14 +532,17 @@ class configure:
         if dayOfYear < 304:
             adderDivider = (((123 + 181 - dayOfYear) / 123) * 0.8) + 1
         else:
-            adderDivier = 1
+            adderDivider = 1
             
         adderModif = prevVal + 20
         
         if adderModif < 1:
             adderModif = 1
         
-        return prevVal + ((((-20 - prevVal) * (modif / 13.1)) + (modif / adderDivider)) / adderModif)
+        try:
+            return prevVal + ((((-20 - prevVal) * (modif / 13.1)) + (modif / adderDivider)) / adderModif)
+        except:
+            return prevVal + ((((-20 - prevVal) * (modif / 13.1)) + (modif / adderDivider)) / 1)
     
     def getOutsideVolumeOnHoliday(peakDateArray, peakModif=1, afterHour=False):
         # https://www.desmos.com/calculator/esomopbiwk
@@ -528,20 +555,30 @@ class configure:
                 else:
                     return 0
             else:
-                return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / peakModif
+                return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
         else:
-            return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / peakModif
+            return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
     
     def getOutsideVolume():
         dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
-        print(dayOfYear)
+        actualDayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
         if dayOfYear > 304:
-            if configure.getOutsideVolumeAfterHalloween() <= -19:
-                return configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)
+            if dayOfYear > 304.0208333333333:
+                if configure.getOutsideVolumeAfterHalloween() <= -19:
+                    return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                else:
+                    return configure.getOutsideVolumeWeatherModifier(-19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
             else:
-                return -19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)
+                if configure.getOutsideVolumeAfterHalloween() <= -19:
+                    newValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                else:
+                    newValue = configure.getOutsideVolumeWeatherModifier(-19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                oldValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween(dateArray=[2023, 11, 1, 0, 0, 0]) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5)) 
+        
+                percentage = (304.0208333333333 - dayOfYear) / 0.0208333333333
+                return (oldValue * (percentage)) + (newValue * (1 - percentage))
         else:
-            return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5))
+            return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5))
     
     def getOutsideLimiter(volume):
         # https://www.desmos.com/calculator/hgfrmpjpqs
@@ -585,7 +622,10 @@ class configure:
         if lim > 0:
             lim = 0.0
         
-        return lim
+        if (lim < 0) and (lim > -9):
+            return -math.fabs(lim) ** (math.fabs(lim / -9) ** 4)
+        else:
+            return lim
     
     def setOutsideVolume():
         configure.outsideVolume = configure.getOutsideVolume()
