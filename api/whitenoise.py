@@ -203,68 +203,68 @@ def main():
         if activeState[0] == 1:
             if typeState[0] == 0:
                 typeState[0] = 1
-                audio.playSoundWindow("warm_wn_night_fi.mp3;warm_wn_night_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_night_fi.mp3;warm_wn_night_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("warm_wn_night.mp3;warm_wn_night_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_night.mp3;warm_wn_night_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[0] == 1:
                 typeState[0] = 0
-                audio.playSoundWindow("warm_wn_night_fo.mp3;warm_wn_night_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_night_fo.mp3;warm_wn_night_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
 
         if activeState[1] == 1:
             if typeState[1] == 0:
                 typeState[1] = 1
-                audio.playSoundWindow("warm_wn_evening_fi.mp3;warm_wn_evening_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_evening_fi.mp3;warm_wn_evening_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("warm_wn_evening.mp3;warm_wn_evening_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_evening.mp3;warm_wn_evening_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[1] == 1:
                 typeState[1] = 0
-                audio.playSoundWindow("warm_wn_evening_fo.mp3;warm_wn_evening_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_evening_fo.mp3;warm_wn_evening_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
 
         if activeState[2] == 1:
             if typeState[2] == 0:
                 typeState[2] = 1
-                audio.playSoundWindow("warm_wn_morning_fi.mp3;warm_wn_morning_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_morning_fi.mp3;warm_wn_morning_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("warm_wn_morning.mp3;warm_wn_morning_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_morning.mp3;warm_wn_morning_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[2] == 1:
                 typeState[2] = 0
-                audio.playSoundWindow("warm_wn_morning_fo.mp3;warm_wn_morning_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_morning_fo.mp3;warm_wn_morning_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         
         if activeState[3] == 1:
             if typeState[3] == 0:
                 typeState[3] = 1
-                audio.playSoundWindow("warm_wn_day_fi.mp3;warm_wn_day_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_day_fi.mp3;warm_wn_day_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("warm_wn_day.mp3;warm_wn_day_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_day.mp3;warm_wn_day_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[3] == 1:
                 typeState[3] = 0
-                audio.playSoundWindow("warm_wn_day_fo.mp3;warm_wn_day_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("warm_wn_day_fo.mp3;warm_wn_day_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             
         if activeState[4] == 1:
             if typeState[4] == 0:
                 typeState[4] = 1
-                audio.playSoundWindow("cold_wn_night_fi.mp3;cold_wn_night_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_night_fi.mp3;cold_wn_night_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("cold_wn_night.mp3;cold_wn_night_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_night.mp3;cold_wn_night_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[4] == 1:
                 typeState[4] = 0
-                audio.playSoundWindow("cold_wn_night_fo.mp3;cold_wn_night_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_night_fo.mp3;cold_wn_night_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         
         if activeState[5] == 1:
             if typeState[5] == 0:
                 typeState[5] = 1
-                audio.playSoundWindow("cold_wn_day_fi.mp3;cold_wn_day_fi_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_day_fi.mp3;cold_wn_day_fi_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
             else:
-                audio.playSoundWindow("cold_wn_day.mp3;cold_wn_day_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_day.mp3;cold_wn_day_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         else:
             if typeState[5] == 1:
                 typeState[5] = 0
-                audio.playSoundWindow("cold_wn_day_fo.mp3;cold_wn_day_fo_nm.mp3", [100, 100, 90], 1.0, 0.0, 0)
+                audio.playSoundWindow("cold_wn_day_fo.mp3;cold_wn_day_fo_nm.mp3", [100, 100, 50], 1.0, 0.0, 0)
         
         time.sleep(194)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

@@ -23,9 +23,15 @@ class utils:
             out = [[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
         return out
 
-def playMusic():
-    mp3 = 'ch_music_' + str(random.randint(0, 1)) + ".mp3"
-    audio.playSoundWindow(mp3 + ";" + mp3, 50, 1.0, 0, 1)
+def playMusic(outside=True):
+    mp3 = 'ch_music_' + str(random.randint(0, 7)) + ".mp3"
+    if outside:
+        audio.playSoundWindow(mp3 + ";" + mp3, [50, 8, 20], 1.0, 0, 1)
+    else:
+        event = audio.event()
+        event.register(mp3, 2, 50, 1.0, 0, 1)
+        event.register(mp3, 9, 8, 1.0, 0, 1)
+        event.run()
 
 def music(dateArray, dataArray=False):
     if dataArray:
@@ -39,6 +45,11 @@ def music(dateArray, dataArray=False):
                 if (dateArray[4] < 10) == False:
                     if dateArray[4] < 40:
                         playMusic()
+        if dateArray[3] < 21:
+            if not ((dateArray[1] == 12) and ((dateArray[2] == 24) or (dateArray[2] == 25))):
+                if (dateArray[4] < 10) == False:
+                    if dateArray[4] < 40:
+                        playMusic(outside=False)
 
 def main():
     while not status.exit:

@@ -41,6 +41,9 @@ def sysHandler():
                     vars.intf = vars.intf - 0.000001
             vars.prevTic = (afterTic - beforeTic)
             
+        if vars.intf < 0.001:
+            vars.intf = 0.001
+            
         sys.setswitchinterval(vars.intf)
         
 def run():

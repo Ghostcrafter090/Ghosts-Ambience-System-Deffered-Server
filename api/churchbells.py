@@ -72,7 +72,8 @@ def playDeath(typef=1):
         if typef == 1:
             audio.playSoundWindow("dnwbella.mp3;dnwbella.mp3", [20, 75, 50], 1.0, 0, 1)
         elif typef != 0:
-            audio.playSoundWindow("dnwbell" + str(typef) + ".mp3;dnwbell" + str(typef) + ".mp3", [20, 75, 50], 1.0, 0, 1)
+            if not ((pytools.clock.getDateTime()[1] == 11) and (((pytools.clock.getDateTime()[2] == 1) and (pytools.clock.getDateTime()[2] > 12)) or (pytools.clock.getDateTime()[2] > 1))):
+                audio.playSoundWindow("dnwbell" + str(typef) + ".mp3;dnwbell" + str(typef) + ".mp3", [20, 75, 35], 1.0, 0, 1)
         
 def playDnwbell():
     if not (globals.getSection() == globals.deathSection):
@@ -112,24 +113,24 @@ def main():
         dateArray = pytools.clock.getDateTime()
         if dateArray[3] == 9:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb1.mp3;cb1.mp3", [10, 75, 50], 1.0, 0, 1)
+                audio.playSoundWindow("cb1.mp3;cb1.mp3", [10, 75, 35], 1.0, 0, 1)
                 playDeath()
         if dateArray[3] == 14:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb4.mp3;cb4.mp3", [10, 75, 50], 1.0, 0, 1)
+                audio.playSoundWindow("cb4.mp3;cb4.mp3", [10, 75, 35], 1.0, 0, 1)
                 playDeath()
         if dateArray[3] == 18:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb5.mp3;cb5.mp3", [10, 75, 50], 1.0, 0, 1)
+                audio.playSoundWindow("cb5.mp3;cb5.mp3", [10, 75, 35], 1.0, 0, 1)
                 playDeath()
         if (weekDay == 0) or ((dateArray[1] == 10) and (getWeekDayOfMonthNumber(dateArray) == 2) and (weekDay == 1)) or ((dateArray[1] == 11) and (dateArray[2] == 11)) or ((dateArray[1] == 7) and (dateArray[2] == 1))  or ((dateArray[1] == 10) and (dateArray[2] == 31)) or ((dateArray[1] == 10) and (dateArray[2] == 13)) or ((dateArray[1] == 12) and (dateArray[2] == 24)) or ((dateArray[1] == 12) and (dateArray[2] == 25)):
             if dateArray[3] == 10:
                 if dateArray[4] == 35:
-                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 50], 1.0, 0, 1)
+                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 35], 1.0, 0, 1)
                     playDeath()
             if dateArray[3] == 11:
                 if dateArray[4] == 50:
-                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 50], 1.0, 0, 1)
+                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 35], 1.0, 0, 1)
                     playDeath()
         
         playDnwbell()

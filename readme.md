@@ -9,6 +9,15 @@ If you've ran setup in this enviroment before, and just need to unpack the asset
 The "assets" I speak of are audio files. These are used for ambience generation.
 
 <br>
+
+----
+NOTE
+----
+
+If you wish to use this in any projects, all we require is that you give credit to us by supplying a link to our youtube channel, website, or some other equivelent official GS & Co. or Satosus Project link.
+Thank You! 
+
+<br>
 <br>
 
 ----------------------
@@ -33,29 +42,29 @@ py console.py --run
 
 Once ran, an information panel should appear looking something like this:
 
-![alt text](repo_images/console_offline.png?raw=true)
+![alt text](https://github.com/Ghostcrafter090/Ghosts-Ambience-System-Deffered-Server/blob/main/repo_images/console_offline.PNG?raw=true)
 
 Press "m" and than "enter" to enter the main menu for the console.
 
 It should look something like this:
 
-![alt text](repo_images/console_menu.png?raw=true)
+![alt text](https://github.com/Ghostcrafter090/Ghosts-Ambience-System-Deffered-Server/blob/main/repo_images/console_menu.PNG?raw=true)
 
 Follow the menu prompt and press "s" to start the system.
 The system will than ask for your apiKey, enter it in the following prompt:
 
-![alt text](repo_images/console_apikey_prompt.png?raw=true)
+![alt text](https://github.com/Ghostcrafter090/Ghosts-Ambience-System-Deffered-Server/blob/main/repo_images/console_apikey_prompt.PNG?raw=true)
 
 Once entered you should hear audio, and it should take you back to the main menu.
 Once in the menu, press "r" to go back to the console window.
 
 The console window should now look something like this:
 
-![alt text](repo_images/console_online.png?raw=true)
+![alt text](https://github.com/Ghostcrafter090/Ghosts-Ambience-System-Deffered-Server/blob/main/repo_images/console_online.PNG?raw=true)
 
 Here is an explaination of the different sections:
 
-![alt text](repo_images/console_online_explain.png?raw=true)
+![alt text](https://github.com/Ghostcrafter090/Ghosts-Ambience-System-Deffered-Server/blob/main/repo_images/console_online_explain.PNG?raw=true)
 
 <br>
 <br>

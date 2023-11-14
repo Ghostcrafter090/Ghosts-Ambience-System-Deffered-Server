@@ -634,7 +634,11 @@ class sections:
                             hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)) ** 0.1) - 1))
                             # if data.dateArray[1] != 11:
                             print("Looping h_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
-                            audio.playSoundAll('h_general.mp3', hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general.mp3;h_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
                             # else:
                                 # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
                             prevMin = data.dateArray[4]
@@ -675,17 +679,47 @@ class sections:
                             i = i + 1
                         
                         if random.randrange(0, 25000) < moodChance[0]:
-                            audio.playSoundAll('h_general_mood.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_mood.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_mood.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_mood.mp3;h_general_mood.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < moodChance[1]:
-                            audio.playSoundAll('h_general_dark.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_dark.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_dark.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_dark.mp3;h_general_dark.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < moodChance[2]:
-                            audio.playSoundAll('h_general_evil.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_evil.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_evil.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_evil.mp3;h_general_evil.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < moodChance[3]:
-                            audio.playSoundAll('h_general_sinister.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_sinister.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_sinister.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_sinister.mp3;h_general_sinister.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < moodChance[4]:
-                            audio.playSoundAll('h_general_dying.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_dying.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_dying.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_dying.mp3;h_general_dying.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < moodChance[5]:
-                            audio.playSoundAll('h_general_death.mp3', hGeneralVol * (1 + (random.random() / 5)), 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('h_general_death.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('h_general_death.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('h_general_death.mp3;h_general_death.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                     sections.moodChance = moodChance
                 except:
                     pass
@@ -744,7 +778,11 @@ class sections:
                             
                             # if data.dateArray[1] != 11:
                             print("Looping hu_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
-                            audio.playSoundAll('hu_general.mp3', hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('hu_general.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general.mp3;hu_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
                             # else:
                                 # audio.playSoundAll('hu_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
                             prevMin = data.dateArray[4]
@@ -785,17 +823,47 @@ class sections:
                             i = i + 1
                         
                         if random.randrange(0, 25000) < uncannyMoodChance[0]:
-                            audio.playSoundAll('hu_general_mood.mp3', hGeneralVol, 1, 0, 0)
+                            moodEvent = audio.event()
+                            moodEvent.register('hu_general_mood.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_mood.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_mood.mp3;hu_general_mood.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                                
                         if random.randrange(0, 25000) < uncannyMoodChance[1]:
-                            audio.playSoundAll('hu_general_dark.mp3', hGeneralVol, 1, 0, 0)
+                            darkMoodEvent = audio.event()
+                            moodEvent.register('hu_general_dark.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_dark.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_dark.mp3;hu_general_dark.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < uncannyMoodChance[2]:
-                            audio.playSoundAll('hu_general_evil.mp3', hGeneralVol, 1, 0, 0)
+                            evilMoodEvent = audio.event()
+                            moodEvent.register('hu_general_evil.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_evil.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_evil.mp3;hu_general_evil.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < uncannyMoodChance[3]:
-                            audio.playSoundAll('hu_general_sinister.mp3', hGeneralVol, 1, 0, 0)
+                            sinisterMoodEvent = audio.event()
+                            moodEvent.register('hu_general_sinister.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_sinister.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_sinister.mp3;hu_general_sinister.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < uncannyMoodChance[4]:
-                            audio.playSoundAll('hu_general_dying.mp3', hGeneralVol, 1, 0, 0)
+                            dyingMoodEvent = audio.event()
+                            moodEvent.register('hu_general_dying.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_dying.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_dying.mp3;hu_general_dying.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                         if random.randrange(0, 25000) < uncannyMoodChance[5]:
-                            audio.playSoundAll('hu_general_death.mp3', hGeneralVol * (1 + (random.random() / 5)), 1, 0, 0)
+                            deathMoodEvent = audio.event()
+                            moodEvent.register('hu_general_death.mp3', 0, hGeneralVol, 1, 0, 0)
+                            moodEvent.register('hu_general_death.mp3', 1, hGeneralVol, 1, 0, 0)
+                            moodEvent.registerWindow('hu_general_death.mp3;hu_general_death.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.run()
+                            
                     sections.uncannyMoodChance = uncannyMoodChance
                 except:
                     pass
@@ -904,44 +972,43 @@ def main():
             globals.runUncanny = True
         else:
             globals.runUncanny = False
-            
-        print(globals.run)
         
         if globals.run:
             
             data.getZ()
             
-            if data.dateArray[2] > 19:
-                if data.dateArray[4] == 35:
-                    if noE != 1:
-                        if random.random() < (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
-                            if random.randrange(data.dateArray[3], 24) == 23:
-                                rumbleNum = random.randrange(0, 2)
-                                audio.playSoundAll('h_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
-                            noE = 1
+            if (data.dateArray[3] >= data.sunJson["cesth"]) or (data.dateArray[3] <= data.sunJson["csth"]):
+                if data.dateArray[2] > 19:
+                    if data.dateArray[4] == 35:
+                        if noE != 1:
+                            if random.random() < (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
+                                if random.randrange(data.dateArray[3], 24) == 23:
+                                    rumbleNum = random.randrange(0, 2)
+                                    audio.playSoundAll('h_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
+                                noE = 1
+                    else:
+                        noE = 0
                 else:
                     noE = 0
-            else:
-                noE = 0
             
-            if data.dateArray[2] > 24:
-                if data.dateArray[4] == 20:
-                    if noF != 1:
-                        if random.random() < (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
+                if data.dateArray[2] > 24:
+                    if data.dateArray[4] == 20:
+                        if noF != 1:
+                            if random.random() < (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100):
+                                if random.randrange(data.dateArray[3], 24) == 23:
+                                    rumbleNum = random.randrange(0, 2)
+                                    audio.playSoundAll('h_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
+                            noF = 1
+                    elif data.dateArray[4] == 40:
+                        if noF != 1:
                             if random.randrange(data.dateArray[3], 24) == 23:
                                 rumbleNum = random.randrange(0, 2)
                                 audio.playSoundAll('h_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
-                        noF = 1
-                elif data.dateArray[4] == 40:
-                    if noF != 1:
-                        if random.randrange(data.dateArray[3], 24) == 23:
-                            rumbleNum = random.randrange(0, 2)
-                            audio.playSoundAll('h_rumble_' + str(rumbleNum) + '.mp3', 40, 1, 0, 0)
-                        noF = 1
+                            noF = 1
+                    else:
+                        noF = 0
                 else:
                     noF = 0
-            else:
-                noF = 0
             
             if data.dateArray[3] == int(data.sunJson['cesth']):
                 if data.dateArray[4] == int(data.sunJson['cestm']):
@@ -991,7 +1058,7 @@ def main():
                 if data.dateArray[4] == int(data.sunJson['cestm']):
                     if noG != 1:
                         if (random.randint(data.dateArray[2], 31) == 31) or ((random.random() * 180) < -data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True)):
-                            audio.playSoundWindow('hu_sunset.mp3;hu_sunset.mp3', [40, 80], 1, 0, 0)
+                            audio.playSoundWindow('hu_sunset.mp3;hu_sunset.mp3', [40, 100], 1, 0, 0)
                         noG = 1
                 else:
                     noG = 0
@@ -1028,6 +1095,10 @@ def main():
                     pHorr = True
             else:
                 pHorr = False
+        
+        if (not globals.run) and (not globals.runUncanny):
+            time.sleep(5)
+        
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         status.finishedLoop = True
 

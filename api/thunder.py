@@ -7,6 +7,7 @@ import time
 import traceback
 import modules.logManager as log
 import api.halloween_extension as hallow
+import os
 
 print = log.printLog
 
@@ -89,6 +90,11 @@ class storm:
     def __init__(self, cape):
         self.x = 50 - (random.random() * 100)
         self.y = 50 - (random.random() * 100)
+        
+        if (pytools.clock.getDateTime()[3] > 12) and (pytools.clock.getDateTime()[1] == 10) and (pytools.clock.getDateTime()[2] == 31):
+            self.x = 15 * (random.random() - 0.5) * 2
+            self.y = 15 * (random.random() - 0.5) * 2
+        
         self.vx = 0
         self.vy = 0
         self.stage = 0
@@ -276,7 +282,8 @@ def main():
         globals.dataArray[0][10] = globals.dataArray[0][10] + (hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) * 18)
     else:
         globals.dataArray[0][10] = globals.dataArray[0][10] + (hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) / 2)
-    storms.grab()
+    if not os.path.exists(".\\deleteStorms.derp"):
+        storms.grab()
     if storms.stormList == []:
         storms.start()
     while not status.exit:

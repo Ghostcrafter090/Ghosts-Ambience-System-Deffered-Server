@@ -425,7 +425,7 @@ class bulk:
                 h = baseData[8]
                 t = baseData[7]
                 w = t * math.atan(0.151977 * (h + 8.313659) ** (((1) / (2)))) + math.atan(t + h) - math.atan(h * 1.676331) + 0.00391838 * (h) ** (((3) / (2))) * math.atan(0.023101 * h) - 4.686035
-                if baseData[7] <= w:
+                if w < 0:
                     baseData[4] = "snow"
                 else:
                     if (precipData[0] + precipData[1] + precipData[2]) > 0.06:

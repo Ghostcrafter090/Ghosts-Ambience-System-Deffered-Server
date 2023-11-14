@@ -19,13 +19,15 @@ class status:
 
 class handlers:
     def stopSound(permBool: bool):
-        os.system('killaudio.cmd')
         if permBool == 1:
             pytools.IO.saveFile('remember.derp', "derp")
+            audio.command.setFlag("remember", True)
+            audio.command.sendStop()
     
     def startSound():
         os.system('del remember.derp /f /q')
-
+        audio.command.setFlag("remember", False)
+        
 class RDC:
     def run():
         handlers.stopSound(1)
@@ -37,14 +39,11 @@ def main():
         dateArray = pytools.clock.getDateTime()
         if dateArray[1] == 11:
             if dateArray[2] == 11:
-                if dateArray[3] == 11:
-                    if dateArray[4] == 9:
-                        if dateArray[5] > 40:
+                if dateArray[3] == 10:
+                    if dateArray[4] == 58:
+                        if dateArray[5] > 30:
                             RDC.run()
-                    if dateArray[4] == 10:
-                        RDC.run()
-                if dateArray[3] == 11:
-                    if dateArray[4] == 11:
+                    elif dateArray[4] == 59:
                         RDC.run()
         else:
             time.sleep(193)

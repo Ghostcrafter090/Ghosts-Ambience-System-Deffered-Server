@@ -161,8 +161,7 @@ class vm:
                 vm.checkStatus()
             except:
                 pass
-            time.sleep(1)
-            
+            time.sleep(1)    
 
 class configure:
     def fixAudioDg():
@@ -623,9 +622,9 @@ class configure:
             lim = 0.0
         
         if (lim < 0) and (lim > -9):
-            return -math.fabs(lim) ** (math.fabs(lim / -9) ** 4)
+            return (-math.fabs(lim) ** (math.fabs(lim / -9) ** 4)) / 1.1
         else:
-            return lim
+            return lim / 1.1
     
     def setOutsideVolume():
         configure.outsideVolume = configure.getOutsideVolume()

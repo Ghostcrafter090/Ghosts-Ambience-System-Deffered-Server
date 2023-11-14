@@ -20,6 +20,8 @@ class status:
 class globals:
     frozenPercentage = 0
     frozenDepth = 0
+    iceTemperature = 0
+    iceTemperatureArray = []
 
 class utils:
     def dataGrabber():
@@ -41,6 +43,10 @@ def main():
             jsonData = pytools.IO.getJson("lake_ice.json")
             globals.frozenPercentage = jsonData["frozenPercentage"]
             globals.frozenDepth = jsonData["frozenDepth"]
+            try:
+                globals.iceTemperature = jsonData["iceTemperature"]
+            except:
+                pass
         except:
             print("Could not grab frozen data.")
     
@@ -62,12 +68,12 @@ def main():
         
         if w < 0:
             if globals.frozenPercentage < 100:
-                globals.frozenPercentage = globals.frozenPercentage + (0.08333333333333333 * (-w))
+                globals.frozenPercentage = globals.frozenPercentage + (0.008333333333333333 * (-w))
             else:
-                globals.frozenDepth = globals.frozenDepth + (0.00125 * (-w))
+                globals.frozenDepth = globals.frozenDepth + (0.000625 * (-w))
                 
         if w > 0:
-            if globals.frozenDepth >= 0:
+            if globals.frozenDepth > 0:
                 globals.frozenDepth = globals.frozenDepth - (0.00125 * (w))
             else:
                 globals.frozenPercentage = globals.frozenPercentage - (0.08333333333333333 * (w))
@@ -80,21 +86,30 @@ def main():
         
         if globals.frozenDepth < 0:
             globals.frozenDepth = 0
+        
+        globals.iceTemperature = ((globals.iceTemperature * 25) + w) / 26
             
         pytools.IO.saveJson("lake_ice.json", {
             "frozenPercentage": globals.frozenPercentage,
-            "frozenDepth": globals.frozenDepth
+            "frozenDepth": globals.frozenDepth,
+            "iceTemperature": globals.iceTemperature
         })
         
         status.vars["frozenPercentage"] = globals.frozenPercentage
         status.vars["frozenDepth"] = globals.frozenDepth
+        status.vars["iceTemperature"] = globals.iceTemperature
         
         print(status.vars)
-        
-        volume = 0.837021 ** ( - 0.350364 * (globals.frozenDepth + 29.8758)) - 6.39628
+        if w > globals.iceTemperature:
+            volume = (0.837021 ** ( - 0.350364 * (globals.frozenDepth + 29.8758)) - 6.39628) * (((globals.frozenDepth / 45) ** 0.3) * (( - 0.00902526 ** (0.293145 * (w - globals.iceTemperature) - 0.422661) + 2.69626) + 1))
+        else:
+            volume = (0.837021 ** ( - 0.350364 * (globals.frozenDepth + 29.8758)) - 6.39628) * (((globals.frozenDepth / 45) ** 0.3) * (( - 0.00902526 ** (0.293145 * (globals.iceTemperature - w) - 0.422661) + 2.69626) + 1))
         volume = volume / 2
         
-        volume = (volume ** 0.6) * 4.781762498950186
+        if volume >= 0:
+            volume = (volume ** 0.6) * 4.781762498950186
+        else:
+            volume = 0
         
         speed = 0.966807 ** ( - 0.00043857 * (globals.frozenDepth + 93484.5)) - 1.92647 * globals.frozenDepth ** (0.179284)
         
@@ -104,7 +119,7 @@ def main():
                 audioEvent = audio.event()
                 audioEvent.register('ice_wall.mp3', 0, volume / 4, speed, 0, 0)
                 audioEvent.register('ice_wall.mp3', 1, volume / 4, speed, 0, 0)
-                audioEvent.registerWindow('ice_wn.mp3;ice_nm.mp3', [volume / 2, volume, volume], speed, 0, 0)
+                audioEvent.registerWindow('ice_wn.mp3;ice_nm.mp3', [volume / 2, volume, volume / 1.5], speed, 0, 0)
                 audioEvent.run()
             
         time.sleep(300 / speed)

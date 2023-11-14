@@ -23,6 +23,10 @@ location.json
 *.rej
 vars/*
 working/*.pyl
+api/__pycache__/client_handler.py
+copysounds.py
+excludeHosts.json
+working/apiNew/
 working/cond.cmd
 working/daytimes.cmd
 working/sound/assets/assets.zip

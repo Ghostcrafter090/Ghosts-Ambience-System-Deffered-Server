@@ -40,7 +40,7 @@ def getNewJson(path, doPrint=True):
         jsonData = error
     return jsonData
 
-def getMultiFile(listf):
+def getMultiFile(listf, doPrint=False):
     try:
         return pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
             "command": "getMultiFile",
@@ -49,9 +49,11 @@ def getMultiFile(listf):
             }
         })))["data"]
     except:
+        if doPrint:
+            print(traceback.format_exc())
         return {}
 
-def getMultiJson(listf):
+def getMultiJson(listf, doPrint=False):
     try:
         return pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
             "command": "getMultiJson",
@@ -60,7 +62,8 @@ def getMultiJson(listf):
             }
         })))["data"]
     except:
-        print(traceback.format_exc())
+        if doPrint:
+            print(traceback.format_exc())
         return {}
 
 def getNewFile(path, doPrint=True):
@@ -796,6 +799,8 @@ def main():
                         lightningDanger = 0
                     
                     weather = weather.replace("\nCondition", "\nLightning   (danger) : " + str(lightningDanger) + "\nCondition")
+                    
+                    system.status.active = True 
                     
                     if flags.displayOnScreen:
                         pytools.IO.console.printAt(0, 0, "Ambience System Console")

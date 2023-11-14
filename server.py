@@ -24,6 +24,9 @@ import modules.logManager as log
 
 print = log.printLog
 
+class flags:
+    manualHosts = False
+
 class con:
     def arp():
         ipsDirty = subprocess.getoutput("arp -a -v").split("\n")
@@ -138,47 +141,56 @@ class client:
                     except:
                         errorCounts[host] = 0
                     try:
-                        if not os.path.exists(".\\working\\host-" + host + ".bm"):
-                            if pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                "command": "ping"
-                            })), timeout=16)["status"] == "success":
-                                print("Host " + host + " still active.")
-                            else:
-                                try:
-                                    print("Host went offline. Removing host " + host + "...")
-                                    hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                    while host in hostsFile["hosts"]:
-                                        if not os.path.exists(".\\working\\host-" + host + ".bm"):
-                                            hostsFile["hosts"].remove(host)
-                                    hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
-                                    while host in hostsDataFile:
-                                        hostsDataFile.pop(host)
-                                    pytools.IO.saveJson(".\\hosts.json", hostsFile)
-                                    pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
-                                    pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
-                                except:
-                                    print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
-                        errorCounts[host] = 0
-                    except:
-                        errorCounts[host] = errorCounts[host] + 1
-                        if errorCounts[host] > 5:
+                        if not flags.manualHosts:
                             if not os.path.exists(".\\working\\host-" + host + ".bm"):
-                                try:
-                                    print("Host went offline. Removing host " + host + "...")
-                                    hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                    while host in hostsFile["hosts"]:
-                                        if not os.path.exists(".\\working\\host-" + host + ".bm"):
-                                            hostsFile["hosts"].remove(host)
-                                    hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
-                                    while host in hostsDataFile:
-                                        hostsDataFile.pop(host)
-                                    pytools.IO.saveJson(".\\hosts.json", hostsFile)
-                                    pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
-                                    pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
-                                except:
-                                    print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                                if pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    "command": "ping"
+                                })), timeout=16)["status"] == "success":
+                                    print("Host " + host + " still active.")
+                                else:
+                                    try:
+                                        print("Host went offline. Removing host " + host + "...")
+                                        hostsFile = pytools.IO.getJson(".\\hosts.json")
+                                        while host in hostsFile["hosts"]:
+                                            if not os.path.exists(".\\working\\host-" + host + ".bm"):
+                                                hostsFile["hosts"].remove(host)
+                                        hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                                        while host in hostsDataFile:
+                                            hostsDataFile.pop(host)
+                                        pytools.IO.saveJson(".\\hosts.json", hostsFile)
+                                        pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
+                                        pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+                                    except:
+                                        print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                            errorCounts[host] = 0
+                    except:
+                        if not flags.manualHosts:
+                            errorCounts[host] = errorCounts[host] + 1
+                            if errorCounts[host] > 5:
+                                if not os.path.exists(".\\working\\host-" + host + ".bm"):
+                                    try:
+                                        print("Host went offline. Removing host " + host + "...")
+                                        hostsFile = pytools.IO.getJson(".\\hosts.json")
+                                        while host in hostsFile["hosts"]:
+                                            if not os.path.exists(".\\working\\host-" + host + ".bm"):
+                                                hostsFile["hosts"].remove(host)
+                                        hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                                        while host in hostsDataFile:
+                                            hostsDataFile.pop(host)
+                                        pytools.IO.saveJson(".\\hosts.json", hostsFile)
+                                        pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
+                                        pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+                                    except:
+                                        print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
             except:
                 print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+            
+            try:
+                if pytools.IO.getJson(".\\hosts.json") != pytools.IO.getJson(".\\working\\hosts.json"):
+                    pytools.IO.saveJson(".\\working\\hosts.json", pytools.IO.getJson(".\\hosts.json"))
+            except:
+                print(traceback.format_exc())
+            
             time.sleep(5)
             
     def sleepManager():
@@ -223,13 +235,15 @@ class puppet:
             hosts = {
                 "hosts": []
             }
-        if data["ipAddress"] not in hosts["hosts"]:
-            hosts["hosts"].reverse()
-            hosts["hosts"].append(data["ipAddress"])
-            hosts["hosts"].reverse()
-            pytools.IO.saveJson(".\\hosts.json", hosts)
-            pytools.IO.saveJson(".\\working\\hosts.json", hosts)
-            # client(data["ipAddress"]).thread.start()
+        
+        if not flags.manualHosts:
+            if data["ipAddress"] not in hosts["hosts"]:
+                hosts["hosts"].reverse()
+                hosts["hosts"].append(data["ipAddress"])
+                hosts["hosts"].reverse()
+                pytools.IO.saveJson(".\\hosts.json", hosts)
+                pytools.IO.saveJson(".\\working\\hosts.json", hosts)
+                # client(data["ipAddress"]).thread.start()
     
     def getOthers():
         return pytools.IO.getJson('.\\hosts.json')["hosts"]
@@ -293,8 +307,11 @@ class puppet:
         max = 0
         current = 0
         for host in hostList:
-            max = max + hostData[host]["max"]
-            current = current + hostData[host]["current"]
+            try:
+                max = max + hostData[host]["max"]
+                current = current + hostData[host]["current"]
+            except:
+                pass
         if max == 0:
             if current == 0:
                 return [10, 0]
@@ -374,6 +391,11 @@ class com:
     class MyServer(BaseHTTPRequestHandler):
         def do_GET(self):
             try:
+                try:
+                    if self.client_address[0] in pytools.IO.getJson(".\\excludeHosts.json")["list"]:
+                        return
+                except:
+                    pass
                 self.send_response(200)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
@@ -574,6 +596,11 @@ def main():
                 pytools.IO.saveJson(".\\serverCommands.json", commands)
         except:
             pass
+        try:
+            os.system("wmic process where name=\"audiodg.exe\" CALL setpriority \"high priority\"")
+            os.system("powershell -executionpolicy unrestricted -command \"$Process = Get-Process audiodg; $Process.ProcessorAffinity = 0032\"")
+        except:
+            pass
         time.sleep(1)
         if (pytools.clock.getDateTime()[5] % 30) == 0:
             try:
@@ -585,6 +612,8 @@ def main():
         
 try:
     for n in sys.argv:
+        if n == "--manualHosts":
+            flags.manualHosts = True
         if n == "--run":
             threading.Thread(target=main).start()
             threading.Thread(target=com.run).start()

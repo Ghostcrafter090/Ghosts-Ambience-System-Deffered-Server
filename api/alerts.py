@@ -58,6 +58,9 @@ def main():
         for n in texts:
             if n.lower().find("no alerts in effect") != -1:
                 out = False
+            if n.lower().find("the web address you have entered is incorrect") != -1:
+                out = False
+                french = True
             if n.lower().find("aucune alerte en vigueur") != -1:
                 out = False
                 french = True
