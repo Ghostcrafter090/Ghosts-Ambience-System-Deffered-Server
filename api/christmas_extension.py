@@ -115,13 +115,13 @@ class sections:
                 try:
                     outsideBandChance = 0
                     outsideBandChance = calc.bellCurve(2, 1900, 7800, 43200, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < outsideBandChance:
+                    if random.randrange(0, 650000) < outsideBandChance:
                         if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
                             if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
                                 audioEvent = audio.event()
                                 audioEvent.register("outside_band.mp3", 0, 10, 1, 0, 0)
                                 audioEvent.register("outside_band.mp3", 1, 10, 1, 0, 0)
-                                audioEvent.registerWindow("outside_band.mp3;outside_band_nm.mp3", 10, 1, 0, 0)
+                                audioEvent.registerWindow("outside_band.mp3;outside_band_nm.mp3", 10, 1, 0, 1)
                                 audioEvent.run()
                     sections.outsideBandChance = outsideBandChance
                     time.sleep(0.1)
@@ -140,7 +140,7 @@ class sections:
                 try:
                     outsideBellsChance = 0
                     outsideBellsChance = calc.bellCurve(2, 1900, 8800, 39600, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < outsideBellsChance:
+                    if random.randrange(0, 400000) < outsideBellsChance:
                         if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
                             if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
                                 if globals.playBells:
@@ -166,20 +166,21 @@ class sections:
                 try:
                     musicBoxChance = 0
                     musicBoxChance = calc.bellCurve(2, 1900, 8800, 72000, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < musicBoxChance:
-                        ghSpeaker = 5
-                        while ghSpeaker == 5:
-                            ghSpeaker = random.randrange(0, 10)
-                        if random.randrange(0, 2) == 1:
-                            if globals.playBells:
-                                audioEvent = audio.event()
-                                audioEvent.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                audioEvent.run()
-                        else:
-                            if globals.playBells:
-                                audioEvent = audio.event()
-                                audioEvent.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                audioEvent.run()
+                    if not os.path.exists(".\\ch_music_playing.derp"):
+                        if random.randrange(0, 35000) < musicBoxChance:
+                            ghSpeaker = 5
+                            while ghSpeaker == 5:
+                                ghSpeaker = random.randrange(0, 10)
+                            if random.randrange(0, 2) == 1:
+                                if globals.playBells:
+                                    audioEvent = audio.event()
+                                    audioEvent.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                    audioEvent.run()
+                            else:
+                                if globals.playBells:
+                                    audioEvent = audio.event()
+                                    audioEvent.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                    audioEvent.run()
                     sections.musicBoxChance = musicBoxChance
                     time.sleep(0.1)
                 except:
@@ -274,7 +275,7 @@ class sections:
                 try:
                     mmcIdleChance = 0
                     mmcIdleChance = calc.bellCurve(2, 1900, 12600, 43200, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < mmcIdleChance:
+                    if random.randrange(0, 350000) < mmcIdleChance:
                         audio.playSoundWindow("mmcidle.mp3;mmcidle.mp3", [20, 30], 1, 0, 1)
                     sections.mmcIdleChance = mmcIdleChance
                     time.sleep(0.1)

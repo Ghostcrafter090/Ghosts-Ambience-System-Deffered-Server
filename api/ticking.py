@@ -21,6 +21,10 @@ def main():
     diab = diaa + 30
     while diab >= 60:
         diab = diab - 60
+
+    status.vars["tickingMinuteA"] = diaa
+    status.vars["tickingMinuteB"] = diab
+
     while not status.exit:
         dateArray = pytools.clock.getDateTime()
         if dateArray[4] == diaa:

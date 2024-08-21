@@ -87,7 +87,7 @@ def main():
         if globals.frozenDepth < 0:
             globals.frozenDepth = 0
         
-        globals.iceTemperature = ((globals.iceTemperature * 25) + w) / 26
+        globals.iceTemperature = ((globals.iceTemperature * 100) + w) / 101
             
         pytools.IO.saveJson("lake_ice.json", {
             "frozenPercentage": globals.frozenPercentage,

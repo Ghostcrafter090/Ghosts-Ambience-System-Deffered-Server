@@ -49,9 +49,27 @@ class utils:
         return dayTimes
     
     def getHallowIndex(timeStamp, noDay=False):
-        u = math.floor(timeStamp / (365 * 24 * 60 * 60))
-        w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
-        q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
+        # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
+        
+        fourYearFloat = timeStamp / (1461 * 24 * 60 * 60)
+        
+        dayOfFourYears = pytools.clock.getDayOfFourYear(pytools.clock.UTCToDateArray(timeStamp))
+        
+        dayOfYear = pytools.clock.getDayOfYear(pytools.clock.UTCToDateArray(timeStamp))
+        
+        u = pytools.clock.UTCToDateArray(timeStamp)[0]
+        
+        print(u)
+        
+        # w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
+        
+        w = ((timeStamp) - (24 * 60 * 60) - (pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])) - 1) + 86400
+        
+        print(w)
+        print(dayOfYear)
+        
+        # q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
+        q = 0
         a = 100
         b = 26265600 + q
         c = 3000000000000

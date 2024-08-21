@@ -10,10 +10,15 @@ import json
 import traceback
 import modules.audio as audio
 import random
+import copy
+import sys
 
 import modules.logManager as log
+import modules.vban as vban
 
 print = log.printLog
+
+log.settings.debug = True
 
 class globals:
     instance = False
@@ -312,6 +317,7 @@ class configure:
                 clients.remove(permaClients["primary"])
                 # sortedClients = sorted(clients, key = lambda s: sum(map(ord, s[1])), reverse=False)
                 sortedClients = clients
+                sortedClients.remove("0.0.0.0")
                 sortedClients.append(permaClients["primary"])
             else:
                 sortedClients = clients
@@ -337,56 +343,57 @@ class configure:
             clients = configure.vban.getDaisyChain()
             
             if clients[0] != False:
-                if globals.instance.get("vban.instream[0].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[0].name", "StreamClock")
-                    globals.instance.set("vban.instream[0].ip", clients[0])
-                    globals.instance.set("vban.instream[0].port", 6980)
-                    globals.instance.set("vban.instream[0].route", 5)
-                    globals.instance.set("vban.instream[0].on", 1)
-                
-                if globals.instance.get("vban.instream[1].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[1].name", "StreamFireplace")
-                    globals.instance.set("vban.instream[1].ip", clients[0])
-                    globals.instance.set("vban.instream[1].port", 6980)
-                    globals.instance.set("vban.instream[1].route", 6)
-                    globals.instance.set("vban.instream[1].on", 1)
+                if clients[0] != "0.0.0.0":
+                    if str(globals.instance.get("vban.instream[0].ip", string=True)) != str(clients[0]):
+                        globals.instance.set("vban.instream[0].name", "StreamClock")
+                        globals.instance.set("vban.instream[0].ip", clients[0])
+                        globals.instance.set("vban.instream[0].port", 6980)
+                        globals.instance.set("vban.instream[0].route", 5)
+                        globals.instance.set("vban.instream[0].on", 1)
                     
-                if globals.instance.get("vban.instream[2].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[2].name", "StreamWindow")
-                    globals.instance.set("vban.instream[2].ip", clients[0])
-                    globals.instance.set("vban.instream[2].port", 6980)
-                    globals.instance.set("vban.instream[2].route", 7)
-                    globals.instance.set("vban.instream[2].on", 1)
-                
-                if globals.instance.get("vban.instream[3].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[3].name", "StreamOutside")
-                    globals.instance.set("vban.instream[3].ip", clients[0])
-                    globals.instance.set("vban.instream[3].port", 6980)
-                    globals.instance.set("vban.instream[3].route", 0)
-                    globals.instance.set("vban.instream[3].on", 1)
-                
-                if globals.instance.get("vban.instream[4].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[4].name", "StreamPorch")
-                    globals.instance.set("vban.instream[4].ip", clients[0])
-                    globals.instance.set("vban.instream[4].port", 6980)
-                    globals.instance.set("vban.instream[4].route", 1)
-                    globals.instance.set("vban.instream[4].on", 1)
-                
-                if globals.instance.get("vban.instream[5].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[5].name", "StreamGeneric")
-                    globals.instance.set("vban.instream[5].ip", clients[0])
-                    globals.instance.set("vban.instream[5].port", 6980)
-                    globals.instance.set("vban.instream[5].route", 2)
-                    globals.instance.set("vban.instream[5].on", 1)
-                
-                if globals.instance.get("vban.instream[6].ip", string=True) != clients[0]:
-                    globals.instance.set("vban.instream[6].name", "StreamLight")
-                    globals.instance.set("vban.instream[6].ip", clients[0])
-                    globals.instance.set("vban.instream[6].port", 6980)
-                    globals.instance.set("vban.instream[6].route", 3)
-                    globals.instance.set("vban.instream[6].on", 1)
+                    if globals.instance.get("vban.instream[1].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[1].name", "StreamFireplace")
+                        globals.instance.set("vban.instream[1].ip", clients[0])
+                        globals.instance.set("vban.instream[1].port", 6980)
+                        globals.instance.set("vban.instream[1].route", 6)
+                        globals.instance.set("vban.instream[1].on", 1)
+                        
+                    if globals.instance.get("vban.instream[2].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[2].name", "StreamWindow")
+                        globals.instance.set("vban.instream[2].ip", clients[0])
+                        globals.instance.set("vban.instream[2].port", 6980)
+                        globals.instance.set("vban.instream[2].route", 7)
+                        globals.instance.set("vban.instream[2].on", 1)
+                    
+                    if globals.instance.get("vban.instream[3].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[3].name", "StreamOutside")
+                        globals.instance.set("vban.instream[3].ip", clients[0])
+                        globals.instance.set("vban.instream[3].port", 6980)
+                        globals.instance.set("vban.instream[3].route", 0)
+                        globals.instance.set("vban.instream[3].on", 1)
+                    
+                    if globals.instance.get("vban.instream[4].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[4].name", "StreamPorch")
+                        globals.instance.set("vban.instream[4].ip", clients[0])
+                        globals.instance.set("vban.instream[4].port", 6980)
+                        globals.instance.set("vban.instream[4].route", 1)
+                        globals.instance.set("vban.instream[4].on", 1)
+                    
+                    if globals.instance.get("vban.instream[5].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[5].name", "StreamGeneric")
+                        globals.instance.set("vban.instream[5].ip", clients[0])
+                        globals.instance.set("vban.instream[5].port", 6980)
+                        globals.instance.set("vban.instream[5].route", 2)
+                        globals.instance.set("vban.instream[5].on", 1)
+                    
+                    if globals.instance.get("vban.instream[6].ip", string=True) != clients[0]:
+                        globals.instance.set("vban.instream[6].name", "StreamLight")
+                        globals.instance.set("vban.instream[6].ip", clients[0])
+                        globals.instance.set("vban.instream[6].port", 6980)
+                        globals.instance.set("vban.instream[6].route", 3)
+                        globals.instance.set("vban.instream[6].on", 1)
             
-            if clients[1] != False:
+            if (clients[1] != False) and (clients[1] != "localhost"):
                 if globals.instance.get("vban.outstream[0].ip", string=True) != clients[1]:
                     globals.instance.set("vban.outstream[0].name", "StreamClock")
                     globals.instance.set("vban.outstream[0].ip", clients[1])
@@ -438,7 +445,9 @@ class configure:
                     globals.instance.set("vban.outstream[6].port", 6980)
                     globals.instance.set("vban.outstream[6].route", 7)
                     globals.instance.set("vban.outstream[6].on", 1)
-                
+            
+            return 
+            
             if globals.instance.get("vban.Enable") != 1:
                 globals.instance.set("vban.Enable", 1)
                 
@@ -654,3 +663,190 @@ class configure:
             except:
                 print(traceback.format_exc())
                 time.sleep(1)
+
+class streams:
+    lastUpdated = time.time()
+
+    def handler():
+        clients = configure.vban.getDaisyChain()
+        clientsOld = clients
+
+        streamClock = vban.speaker("clock", clients[0])
+        streamFireplace = vban.speaker("fireplace", clients[0])
+        streamWindow = vban.speaker("window", clients[0])
+        streamOutside = vban.speaker("outside", clients[0])
+        streamPorch = vban.speaker("porch", clients[0])
+        streamGeneric = vban.speaker("generic", clients[0])
+        streamLight = vban.speaker("light", clients[0])
+        
+        streamClock.run()
+        streamFireplace.run()
+        streamWindow.run()
+        streamOutside.run()
+        streamPorch.run()
+        streamGeneric.run()
+        streamLight.run()
+
+        exitf = False
+
+        lastUpdatedOld = streams.lastUpdated
+
+        while not exitf:
+
+            try:
+                types = {}
+                for thread in vban.pyvban.utils.receiver.allf.receiverUUIDs:
+                    try:
+                        types[vban.pyvban.utils.receiver.allf.receiverUUIDs[thread][2]._stream_name] 
+                    except:
+                        types[vban.pyvban.utils.receiver.allf.receiverUUIDs[thread][2]._stream_name] = []
+                    types[vban.pyvban.utils.receiver.allf.receiverUUIDs[thread][2]._stream_name].append([thread, vban.pyvban.utils.receiver.allf.receiverUUIDs[thread]])
+                
+                for speaker in types:
+                    loopCount = 0
+
+                    inf = 0
+                    toRemove = {}
+                    for thread in types[speaker]:
+                        if thread[1][2]._hasStopped:
+                            vban.pyvban.utils.receiver.allf.receiverUUIDs.pop(thread[1][2]._uuid)
+                            if not speaker in toRemove:
+                                toRemove[speaker] = []
+                            toRemove[speaker].append(inf)
+
+                for speaker in toRemove:
+                    for intf in toRemove[speaker]:
+                        try:
+                            types[speaker].pop(intf)
+                        except:
+                            print(traceback.format_exc())
+                    
+                    
+                for speaker in types:
+                    while (len(types[speaker]) > 1) and (loopCount < 100):
+                        randomInt = random.randint(0, len(types[speaker]) - 1)
+                        randomStream = types[speaker][randomInt][1]
+                        loopCount = 0
+                        while (not randomStream[2]._hasStopped) and (loopCount < 100):
+                            try:
+                                print("Stopping thread with uuid of " + str(types[speaker][randomInt][0]))
+                                randomStream[2].stop()
+                            except:
+                                pass
+                            loopCount = loopCount + 1
+                            time.sleep(0.1)
+                        
+                        try:
+                            if (loopCount < 100) or ((randomStream[2].lastStreamActivityTimestamp + 40) < time.time()):
+                                types[speaker].pop(randomInt)
+                                vban.pyvban.utils.receiver.allf.receiverUUIDs.pop(randomStream[2]._uuid)
+                        except:
+                            print(traceback.format_exc())
+
+                outJson = {}
+                for speaker in types:
+                    for thread in types[speaker]:
+                        if not speaker in outJson:
+                            outJson[speaker] = []
+                        outJson[speaker].append([thread[0], thread[1][0], thread[1][1], thread[1][3]])
+                
+                pytools.IO.saveJson("streamThreads.json", {
+                    "speakers": outJson,
+                    "error": False
+                })
+            except:
+                exc = traceback.format_exc()
+                print(exc)
+                pytools.IO.saveJson("streamThreads.json", {
+                    "speakers": {},
+                    "error": exc
+                })
+
+            try:
+                clients = configure.vban.getDaisyChain()
+            
+                if (clientsOld != clients):
+
+                    print("Updated clients detected...")
+
+                    streamClock.setReceiveFromIp(clients[0])
+                    
+                    streamFireplace.setReceiveFromIp(clients[0])
+
+                    streamWindow.setReceiveFromIp(clients[0])
+                    
+                    streamOutside.setReceiveFromIp(clients[0])
+                    
+                    streamPorch.setReceiveFromIp(clients[0])
+                    
+                    streamGeneric.setReceiveFromIp(clients[0])
+                    
+                    streamLight.setReceiveFromIp(clients[0])
+
+                    clientsOld = clients
+            except:
+                print(traceback.format_exc())
+
+            try:
+                def _streamWatchDog(streamf: vban.speaker):
+                    try:
+                        if ((streamf.lastUpdated + 120) < time.time()):
+                            print("Stream watchdog detected crashed stream of type " + str(streamf.speakerType) + ". Restarting...")
+                            streamf.exitf = True
+
+                            try:
+                                while not streamf.isRunning:
+                                    streamf.exitf = True
+                                    print("    > Waiting for stream of type " + str(streamf.speakerType) + " to exit...")
+                                    time.sleep(0.1)
+                            except:
+                                pass
+
+                            streamNew = vban.speaker(streamf.speakerType, streamf.receiveFrom)
+                            streamNew.run()
+                            return streamNew
+                    except:
+                        print(traceback.format_exc())
+                    return streamf
+
+                streamClock = _streamWatchDog(streamClock)
+                streamFireplace = _streamWatchDog(streamFireplace)
+                streamWindow = _streamWatchDog(streamWindow)
+                streamOutside = _streamWatchDog(streamOutside)
+                streamPorch = _streamWatchDog(streamPorch)
+                streamGeneric = _streamWatchDog(streamGeneric)
+                streamLight = _streamWatchDog(streamLight)
+
+            except:
+                print(traceback.format_exc())
+
+            try:
+                if streams.lastUpdated != lastUpdatedOld:
+                    exitf = True
+                
+                streams.lastUpdated = time.time()
+                pytools.IO.saveFile(".\\lastStreamsLoop.cx", str(time.time()))
+                lastUpdatedOld = copy.deepcopy(streams.lastUpdated)
+            except:
+                print(traceback.format_exc())
+
+            time.sleep(1)
+            print("Handler looping...")
+
+        print("Handler has exited.")
+        streamClock.exitf = True
+        streamFireplace.exitf = True
+        streamWindow.exitf = True
+        streamOutside.exitf = True
+        streamPorch.exitf = True
+        streamGeneric.exitf = True
+        streamLight.exitf = True
+        
+        
+if __name__ == '__main__':
+    if sys.argv[1] == "--runStreams":
+        try:
+            if (float(pytools.IO.getFile("lastStreamsLoop.cx")) + 120) < time.time():
+                streams.handler()
+        except:
+            streams.handler()

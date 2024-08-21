@@ -71,7 +71,7 @@ class secs:
         randf = random.random() * 32768
         print(randf)
         if dataList[0][1] > 20 - api.wind.globals.windModif:
-            if randf < (rand / 3):
+            if randf < (rand / 9):
                 if globals.windowBroken == 0:
                     audioEvent = audio.event()
                     audioEvent.register("windowsmash.mp3", 2, 50, 1.0, 0.0, 0)
@@ -132,6 +132,9 @@ def main():
             print(pytools.clock.dateArrayToUTC(dateArray))
             if globals.windowFixUtc < pytools.clock.dateArrayToUTC(dateArray):
                 secs.fixWindow(dataList)
+            elif os.path.exists(".\\fixwindow.derp"):
+                secs.fixWindow(dataList)
+                os.system("del .\\fixwindow.derp /f /q")
                 
         pytools.IO.saveJson("windowState.json", {
             "windowBroken": globals.windowBroken,

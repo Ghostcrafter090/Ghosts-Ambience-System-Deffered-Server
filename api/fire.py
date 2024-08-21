@@ -105,11 +105,24 @@ class sounds:
         except:
             pass
         
+    def playFireoLog():
+        print("Playing standard fire_olog effect...")
+        audioEvent = audio.event()
+        audioEvent.register('fire_olog.mp3', 1, 20, 1, 0, 0)
+        audioEvent.register('fire_olog.mp3', 5, 100, 1, -100, 0)
+        audioEvent.run()
+        globals.fireplaceStage = "fireOlog"
+        status.vars["fireplace"]["fireplaceStage"] = "fireOlog"
+        try:
+            pytools.IO.saveJson("fireplace.json", {"count": globals.woodCount, "fireplaceStage": globals.fireplaceStage})
+        except:
+            pass
+        
     def playGetLogs():
         audioEvent = audio.event()
         audioEvent.registerWindow("wood_chopper_wn.mp3;wood_chopper_nm.mp3", [15, 100], 1, 0, 0)
         audioEvent.register('wood_chopper_wall.mp3', 0, 15, 1, 0, 0)
-        audioEvent.register('wood_chopper_wall.mp3', 1, 15, 1, 0, 0)
+        audioEvent.register('wood_chopper_wall.mp3', 1, 15, 1, 0, 1)
         audioEvent.run()
         
     def enterRoom():
@@ -232,15 +245,19 @@ class handlers:
                 if globals.fireLit == True:
                     if justLit:
                         sounds.playFireStart()
-                        time.sleep(300)
+                        time.sleep(600)
                     tic = 0
                     while tic < 5:
                         sounds.playFire()
                         tic = tic + 1
                         time.sleep(194)
                     if globals.dataArray[0][7] < 10:
-                        sounds.playFireiLog()
-                        time.sleep(2100)
+                        if (pytools.clock.getDateTime()[3] > 18) or (pytools.clock.getDateTime()[3] < 7):
+                            sounds.playFireoLog()
+                            time.sleep(7500)
+                        else:
+                            sounds.playFireiLog()
+                            time.sleep(2100)
                         globals.logs = globals.logs - random.randint(0, 3)
                     else:
                         sounds.playFireEnd()

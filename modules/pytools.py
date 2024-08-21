@@ -864,7 +864,8 @@ class net:
             }
         )
         response = urlopen(req, timeout=timeout)
-        data_json = json.loads(response.read())
+        h = response.read()
+        data_json = json.loads(h)
         return data_json
     
     def getRawAPI(url, myobj):
@@ -1196,12 +1197,24 @@ class clock:
         return outArray
     
     def UTCToDateArray(utc):
-        yearFloat = utc / (365 * 24 * 60 * 60)
-        year = mather.floor(yearFloat)
-        dayOfYear = 365 * (yearFloat - year)
+        
+        fourYearFloat = utc / (1461 * 24 * 60 * 60)
+        
+        dayOfFourYears = (fourYearFloat - mather.floor(fourYearFloat)) * 1461
+        
+        if dayOfFourYears < 367:
+            dayOfYear = dayOfFourYears
+            year = mather.floor(fourYearFloat) * 4
+        else:
+            year = (mather.floor(fourYearFloat) * 4) + 1
+            dayOfYear = dayOfFourYears - 366
+            while dayOfYear > 365:
+                year = year + 1
+                dayOfYear = dayOfYear - 365
+        
         month = 1
-        while clock.getMonthEnd(month) < dayOfYear:
-            dayOfYear = dayOfYear - clock.getMonthEnd(month)
+        while (clock.getMonthEnd(month, year) + 1) < dayOfYear:
+            dayOfYear = dayOfYear - clock.getMonthEnd(month, year)
             month = month + 1
         day = mather.floor(dayOfYear)
         hour = mather.floor((dayOfYear - day) * 24)
@@ -1218,7 +1231,11 @@ class clock:
             out = 0
         return out
         
-    def getMonthEnd(month):
+    def getMonthEnd(month, year=False):
+        
+        if not year:
+            year = clock.getDateTime()[0]
+        
         mon31 = [12, 10, 8, 7, 5, 3, 1]
         i = 0
         out = 28
@@ -1229,6 +1246,10 @@ class clock:
         if out != 31:
             if month != 2:
                 out = 30
+        
+        if (month == 2) and ((year % 4) == 0):
+            out = 29
+        
         return out
 
     def getMidnight(dateArray):
@@ -1245,18 +1266,56 @@ class clock:
         return midnight
         
     def dateArrayToUTC(dateArray):
-        out = ((dateArray[0]) * 365 * 24 * 60 * 60)
-        i = 1
-        while i < dateArray[1]:
-            out = out + (clock.getMonthEnd(i) * 24 * 60 * 60)
-            i = i + 1
-        out = out + (dateArray[2] * 24 * 60 * 60) + (dateArray[3] * 60 * 60) + (dateArray[4] * 60) + dateArray[5]
-        return out
+        
+        yearsSince0 = clock.getYearDecimal(dateArray)
+        
+        daysSince0 = (mather.floor(yearsSince0 / 4) * 1461) + clock.getDayOfFourYear(dateArray) + 1
+        
+        return daysSince0 * 24 * 60 * 60
     
     def getYearUTC():
         utc = clock.dateArrayToUTC(clock.getDateTime())
         start = clock.dateArrayToUTC([clock.getDateTime()[0], 1, 1, 0, 0, 0])
         return utc - start
+    
+    def getYearDecimal(dateArray):
+        day = -1
+        month = 1
+        while month < dateArray[1]:
+            day = day + clock.getMonthEnd(month, year=dateArray[0])
+            month = month + 1
+        day = day + dateArray[2] + (dateArray[3] / 24) + (dateArray[4] / 24 / 60) + (dateArray[5] / 24 / 60 / 60)
+        if (dateArray[0] % 4) == 0:
+            return dateArray[0] + (day / 366)
+        else:
+            return dateArray[0] + (day / 365)
+        
+    def getDayOfYear(dateArray):
+        day = -1
+        month = 1
+        while month < dateArray[1]:
+            day = day + clock.getMonthEnd(month, year=dateArray[0])
+            month = month + 1
+        day = day + dateArray[2] + (dateArray[3] / 24) + (dateArray[4] / 24 / 60) + (dateArray[5] / 24 / 60 / 60)
+        return day
+    
+    def getDayOfFourYear(dateArray):
+        day = -1
+        month = 1
+        while month < dateArray[1]:
+            day = day + clock.getMonthEnd(month, year=dateArray[0])
+            month = month + 1
+        day = day + dateArray[2] + (dateArray[3] / 24) + (dateArray[4] / 24 / 60) + (dateArray[5] / 24 / 60 / 60)
+        
+        yearf = mather.floor(dateArray[0] / 4) * 4
+        while yearf != dateArray[0]:
+            if (yearf % 4) == 0:
+                day = day + 366
+            else:
+                day = day + 365
+            yearf = yearf + 1
+        
+        return day
     
 def dummy(*args):
     if args[0] == args[0]:

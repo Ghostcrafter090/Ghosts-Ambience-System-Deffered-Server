@@ -3,6 +3,7 @@ import modules.pytools as pytools
 import time
 import random
 import modules.logManager as log
+import os
 
 print = log.printLog
 
@@ -25,6 +26,7 @@ class utils:
 
 def playMusic(outside=True):
     mp3 = 'ch_music_' + str(random.randint(0, 7)) + ".mp3"
+    pytools.IO.saveFile(".\\ch_music_playing.derp", "")
     if outside:
         audio.playSoundWindow(mp3 + ";" + mp3, [50, 8, 20], 1.0, 0, 1)
     else:
@@ -32,6 +34,7 @@ def playMusic(outside=True):
         event.register(mp3, 2, 50, 1.0, 0, 1)
         event.register(mp3, 9, 8, 1.0, 0, 1)
         event.run()
+    os.system("del \".\\ch_music_playing.derp\" /f /q")
 
 def music(dateArray, dataArray=False):
     if dataArray:
@@ -42,14 +45,16 @@ def music(dateArray, dataArray=False):
     if dateArray[3] > 9:
         if dateArray[3] < 16:
             if (11 < dateArray[3] < 12) == False:
-                if (dateArray[4] < 10) == False:
-                    if dateArray[4] < 40:
-                        playMusic()
+                if (dateArray[4] < 12) == False:
+                    if not ((dateArray[2] == 24) and (dateArray[3] != 16) and (dateArray[3] != 17) and (dateArray[3] != 18) and (dateArray[3] != 22)):
+                        if dateArray[4] < 25:
+                            playMusic()
         if dateArray[3] < 21:
             if not ((dateArray[1] == 12) and ((dateArray[2] == 24) or (dateArray[2] == 25))):
-                if (dateArray[4] < 10) == False:
-                    if dateArray[4] < 40:
-                        playMusic(outside=False)
+                if (dateArray[4] < 12) == False:
+                    if dateArray[4] < 25:
+                        if not ((dateArray[2] == 24) and (dateArray[3] != 16) and (dateArray[3] != 17) and (dateArray[3] != 18) and (dateArray[3] != 22)):
+                                playMusic(outside=False)
 
 def main():
     while not status.exit:

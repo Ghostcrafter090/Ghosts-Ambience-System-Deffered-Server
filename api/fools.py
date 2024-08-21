@@ -41,13 +41,13 @@ def main():
                     if globals.foolsType == False:
                         globals.foolsType = random.randint(0, 5)
                     if globals.foolsType == 0:
-                        if dateArray[3] > 9:
+                        if dateArray[3] > 8:
                             if dateArray[3] < 12:
                                 if dateArray[4] == 7:
                                     audio.playSoundAll("rickroll.mp3", 50, 1.0, 0.0, 1)
                                     globals.foolsType = False
                     if globals.foolsType == 1:
-                        if dateArray[3] > 9:
+                        if dateArray[3] > 8:
                             if dateArray[3] < 12:
                                 status.vars["foolsType"] = globals.foolsType
                                 pytools.IO.saveFile("randomSounds.derp", "")
@@ -69,13 +69,13 @@ def main():
                         # audioEvent.run()
                         globals.foolsType = False
                     if globals.foolsType == 4:
-                        if dateArray[3] > 9:
+                        if dateArray[3] > 8:
                             if dateArray[3] < 12:
                                 status.vars["foolsType"] = globals.foolsType
                                 audio.playSoundAll("fbi_troll.mp3", 100, 1.0, 0.0, 1)
                                 globals.foolsType = False
                     if globals.foolsType == 5:
-                        if dateArray[3] > 9:
+                        if dateArray[3] > 8:
                             if dateArray[3] < 12:
                                 status.vars["foolsType"] = globals.foolsType
                                 pytools.IO.saveFile("speakSounds.derp", "")

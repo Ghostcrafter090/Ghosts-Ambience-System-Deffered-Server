@@ -133,6 +133,7 @@ class flags:
     
 class globals:
     maxY = 0
+    lastSSTCGrabs = {}
     
 class tools:
     def max_window(lines=None):
@@ -827,8 +828,7 @@ def main():
                                 pInfo = outList[".\\vars\\pluginVarsJson\\" + plugin]
                                 if system.status.active == True:
                                     if flags.displayOnScreen:
-                                        if (os.path.exists(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx")) and (".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx" in outErrorList):
-                                            pError = outErrorList[".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"]
+                                        if os.path.exists(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"):
                                             if flash == 0:
                                                 try:
                                                     if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC(pInfo["lastLoop"])) > 600:
@@ -839,7 +839,6 @@ def main():
                                                     printColor(0, i, "!", "red")
                                             else:
                                                 pytools.IO.console.printAt(0, i, " ")
-                                            printColor(37, i, " ;;; " + pError, "yellow")
                                         else:
                                             pytools.IO.console.printAt(0, i, " ")
                                 if flags.displayOnScreen:
@@ -960,36 +959,60 @@ def main():
                             clientsData = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\hostData.json", doPrint=False)
                         
                         if flags.displayOnScreen:
-                            pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information            ")
-                            pytools.IO.console.printAt(130, globals.maxY - 2, "---------------------------------------")
-                            pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR OPEN ")
-                            pytools.IO.console.printAt(130, globals.maxY - 4, "                                      ")
+                            pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information                ")
+                            pytools.IO.console.printAt(130, globals.maxY - 2, "-------------------------------------------")
+                            pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR SSTC OPEN")
+                            pytools.IO.console.printAt(130, globals.maxY - 4, "                                           ")
                         
                         totalSounds = 0
                         maxSounds = 0
                         i = 2
                         if flags.displayOnScreen:
                             for client in clients["hosts"]:
-                                try:
-                                    pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
-                                    if clientsData[client]["current"] > clientsData[client]["max"] + 1:
-                                        if flags.displayOnScreen:
-                                            printColor(145, globals.maxY - 3 - i, "overload", "red")
-                                            if flash == 0:
-                                                printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                if client != "0.0.0.0":
+                                    try:
+
+                                        try:
+                                            if not client in globals.lastSSTCGrabs:
+                                                globals.lastSSTCGrabs[client] = [0, 0]
+                                            if globals.lastSSTCGrabs[client][0] < time.time():
+                                                SSTCData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getSleepStateCount"})), timeout=1)["sleepStateCount"]
+                                                globals.lastSSTCGrabs[client][0] = time.time() + 10
+                                                globals.lastSSTCGrabs[client][1] = SSTCData
                                             else:
-                                                printColor(130, globals.maxY - 3 - i, " ", "yellow")
-                                    else:
-                                        if flags.displayOnScreen:
-                                            printColor(130, globals.maxY - 3 - i, " ", "yellow")
-                                            printColor(145, globals.maxY - 3 - i, "connected", "green")
-                                except:
-                                    if flags.displayOnScreen:
-                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
-                                        if flash == 0:
-                                            printColor(130, globals.maxY - 3 - i, "!", "red")
+                                                SSTCData = globals.lastSSTCGrabs[client][1]
+                                        except:
+                                            SSTCData = 0
+                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (5 - len(str(SSTCData))))  + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                        if clientsData[client]["current"] > clientsData[client]["max"] + 1:
+                                            if flags.displayOnScreen:
+                                                printColor(145, globals.maxY - 3 - i, "overload", "red")
+                                                if flash == 0:
+                                                    printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                else:
+                                                    printColor(130, globals.maxY - 3 - i, " ", "yellow")
                                         else:
-                                            printColor(130, globals.maxY - 3 - i, " ", "red")
+                                            if flags.displayOnScreen:
+                                                try:
+                                                    if pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".bl", doPrint=False) != 1:
+                                                        if flash == 0:
+                                                            printColor(130, globals.maxY - 3 - i, "!", "magenta")
+                                                        else:
+                                                            printColor(130, globals.maxY - 3 - i, " ", "magenta")
+                                                        printColor(145, globals.maxY - 3 - i, "dozingoff", "blue")
+                                                    else:
+                                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                        printColor(145, globals.maxY - 3 - i, "connected", "green")
+                                                except:
+                                                    printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                    printColor(145, globals.maxY - 3 - i, "unknown", "white")
+                                    except:
+                                        if flags.displayOnScreen:
+                                            pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
+                                            if flash == 0:
+                                                printColor(130, globals.maxY - 3 - i, "!", "red")
+                                            else:
+                                                printColor(130, globals.maxY - 3 - i, " ", "red")
                                 try:
                                     totalSounds = totalSounds + clientsData[client]["current"]
                                     maxSounds = maxSounds + clientsData[client]["max"]
@@ -1187,6 +1210,8 @@ if runf:
             tools.max_window()
             time.sleep(1)
             thread0 = threading.Thread(target=main)
-            thread1 = threading.Thread(target=menu.handler)
             thread0.start()
-            thread1.start()
+            
+            if not flags.webMode:
+                thread1 = threading.Thread(target=menu.handler)
+                thread1.start()

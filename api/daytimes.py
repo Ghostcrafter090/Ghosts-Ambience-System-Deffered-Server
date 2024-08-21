@@ -47,6 +47,7 @@ def main():
         ate = tools.returnDateArray(data['results']['astronomical_twilight_end'])
         solarNoon = tools.returnDateArray(data['results']['solar_noon'])
         pytools.IO.saveList("daytimes.pyl", [ats, nts, cts, sunrise, solarNoon, sunset, cte, nte, ate])
+        status.vars["daytimes"] = [ats, nts, cts, sunrise, solarNoon, sunset, cte, nte, ate]
         string = """
 set csth=""" + str(cts[3]) + """
 set cstm=""" + str(cts[4]) + """

@@ -6,6 +6,8 @@ import traceback
 from bs4 import BeautifulSoup as bs
 import modules.logManager as log
 
+from pydub import AudioSegment
+
 print = log.printLog
 
 class status:
@@ -117,14 +119,26 @@ def main():
                             nf = nf + 1
                             print("Speaking: " + n)
                             gtts.gTTS(text=n, lang="en", slow=False).save(".\\sound\\assets\\alerts_" + str(nf) + ".mp3")
-                            audioEvent = audio.event()
-                            if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
-                                audioEvent.register("alerts_" + str(nf) + ".mp3", 2, 25, 1.0, 0.0, 1)
-                            else:
-                                audioEvent.register("alerts_" + str(nf) + ".mp3", 2, 15, 1.0, 0.0, 1,)
-                            audioEvent.run(sendFile=True)
                     except:
                         print(traceback.format_exc())
+                
+                soundData = AudioSegment.silent(duration=100, frame_rate=24000)
+                ng = 0
+                while ng <= nf:
+                    try:
+                        soundData = soundData + AudioSegment.from_file(".\\sound\\assets\\alerts_" + str(ng) + ".mp3", format="mp3") + AudioSegment.silent(duration=1, frame_rate=24000)
+                    except:
+                        print(traceback.format_exc())
+                    ng = ng + 1
+                
+                soundData.export(".\\sound\\assets\\alerts_audio.mp3", format="mp3")
+                
+                audioEvent = audio.event()
+                if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
+                    audioEvent.register("alerts_audio.mp3", 2, 25, 1.0, 0.0, 1)
+                else:
+                    audioEvent.register("alerts_audio.mp3", 2, 15, 1.0, 0.0, 1,)
+                audioEvent.run(sendFile=True, largeFile=True)
                 audioEvent = audio.event()
                 if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
                     audioEvent.register("alert_end.mp3", 2, 25, 1.0, 0.0, 1)
@@ -140,19 +154,34 @@ def main():
                     else:
                         audioEvent.register("alert_reproduce_night.mp3", 2, 10, 1.0, 0.0, 1)
                     audioEvent.run(sendFile=True)
+                    nf = 0
                     for n in texts:
                         try:
                             if n != ' ':
                                 nf = nf + 1
                                 gtts.gTTS(text=n, lang="en", slow=False).save(".\\sound\\assets\\alerts_" + str(nf) + ".mp3")
-                                audioEvent = audio.event()
-                                if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
-                                    audioEvent.register("alerts_" + str(nf) + ".mp3", 2, 25, 1.0, 0.0, 1)
-                                else:
-                                    audioEvent.register("alerts_" + str(nf) + ".mp3", 2, 15, 1.0, 0.0, 1)
-                                audioEvent.run(sendFile=True)
+                                
                         except:
                             pass
+                        
+                    soundData = AudioSegment.silent(duration=100, frame_rate=24000)
+                    ng = 0
+                    while ng <= nf:
+                        try:
+                            soundData = soundData + AudioSegment.from_file(".\\sound\\assets\\alerts_" + str(ng) + ".mp3", format="mp3") + AudioSegment.silent(duration=1, frame_rate=24000)
+                        except:
+                            print(traceback.format_exc())
+                        ng = ng + 1
+                    
+                    soundData.export(".\\sound\\assets\\alerts_audio.mp3", format="mp3")
+                    
+                    audioEvent = audio.event()
+                    if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
+                        audioEvent.register("alerts_audio.mp3", 2, 25, 1.0, 0.0, 1)
+                    else:
+                        audioEvent.register("alerts_audio.mp3", 2, 15, 1.0, 0.0, 1)
+                    audioEvent.run(sendFile=True, largeFile=True)
+                    
                     audioEvent = audio.event()
                     if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
                         audioEvent.register("alert_end.mp3", 2, 25, 1.0, 0.0, 1)

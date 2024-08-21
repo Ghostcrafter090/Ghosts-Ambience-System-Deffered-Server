@@ -11,6 +11,8 @@ import traceback
 import threading
 import modules.logManager as log
 
+import api.halloween_extension as hallow
+
 print = log.printLog
 
 class status:
@@ -104,8 +106,12 @@ class haunts:
         pytools.IO.saveJson("ghosts.json", ghostsf)
         
     def getGhosts():
-        return pytools.IO.getJson("ghosts.json")["list"]
-        
+        try:
+            return pytools.IO.getJson("ghosts.json")["list"]
+        except:
+            pytools.IO.saveJson("ghosts.json", {"list": [{"name": "Mr. Penis", "type": 4, "details": {"activity": [10, 10, 9, 4, 1, 0, 10, 10, 2, 8, 10, 10], "hatrid": 0, "love": 10, "voice": [1.4441737328663464, 8.776564559683385, 0.07029592593583422], "memmories": [[[0, 0, 0, 0, 0, 0], [120, 140]]], "completedMemmories": {}}}]})
+            return pytools.IO.getJson("ghosts.json")["list"]
+    
     def randomRegister():
         try:
             person = pytools.net.getJsonAPI("https://api.parser.name/?endpoint=generate&country_code=CA&api_key=" + status.nameKey)
@@ -192,8 +198,11 @@ class haunts:
                 i = i + 1
             hallowFactor = (a * e ** (-(((current - b) ** 2) / c))) + (h * e ** (-(((current - f) ** 2) / g))) + j + k + l
             pytools.IO.saveFile("hallowFactor.cx", str(hallowFactor))
+            
+            hallowFactor = hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
+            
             if hallowFactor < 6:
-                hallowFactor = 12
+                hallowFactor = 6
             while len(haunts.getGhosts()) < (hallowFactor / 6):
                 haunts.randomRegister()
             haunts.purgeGhosts()

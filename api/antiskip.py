@@ -180,7 +180,7 @@ def main():
         audioEvent.register("high_pitch.mp3", 3, 100, 1.0, 0.0, 0, remember=True)
         threading.Thread(target=audioEvent.run).start()
         status.vars["lastLoop"] = pytools.clock.getDateTime()
-        time.sleep(5)
+        time.sleep(10)
     
 def run():
     status.hasExited = False

@@ -26,6 +26,7 @@ print = log.printLog
 
 class flags:
     manualHosts = False
+    restart = False
 
 class con:
     def arp():
@@ -60,7 +61,36 @@ class client:
     neededHosts = 1
     
     def wakeOnLan():
+        
+        if os.path.exists("..\\clientsLastHeardFrom.json"):
+            lastHeardInfo = pytools.IO.getJson("..\\clientsLastHeardFrom.json")
+        else:
+            lastHeardInfo = {}
+        
         while True:
+            
+            try:
+                permaClients = pytools.IO.getJson("..\\permaclients.json")["clients"]
+                offlineInterface = pytools.IO.getJson("..\\permaclients.json")["offlineInterface"]
+                
+                updated = False
+                for host in pytools.IO.getJson(".\\hosts.json")["hosts"]:
+                    updated = True
+                    lastHeardInfo[host] = time.time()
+                    
+                if updated:
+                    pytools.IO.saveJson("..\\clientsLastHeardFrom.json", lastHeardInfo)
+                
+                for client in permaClients:
+                    if not client in lastHeardInfo:
+                        wakeComputer(permaClients[client], interface=offlineInterface)
+                        
+                for client in lastHeardInfo:
+                    if (lastHeardInfo[client] + 3600) < time.time():
+                        wakeComputer(permaClients[client], interface=offlineInterface)
+            except:
+                print(traceback.format_exc())
+            
             try:
                 files = os.listdir(".\\working")
                 asleepHosts = []
@@ -87,37 +117,34 @@ class client:
                     load = False
                     print("No Sleep Clients Detected.")
                     time.sleep(30)
+                ticker = 0
                 if load:
                     if (load[1] / load[0]) < 0.35:
-                        ticker = 0
-                        while ((load[1] / load[0]) < 0.45) and (ticker < 1200):
+                        while ((load[1] / load[0]) < 0.55) and (ticker < 3600):
                             try:
                                 load = puppet.getLoad()
                             except:
                                 pass
                             ticker = ticker + 5
                             time.sleep(5)
-                    elif (load[1] / load[0]) < 0.45:
-                        ticker = 0
-                        while ((load[1] / load[0]) < 0.55) and (ticker < 600):
+                    if (load[1] / load[0]) < 0.45:
+                        while ((load[1] / load[0]) < 0.65) and (ticker < 1800):
                             try:
                                 load = puppet.getLoad()
                             except:
                                 pass
                             ticker = ticker + 5
                             time.sleep(5)
-                    elif (load[1] / load[0]) < 0.55:
-                        ticker = 0
-                        while ((load[1] / load[0]) < 0.65) and (ticker < 300):
+                    if (load[1] / load[0]) < 0.55:
+                        while ((load[1] / load[0]) < 0.75) and (ticker < 900):
                             try:
                                 load = puppet.getLoad()
                             except:
                                 pass
                             ticker = ticker + 5
                             time.sleep(5)
-                    elif (load[1] / load[0]) < 0.65:
-                        ticker = 0
-                        while ((load[1] / load[0]) < 0.75) and (ticker < 150):
+                    if (load[1] / load[0]) < 0.65:
+                        while ((load[1] / load[0]) < 0.85) and (ticker < 450):
                             try:
                                 load = puppet.getLoad()
                             except:
@@ -266,6 +293,9 @@ class puppet:
             out[item] = pytools.IO.getJson(item)
         return out
     
+    def restart():
+        flags.restart = True
+    
     def transferEvent(eventBytes, fileData):
         hosts = puppet.getOthers()
         hostData = pytools.IO.getJson(".\\working\\hostData.json")
@@ -307,11 +337,12 @@ class puppet:
         max = 0
         current = 0
         for host in hostList:
-            try:
-                max = max + hostData[host]["max"]
-                current = current + hostData[host]["current"]
-            except:
-                pass
+            if not os.path.exists(".\\working\\host-" + str(host) + ".bl"):
+                try:
+                    max = max + hostData[host]["max"]
+                    current = current + hostData[host]["current"]
+                except:
+                    pass
         if max == 0:
             if current == 0:
                 return [10, 0]
@@ -349,6 +380,7 @@ class comMulti:
     def run(self):
         while True:
             threadf = threading.Thread(target=self.start)
+            threadf.daemon = True
             threadf.start()
             time.sleep(1)
             try:
@@ -357,10 +389,12 @@ class comMulti:
                 })), timeout=1)["status"] == "success":
                     time.sleep(15)
                 threadf = threading.Thread(target=self.start)
+                threadf.daemon = True
                 threadf.start()
                 time.sleep(1)
             except:
                 threadf = threading.Thread(target=self.start)
+                threadf.daemon = True
                 threadf.start()
                 time.sleep(1)
    
@@ -372,6 +406,12 @@ class com:
     serverPort = 5597
     
     webServer = False
+
+    oldServerShutdown = False
+
+    def shutdown(serverInstance: HTTPServer):
+        serverInstance.server_close()
+        oldServerShutdown = True
     
     # Structure
     # ---------
@@ -417,6 +457,11 @@ class com:
                     self.wfile.write(bytes(json.dumps({
                         "status": "success",
                         "data": pytools.IO.getFile(request["data"]["path"])
+                    }), "utf-8"))
+                if request["command"] == "restart":
+                    puppet.restart()
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success"
                     }), "utf-8"))
                 if request["command"] == "getMultiFile":
                     self.wfile.write(bytes(json.dumps({
@@ -525,7 +570,21 @@ class com:
                 self.send_error(400, traceback.format_exc())
 
     def start():
+
+        if type(com.webServer) == HTTPServer:
+            oldServer = com.webServer
+            com.oldServerShutdown = False
+            shutThread = threading.Thread(target=com.shutdown, args=(oldServer,))
+            shutThread.daemon = True
+            shutThread.start()
+
+            startWaitTime = time.time()
+
+            while (not com.oldServerShutdown) and (time.time() < (startWaitTime + 10)):
+                time.sleep(1)
+
         com.webServer = HTTPServer((com.hostName, com.serverPort), com.MyServer)
+
         print("Server started http://%s:%s" % (com.hostName, com.serverPort))
 
         try:
@@ -536,27 +595,40 @@ class com:
         com.webServer.server_close()
         print("Server stopped.")
 
+    webServerErrorCount = 0
+
     def run():
         threadVoicemeeter = threading.Thread(target=vm.vm.handler)
         threadVConfigure = threading.Thread(target=vm.configure.handler)
         threadWakeOnLan = threading.Thread(target=client.wakeOnLan)
+        # threadStreams = threading.Thread(target=vm.streams.handler)
+        threadVoicemeeter.daemon = True
+        threadVConfigure.daemon = True
+        threadWakeOnLan.daemon = True
         threadVoicemeeter.start()
         threadVConfigure.start()
         threadWakeOnLan.start()
+        # threadStreams.start()
         while True:
             threadf = threading.Thread(target=com.start)
+            threadf.daemon = True
             threadf.start()
             time.sleep(1)
             try:
                 while pytools.net.getJsonAPI("http://localhost:5597?json=" + urllib.parse.quote(json.dumps({
                     "command": "ping"
                 })), timeout=1)["status"] == "success":
+                    webServerErrorCount = 0
                     time.sleep(15)
+                webServerErrorCount = webServerErrorCount + 1
                 threadf = threading.Thread(target=com.start)
+                threadf.daemon = True
                 threadf.start()
                 time.sleep(1)
             except:
+                webServerErrorCount = webServerErrorCount + 1
                 threadf = threading.Thread(target=com.start)
+                threadf.daemon = True
                 threadf.start()
                 time.sleep(1)
     
@@ -567,6 +639,7 @@ class com:
         while i < portRange[1]:
             com.multiThreaders.append([comMulti(i), False])
             com.multiThreaders[-1][1] = threading.Thread(target=com.multiThreaders[-1][0].run)
+            com.multiThreaders[-1][1].daemon = True
             i = i + 1
             
         for thread in com.multiThreaders:
@@ -577,6 +650,7 @@ class hosts:
 
 def main():
     clientManager = threading.Thread(target=client.run)
+    clientManager.daemon = True
     clientManager.start()
     pytools.IO.saveFile(".\\working\\server.derp", "derp")
     if os.path.exists(".\\serverCommands.json") == False:
@@ -615,8 +689,20 @@ try:
         if n == "--manualHosts":
             flags.manualHosts = True
         if n == "--run":
-            threading.Thread(target=main).start()
-            threading.Thread(target=com.run).start()
-            threading.Thread(target=com.runMultithreader).start()
+            mainThread = threading.Thread(target=main)
+            mainThread.daemon = True
+            mainThread.start()
+            comThread = threading.Thread(target=com.run)
+            comThread.daemon = True
+            comThread.start()
+            multiThread = threading.Thread(target=com.runMultithreader)
+            multiThread.daemon = True
+            multiThread.start()
+            os.system("start "" py .\\vm.py --runStreams")
+            while (com.webServerErrorCount < 60) and (not flags.restart):
+                print("Server is running!")
+                time.sleep(1)
+            
+            sys.exit(0)
 except:
     pass

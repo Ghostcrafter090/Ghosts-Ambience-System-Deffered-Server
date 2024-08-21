@@ -1,7 +1,6 @@
 from traceback import format_exc as traceback_format_exc, format_stack as traceback_format_stack
-class traceback:
-    format_exc = traceback_format_exc
-    format_stack = traceback_format_stack
+    
+import traceback
 
 import urllib.parse
 
@@ -91,6 +90,7 @@ class log:
     def crash(*strff, typef="errors", forceFile=False):
         for strf in strff:    
             print(str(strf))
+            
             if (not log.hasLogged) and (not forceFile):
                 if not (len(log.data) < 50):
                     log.data.pop(0)
@@ -666,17 +666,23 @@ class tools:
             while i < len(hosts.listf):
                 print(randFloat, hostWeights[i][0])
                 if randFloat < hostWeights[i][0]:
-                    if not os.path.exists(".\\host-" + hosts.listf[hostWeights[i][1]] + ".bl"):
-                        if hostWeights[i][1] != "0.0.0.0":
-                            return hostWeights[i][1]
+                    if tools.ping(hosts.listf[hostWeights[i][1]]):
+                        if not os.path.exists(".\\host-" + hosts.listf[hostWeights[i][1]] + ".bl"):
+                            if hostWeights[i][1] != "0.0.0.0":
+                                return hostWeights[i][1]
+                            else:
+                                return -1
                         else:
                             return -1
-                    else:
-                        return -1
                 i = i + 1
+            return -1
         except:
             print(traceback.format_exc())
             return -1
+    
+    def ping(host):
+        import subprocess
+        return "Lost = 0" in subprocess.getoutput("ping " + host + " -n 1 -w 1")
         
 class reportSound:
     def __init__(self, uuid):
@@ -890,6 +896,177 @@ class playSoundWindow:
             threading.Thread(target=soundReportObj.run).start()
         self.eventData = eventData
         if play:
+            
+            played = False
+            
+            startms = time.time()
+            try:
+                hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                if "0.0.0.0" in hostList:
+                    hostList.remove("0.0.0.0")
+                    
+                hosts.listf = hostList
+            except:
+                print("Could not grab hosts list.")
+                
+            def grabHostData():
+                try:
+                    hostData = pytools.IO.getJson(".\\hostData.json")
+                    if "0.0.0.0" in hostList:
+                        hostData.pop("0.0.0.0")
+                        
+                    hosts.soundsf = hostData
+                except:
+                    print("Could not grab hosts list.")
+            
+            grabHostData()        
+            
+            try:
+                def getHostToSendTo():
+                    randomInt = -1
+                    while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
+                        randomInt = tools.getRandomInt(hosts.soundsf)
+                        if hosts.listf[randomInt] in hosts.soundsf:
+                            if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
+                                if tools.ping(hosts.listf[randomInt]):
+                                    break
+                        else:
+                            randomInt = -1
+                            grabHostData()
+                        print("No hosts connected. Waiting for connection...")
+                    return randomInt
+                
+                randomInt = getHostToSendTo()
+                try:
+                    if not sendFile:
+                        def runSound(randomInt):
+                            try:
+                                hasFired = False
+                                errorCount = 0
+                                while (not hasFired) and (errorCount < 100):
+                                    try:
+                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                            "command": "fireEvent",
+                                            "data": pytools.cipher.base64_encode(json.dumps(self.eventData))
+                                        })), timeout=10)
+                                        hasFired = True
+                                    except:
+                                        import traceback
+                                        print(traceback.format_exc())
+                                        errorCount = errorCount + 1
+                                        if errorCount > 100:
+                                            log.audio("Failed audio event.")
+                                            log.audio(str(self.eventData))
+                                            log.audio(traceback.format_exc())
+                                            log.crash("Failed audio event.")
+                                            log.crash(str(self.eventData))
+                                            log.crash(traceback.format_exc())
+                                        else:
+                                            log.audio("Failed to send audio event. Trying again...")
+                                        randomInt = getHostToSendTo()
+                                        print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                    time.sleep(0.1)
+                            except:
+                                log.audio("Failed audio event.")
+                                log.audio(str(self.eventData))
+                                log.audio(traceback.format_exc())
+                                log.crash("Failed audio event.")
+                                log.crash(str(self.eventData))
+                                log.crash(traceback.format_exc())
+                            try:
+                                endms = time.time()
+                                pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                            except:
+                                print(traceback.format_exc())
+                        threading.Thread(target=runSound, args=(randomInt,)).start()
+                        played = True
+                        for sound in self.eventData["events"]:
+                            dateArray = pytools.clock.getDateTime()
+                            
+                            logError = True
+                            while logError:
+                                try:
+                                    log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                    logError = False
+                                except:
+                                    pass
+                            # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                    else:
+                        def runSound(randomInt):
+                            try:
+                                print(self.eventData["events"][0]["path"])
+                                hasFired = False
+                                errorCount = 0
+                                while (not hasFired) and (errorCount < 100):
+                                    try:
+                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                            "command": "fireEvent",
+                                            "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
+                                            "fileData": {
+                                                "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.eventData["events"][0]["path"].replace(".\\working\\", ".\\")), isBytes=True),
+                                                "fileName": self.eventData["events"][0]["path"].split("\\")[-1]
+                                            }
+                                        })), timeout=10)
+                                        hasFired = True
+                                    except:
+                                        import traceback
+                                        print(traceback.format_exc())
+                                        errorCount = errorCount + 1
+                                        if errorCount > 100:
+                                            log.audio("Failed audio event.")
+                                            log.audio(str(self.eventData))
+                                            log.audio(traceback.format_exc())
+                                            log.crash("Failed audio event.")
+                                            log.crash(str(self.eventData))
+                                            log.crash(traceback.format_exc())
+                                        else:
+                                            log.audio("Failed to send audio event. Trying again...")
+                                        randomInt = getHostToSendTo()
+                                        print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                    time.sleep(0.1)
+                            except:
+                                log.audio("Failed audio event.")
+                                log.audio(str(self.eventData))
+                                log.audio(traceback.format_exc())
+                                log.crash("Failed audio event.")
+                                log.crash(str(self.eventData))
+                                log.crash(traceback.format_exc())
+                            try:
+                                endms = time.time()
+                                pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                            except:
+                                print(traceback.format_exc())
+                        threading.Thread(target=runSound, args=(randomInt,)).start()
+                        played = True
+                        for sound in self.eventData["events"]:
+                            dateArray = pytools.clock.getDateTime()
+                            
+                            logError = True
+                            while logError:
+                                try:
+                                    log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                    logError = False
+                                except:
+                                    pass
+                            # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                except:
+                    print(traceback.format_exc())
+            except:
+                log.audio("Failed to send audio event. Trying again...")
+                log.audio(str(self.eventData))
+                log.audio(traceback.format_exc())
+                log.crash("Failed to send audio event. Trying again...")
+                log.crash(str(self.eventData))
+                log.crash(traceback.format_exc())
+            time.sleep(1)
+            if self.eventData["wait"]:
+                time.sleep(duration)
+            if played != True:
+                log.audio("Failed audio event.")
+                log.audio(str(self.eventData))
+            
+    def runOld():
+        if False:
             if False:
                 if self.wait:
                     os.system("start /low /d \"" + os.getcwd().replace("\\working", "") + "\" /b /wait "" .\\ambience.exe .\\modules\\audio.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
@@ -1210,6 +1387,179 @@ class playSoundAll:
         obj.activeSounds[uuid] = [self.path.split("\\")[-1], "windown", pytools.clock.getDateTime(), duration]
         soundReportObj = reportSound(uuid)
         threading.Thread(target=soundReportObj.run).start()
+        
+        
+        startms = time.time()
+        
+        played = False
+        
+        try:
+            hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+            if "0.0.0.0" in hostList:
+                hostList.remove("0.0.0.0")
+                
+            hosts.listf = hostList
+        except:
+            print("Could not grab hosts list.")
+            
+        def grabHostData():
+            try:
+                hostData = pytools.IO.getJson(".\\hostData.json")
+                if "0.0.0.0" in hostList:
+                    hostData.pop("0.0.0.0")
+                    
+                hosts.soundsf = hostData
+            except:
+                print("Could not grab hosts list.")
+        
+        grabHostData()        
+        
+        try:
+            def getHostToSendTo():
+                randomInt = -1
+                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
+                    randomInt = tools.getRandomInt(hosts.soundsf)
+                    if hosts.listf[randomInt] in hosts.soundsf:
+                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
+                            if tools.ping(hosts.listf[randomInt]):
+                                break
+                    else:
+                        randomInt = -1
+                        grabHostData()
+                    print("No hosts connected. Waiting for connection...")
+                return randomInt
+            
+            randomInt = getHostToSendTo()
+            try:
+                if not sendFile:
+                    def runSound(randomInt):
+                        try:
+                            hasFired = False
+                            errorCount = 0
+                            while (not hasFired) and (errorCount < 100):
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(eventData))
+                                    })), timeout=10)
+                                    hasFired = True
+                                except:
+                                    import traceback
+                                    print(traceback.format_exc())
+                                    errorCount = errorCount + 1
+                                    if errorCount > 100:
+                                        log.audio("Failed audio event.")
+                                        log.audio(str(eventData))
+                                        log.audio(traceback.format_exc())
+                                        log.crash("Failed audio event.")
+                                        log.crash(str(eventData))
+                                        log.crash(traceback.format_exc())
+                                    else:
+                                        log.audio("Failed to send audio event. Trying again...")
+                                    randomInt = getHostToSendTo()
+                                    print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                time.sleep(0.1)
+                        except:
+                            log.audio("Failed audio event.")
+                            log.audio(str(eventData))
+                            log.audio(traceback.format_exc())
+                            log.crash("Failed audio event.")
+                            log.crash(str(eventData))
+                            log.crash(traceback.format_exc())
+                        try:
+                            endms = time.time()
+                            pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                        except:
+                            print(traceback.format_exc())
+                    threading.Thread(target=runSound, args=(randomInt,)).start()
+                    played = True
+                    for sound in eventData["events"]:
+                        dateArray = pytools.clock.getDateTime()
+                        
+                        logError = True
+                        while logError:
+                            try:
+                                log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                logError = False
+                            except:
+                                pass
+                        # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                else:
+                    def runSound(randomInt):
+                        try:
+                            print(eventData["events"][0]["path"])
+                            hasFired = False
+                            errorCount = 0
+                            while (not hasFired) and (errorCount < 100):
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(eventData)),
+                                        "fileData": {
+                                            "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(eventData["events"][0]["path"].replace(".\\working\\", ".\\")), isBytes=True),
+                                            "fileName": eventData["events"][0]["path"].split("\\")[-1]
+                                        }
+                                    })), timeout=10)
+                                    hasFired = True
+                                except:
+                                    import traceback
+                                    print(traceback.format_exc())
+                                    errorCount = errorCount + 1
+                                    if errorCount > 100:
+                                        log.audio("Failed audio event.")
+                                        log.audio(str(eventData))
+                                        log.audio(traceback.format_exc())
+                                        log.crash("Failed audio event.")
+                                        log.crash(str(eventData))
+                                        log.crash(traceback.format_exc())
+                                    else:
+                                        log.audio("Failed to send audio event. Trying again...")
+                                    randomInt = getHostToSendTo()
+                                    print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                time.sleep(0.1)
+                        except:
+                            log.audio("Failed audio event.")
+                            log.audio(str(eventData))
+                            log.audio(traceback.format_exc())
+                            log.crash("Failed audio event.")
+                            log.crash(str(eventData))
+                            log.crash(traceback.format_exc())
+                        try:
+                            endms = time.time()
+                            pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                        except:
+                            print(traceback.format_exc())
+                    threading.Thread(target=runSound, args=(randomInt,)).start()
+                    played = True
+                    for sound in eventData["events"]:
+                        dateArray = pytools.clock.getDateTime()
+                        
+                        logError = True
+                        while logError:
+                            try:
+                                log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                logError = False
+                            except:
+                                pass
+                        # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+            except:
+                print(traceback.format_exc())
+        except:
+            log.audio("Failed to send audio event. Trying again...")
+            log.audio(str(eventData))
+            log.audio(traceback.format_exc())
+            log.crash("Failed to send audio event. Trying again...")
+            log.crash(str(eventData))
+            log.crash(traceback.format_exc())
+        time.sleep(1)
+        if eventData["wait"]:
+            time.sleep(duration)
+        if played != True:
+            log.audio("Failed audio event.")
+            log.audio(str(eventData))
+        
+    def runOld():
+        return
         if False:
             if self.wait:
                 os.system("start /low /d \"" + os.getcwd().replace("\\working", "") + "\" /b /wait "" .\\ambience.exe .\\modules\\audio.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
@@ -1510,7 +1860,215 @@ class event:
             soundReportObj = reportSound(uuid)
             threading.Thread(target=soundReportObj.run).start()
     
-    def run(self, spawnChild=True, sendFile=False):
+    def run(self, spawnChild=True, sendFile=False, largeFile=False):
+        played = False
+        startms = time.time()
+        try:
+            hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+            if "0.0.0.0" in hostList:
+                hostList.remove("0.0.0.0")
+                
+            hosts.listf = hostList
+        except:
+            print("Could not grab hosts list.")
+        
+        def grabHostData():
+            try:
+                hostData = pytools.IO.getJson(".\\hostData.json")
+                if "0.0.0.0" in hostList:
+                    hostData.pop("0.0.0.0")
+                    
+                hosts.soundsf = hostData
+            except:
+                print("Could not grab hosts list.")
+        
+        grabHostData()        
+        
+        try:
+            def getHostToSendTo():
+                randomInt = -1
+                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
+                    randomInt = tools.getRandomInt(hosts.soundsf)
+                    if hosts.listf[randomInt] in hosts.soundsf:
+                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
+                            if tools.ping(hosts.listf[randomInt]):
+                                break
+                    else:
+                        randomInt = -1
+                        grabHostData()
+                    print("No hosts connected. Waiting for connection...")
+                return randomInt
+                    
+            randomInt = getHostToSendTo()
+            
+            if sendFile and largeFile:
+                fileBytes = pytools.IO.getBytes(self.eventData["events"][0]["path"].replace(".\\working\\", ".\\"))
+                bytesI = 0
+                isFirstSend = True
+                while (bytesI * 1000) < len(fileBytes):
+                    hasSentBytes = False
+                    errorCount = 0
+                    while (not hasSentBytes) and (errorCount < 100):
+                        try:
+                            pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                "command": "sendAudioData",
+                                "data": {
+                                    "fileName": self.eventData["events"][0]["path"],
+                                    "fileData": pytools.cipher.base64_encode(fileBytes[bytesI * 1000:(bytesI + 1) * 1000], isBytes=True),
+                                    "isFirstSend": isFirstSend
+                                }
+                            })), timeout=10)
+                            isFirstSend = False
+                            hasSentBytes = True
+                        except:
+                            import traceback
+                            print(traceback.format_exc())
+                            errorCount = errorCount + 1
+                            if errorCount > 100:
+                                log.audio("Failed audio event.")
+                                log.audio(str(self.eventData))
+                                log.audio(traceback.format_exc())
+                                log.crash("Failed audio event.")
+                                log.crash(str(self.eventData))
+                                log.crash(traceback.format_exc())
+                            else:
+                                log.audio("Failed to send audio event. Trying again...")
+                            randomInt = getHostToSendTo()
+                    bytesI = bytesI + 1
+                
+                sendFile = False
+            
+            try:
+                if not sendFile:
+                    def runSound(randomInt):
+                        try:
+                            hasFired = False
+                            errorCount = 0
+                            while (not hasFired) and (errorCount < 100):
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(self.eventData))
+                                    })), timeout=10)
+                                    hasFired = True
+                                except:
+                                    import traceback
+                                    print(traceback.format_exc())
+                                    errorCount = errorCount + 1
+                                    if errorCount > 100:
+                                        log.audio("Failed audio event.")
+                                        log.audio(str(self.eventData))
+                                        log.audio(traceback.format_exc())
+                                        log.crash("Failed audio event.")
+                                        log.crash(str(self.eventData))
+                                        log.crash(traceback.format_exc())
+                                    else:
+                                        log.audio("Failed to send audio event. Trying again...")
+                                    randomInt = getHostToSendTo()
+                                    print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                time.sleep(0.1)
+                        except:
+                            log.audio("Failed audio event.")
+                            log.audio(str(self.eventData))
+                            log.audio(traceback.format_exc())
+                            log.crash("Failed audio event.")
+                            log.crash(str(self.eventData))
+                            log.crash(traceback.format_exc())
+                        try:
+                            endms = time.time()
+                            pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                        except:
+                            print(traceback.format_exc())
+                    threading.Thread(target=runSound, args=(randomInt,)).start()
+                    played = True
+                    for sound in self.eventData["events"]:
+                        dateArray = pytools.clock.getDateTime()
+                        
+                        logError = True
+                        while logError:
+                            try:
+                                log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                logError = False
+                            except:
+                                pass
+                        # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                else:
+                    def runSound(randomInt):
+                        try:
+                            print(self.eventData["events"][0]["path"])
+                            hasFired = False
+                            errorCount = 0
+                            while (not hasFired) and (errorCount < 100):
+                                try:
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "fireEvent",
+                                        "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
+                                        "fileData": {
+                                            "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.eventData["events"][0]["path"].replace(".\\working\\", ".\\")), isBytes=True),
+                                            "fileName": self.eventData["events"][0]["path"].split("\\")[-1]
+                                        }
+                                    })), timeout=10)
+                                    hasFired = True
+                                except:
+                                    print(traceback.format_exc())
+                                    errorCount = errorCount + 1
+                                    if errorCount > 100:
+                                        log.audio("Failed audio event.")
+                                        log.audio(str(self.eventData))
+                                        log.audio(traceback.format_exc())
+                                        log.crash("Failed audio event.")
+                                        log.crash(str(self.eventData))
+                                        log.crash(traceback.format_exc())
+                                    else:
+                                        log.audio("Failed to send audio event. Trying again...")
+                                    randomInt = getHostToSendTo()
+                                    print("Trying again on host " + hosts.listf[randomInt] + "...")
+                                time.sleep(0.1)
+                        except:
+                            log.audio("Failed audio event.")
+                            log.audio(str(self.eventData))
+                            log.audio(traceback.format_exc())
+                            log.crash("Failed audio event.")
+                            log.crash(str(self.eventData))
+                            log.crash(traceback.format_exc())
+                        try:
+                            endms = time.time()
+                            pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
+                        except:
+                            import traceback
+                            print(traceback.format_exc())
+                    threading.Thread(target=runSound, args=(randomInt,)).start()
+                    played = True
+                    for sound in self.eventData["events"]:
+                        dateArray = pytools.clock.getDateTime()
+                        
+                        logError = True
+                        while logError:
+                            try:
+                                log.audio("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+                                logError = False
+                            except:
+                                pass
+                        # print("Playing sound " + str(sound["path"]) + " on speaker " + str(sound["channel"]) + " with volume " + str(sound["volume"]) + " at speed " + str(sound["speed"]) + " using client " + hosts.listf[randomInt] + "...")
+            except:
+                print(traceback.format_exc())
+
+        except:
+            log.audio("Failed to send audio event. Trying again...")
+            log.audio(str(self.eventData))
+            import traceback
+            log.audio(traceback.format_exc())
+            log.crash("Failed to send audio event. Trying again...")
+            log.crash(str(self.eventData))
+            log.crash(traceback.format_exc())
+        time.sleep(1)
+        if self.eventData["wait"]:
+            time.sleep(self.duration)
+        if played != True:
+            log.audio("Failed audio event.")
+            log.audio(str(self.eventData))
+
+    def runOld(self, spawnChild=True, sendFile=False):
         startms = time.time()
         if False:
             if spawnChild:
@@ -1605,7 +2163,7 @@ class event:
                                                             pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
                                                                 "command": "fireEvent",
                                                                 "data": pytools.cipher.base64_encode(json.dumps(self.eventData))
-                                                            })))
+                                                            })), timeout=10)
                                                             hasFired = True
                                                         except:
                                                             errorCount = errorCount + 1
@@ -1659,7 +2217,7 @@ class event:
                                                                     "data" : pytools.cipher.base64_encode(pytools.IO.getBytes(self.eventData["events"][0]["path"].replace(".\\working\\", ".\\")), isBytes=True),
                                                                     "fileName": self.eventData["events"][0]["path"].split("\\")[-1]
                                                                 }
-                                                            })))
+                                                            })), timeout=10)
                                                             hasFired = True
                                                         except:
                                                             errorCount = errorCount + 1
@@ -1775,6 +2333,11 @@ class command:
                                     "bool": boolf
                                 }
                             })))
+                            if not target:
+                                if boolf:
+                                    pytools.IO.saveFile(".\\" + flagName + ".derp", "")
+                                else:
+                                    pytools.IO.saveFile("del \".\\" + flagName + ".derp\" /f /q")
                             print("Flag Set.")
                         except:
                             print("Error. Flag could not be set.")

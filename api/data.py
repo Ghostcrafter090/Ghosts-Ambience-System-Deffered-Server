@@ -27,15 +27,83 @@ class status:
 class globals:
     lat = 0
     lon = 0
-    urlBase = 'http://gsweathermore.ddns.net:226/access.php?grabopenspec=true&lat=<lat>&lon=<lon>&key='
+    urlBase = 'http://gsweathermore.ddns.net:226/access.php?grabopenlocspec=true&lat=<lat>&lon=<lon>&key='
     urlBaseNorth = 'http://gsweathermore.ddns.net:226/access.php?grabopennorth=true&lat=<lat>&lon=<lon>&key='
     urlBaseSouth = 'http://gsweathermore.ddns.net:226/access.php?grabopensouth=true&lat=<lat>&lon=<lon>&key='
     urlBaseEast = 'http://gsweathermore.ddns.net:226/access.php?grabopeneast=true&lat=<lat>&lon=<lon>&key='
     urlBaseWest = 'http://gsweathermore.ddns.net:226/access.php?grabopenwest=true&lat=<lat>&lon=<lon>&key='
     
+    # ["main_code", <clear_percent>, <clouds_percent>, <rain_percent>, <hail_percent>, <thunder_percent>, <snow_percent>]
+    
+    conditionCodes = {
+        200: ["thunder", 0, 100, 10, 1, 50, 0],
+        201: ["thunder", 0, 100, 50, 5, 75, 0],
+        202: ["thunder", 0, 100, 100, 10, 100, 0],
+        210: ["thunder", 0, 100, 0, 0, 25, 0],
+        211: ["thunder", 0, 100, 5, 1, 50, 0],
+        212: ["thunder", 0, 100, 10, 2, 75, 0],
+        221: ["thunder", 50, 50, 5, 1, 15, 0],
+        230: ["thunder", 0, 100, 5, 0, 25, 0],
+        231: ["thunder", 0, 100, 20, 0, 50, 0],
+        232: ["thunder", 0, 100, 40, 1, 100, 0],
+        
+        300: ["mist", 0, 100, 5, 0, 0, 0],
+        301: ["mist", 0, 100, 10, 0, 0, 0],
+        302: ["mist", 0, 100, 15, 0, 0, 0],
+        310: ["mist", 0, 100, 7, 0, 0, 0],
+        311: ["mist", 0, 100, 14, 0, 0, 0],
+        312: ["mist", 0, 100, 21, 0, 0, 0],
+        313: ["mist", 0, 100, 9, 0, 0, 0],
+        314: ["mist", 0, 100, 18, 0, 0, 0],
+        321: ["mist", 0, 100, 13, 0, 0, 0],
+        
+        500: ["lightrain", 0, 100, 40, 0, 0, 0],
+        501: ["lightrain", 0, 100, 60, 0, 0, 0],
+        502: ["lightrain", 0, 100, 80, 0, 0, 0],
+        503: ["lightrain", 0, 100, 90, 0, 0, 0],
+        504: ["lightrain", 0, 100, 100, 0, 0, 0],
+        511: ["lightrain", 0, 100, 50, 45, 0, 5],
+        520: ["lightrain", 0, 100, 30, 1, 0, 0],
+        521: ["lightrain", 0, 100, 50, 2, 0, 0],
+        522: ["lightrain", 0, 100, 70, 3, 0, 0],
+        531: ["lightrain", 50, 50, 20, 0, 0, 0],
+        
+        600: ["snow", 0, 100, 0, 0, 0, 35],
+        601: ["snow", 0, 100, 0, 0, 0, 65],
+        602: ["snow", 0, 100, 0, 0, 0, 100],
+        611: ["snow", 0, 100, 15, 5, 0, 15],
+        612: ["snow", 0, 100, 5, 1, 0, 10],
+        613: ["snow", 0, 100, 25, 10, 0, 35],
+        615: ["snow", 0, 100, 25, 0, 0, 25],
+        616: ["snow", 0, 100, 50, 0, 0, 50],
+        620: ["snow", 0, 100, 0, 0, 0, 25],
+        621: ["snow", 0, 100, 0, 0, 0, 50],
+        622: ["snow", 0, 100, 0, 0, 0, 75],
+        
+        701: ["mist", 0, 100, 5, 0, 0, 0],
+        711: ["clouds", 0, 100, 0, 0, 0, 0],
+        721: ["clouds", 25, 75, 0, 0, 0, 0],
+        731: ["clouds", 50, 50, 0, 0, 0, 0],
+        741: ["clouds", 0, 100, 1, 0, 0, 0],
+        751: ["clouds", 75, 25, 0, 0, 0, 0],
+        761: ["clear", 85, 15, 0, 0, 0, 0],
+        762: ["clear", 95, 5, 0, 0, 0, 0],
+        771: ["clouds", 50, 50, 3, 0, 0, 0],
+        781: ["thunder", 0, 100, 100, 100, 100, 0],
+        
+        800: ["clear", 100, 0, 0, 0, 0, 0],
+        801: ["clouds", 75, 25, 0, 0, 0, 0],
+        802: ["clouds", 50, 50, 0, 0, 0, 0],
+        803: ["clouds", 25, 75, 0, 0, 0, 0],
+        804: ["clouds", 0, 100, 0, 0, 0, 0]
+    }
+    
+    openLatLons = []
+    
     doManual = False
     
     urlFast = 'http://gsweathermore.ddns.net:226/access.php?key=56c15c7d00df42d8815c7d00df42d8ab'
+    urlOtherFast= 'http://gsweathermore.ddns.net:226/access.php?grabotherfast=true&key=56c15c7d00df42d8815c7d00df42d8ab'
     urlSuperFast = 'http://gsweathermore.ddns.net:226/currentdata.json'
     urlPrecip = "http://gsweathermore.ddns.net:226/access.php?key=makeitrain&grabrain=true"
     dataBaseOld = [0.0, 0.0, 15000, 0.0, 'clear', 0, 1000.0, 15.0, 50.0, 0, 0]
@@ -49,9 +117,24 @@ def doManual(baseData):
         baseData[4] = "rain"
     return baseData
 
+def getCurrentOpenLatLon():
+    i = 0
+    oldestI = 0
+    while i < len(globals.openLatLons):
+        if globals.openLatLons[i][2] < globals.openLatLons[oldestI][2]:
+            oldestI = i
+        i = i + 1
+    
+    globals.openLatLons[oldestI][2] = time.time()
+    return globals.openLatLons[oldestI]
+
 class grabber:
     def getBaseData(url):
-        url = url.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
+        currentLatLon = getCurrentOpenLatLon()
+        
+        print("New Coordinate Values: " + str(currentLatLon))
+        
+        url = url.replace("<lat>", str(currentLatLon[0])).replace("<lon>", str(currentLatLon[1]))
         urlNorth = globals.urlBaseNorth.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         urlSouth = globals.urlBaseSouth.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         urlEast = globals.urlBaseEast.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
@@ -89,34 +172,60 @@ class grabber:
             print(data)
             condf = 0
             weather = 'clear'
+            
+            actualConditions = [[0, 0, 0, 0, 0, 0], 0]
+            
             while r < len(data['weather']):
-                print(data['weather'][r]['main'] )
-                try:
-                    print(data['weather'][r])
-                    if data['weather'][r]['main'] == "Thunderstorm":
-                        weather = 'thunder'
-                        condf = 6
-                    elif (data['weather'][r]['main'] == "Snow") and (condf < 5):
-                        weather = 'snow'
-                        condf = 5
-                    elif (data['weather'][r]['main'] == "Rain") and (condf < 4):
-                        weather = 'rain'
-                        condf = 4
-                    elif (data['weather'][r]['main'] == "Drizzle") and (condf < 3):
-                        weather = 'lightrain'
-                        condf = 3
-                    elif (data['weather'][r]['main'] == "Mist") and (condf < 2):
-                        weather = 'mist'
-                        condf = 2
-                    elif (data['weather'][r]['main'] == "Clouds") and (condf < 1):
-                        weather = 'clouds'
-                        condf = 1
-                    elif (float(data['weather'][r]['id']) == 500.0) and (condf < 3):
-                        weather = 'lightrain'
-                        condf = 3
-                except:
-                    print("fuck")
+                
+                weather = globals.conditionCodes[data['weather'][r]['id']][0]
+                if sum(globals.conditionCodes[data['weather'][r]['id']][1:]) > condf:
+                    condf = sum(globals.conditionCodes[data['weather'][r]['id']][1:])
+                    weather = globals.conditionCodes[data['weather'][r]['id']][0]
+                
+                actualConditions[0][0] = actualConditions[0][0] + globals.conditionCodes[data['weather'][r]['id']][1]
+                actualConditions[0][1] = actualConditions[0][1] + globals.conditionCodes[data['weather'][r]['id']][2]
+                actualConditions[0][2] = actualConditions[0][2] + globals.conditionCodes[data['weather'][r]['id']][3]
+                actualConditions[0][3] = actualConditions[0][3] + globals.conditionCodes[data['weather'][r]['id']][4]
+                actualConditions[0][4] = actualConditions[0][4] + globals.conditionCodes[data['weather'][r]['id']][5]
+                actualConditions[0][5] = actualConditions[0][5] + globals.conditionCodes[data['weather'][r]['id']][6]
+                
+                actualConditions[1] = actualConditions[1] + 1
+                
+                if False:
+                    print(data['weather'][r]['main'] )
+                    try:
+                        print(data['weather'][r])
+                        if data['weather'][r]['main'] == "Thunderstorm":
+                            weather = 'thunder'
+                            condf = 6
+                        elif (data['weather'][r]['main'] == "Snow") and (condf < 5):
+                            weather = 'snow'
+                            condf = 5
+                        elif (data['weather'][r]['main'] == "Rain") and (condf < 4):
+                            weather = 'rain'
+                            condf = 4
+                        elif (data['weather'][r]['main'] == "Drizzle") and (condf < 3):
+                            weather = 'lightrain'
+                            condf = 3
+                        elif (data['weather'][r]['main'] == "Mist") and (condf < 2):
+                            weather = 'mist'
+                            condf = 2
+                        elif (data['weather'][r]['main'] == "Clouds") and (condf < 1):
+                            weather = 'clouds'
+                            condf = 1
+                        elif (float(data['weather'][r]['id']) == 500.0) and (condf < 3):
+                            weather = 'lightrain'
+                            condf = 3
+                    except:
+                        print("fuck")
                 r = r + 1
+            
+            actualConditions[0][0] = actualConditions[0][0] / actualConditions[1]
+            actualConditions[0][1] = actualConditions[0][1] / actualConditions[1]
+            actualConditions[0][2] = actualConditions[0][2] / actualConditions[1]
+            actualConditions[0][3] = actualConditions[0][3] / actualConditions[1]
+            actualConditions[0][4] = actualConditions[0][4] / actualConditions[1]
+            actualConditions[0][5] = actualConditions[0][5] / actualConditions[1]
             
             try:
                 if grabber.lightning.currentDangerLevel > 4:
@@ -164,7 +273,7 @@ class grabber:
                     snow = float(data['snow']['3h'])
                 except:
                     snow = 0
-            array = [speed, gusts, float(data['visibility']), snow, weather, modifier, pressure, temp, humidity, direction, cape]
+            array = [speed, gusts, float(data['visibility']), snow, weather, modifier, pressure, temp, humidity, direction, cape, actualConditions]
             print(array)
             return array
         except:
@@ -177,11 +286,16 @@ class grabber:
             # url: https://api.weather.com/v2/pws/observations/current?stationId=INOVASCO146&format=json&units=s&apiKey=<apiKey>
             try:
                 data = pytools.net.getJsonAPI(url)['data']
+                otherFastData = pytools.net.getJsonAPI(globals.urlOtherFast)['data']
             except:
                 data = globals.dataFastOld
+                otherFastData = data
             globals.dataFastOld = data
             # [rainRate, rainTotal, pressure, temp, humidity, lightningDanger]
-            rainRate = data['main']['observations'][0]['metric_si']['precipRate']
+            if data['main']['observations'][0]['metric_si']['precipRate'] > otherFastData['main']['observations'][0]['metric_si']['precipRate']:
+                rainRate = data['main']['observations'][0]['metric_si']['precipRate']
+            else:
+                rainRate = otherFastData['main']['observations'][0]['metric_si']['precipRate']
             rainTotal = data['main']['observations'][0]['metric_si']['precipTotal']
             pressure = data['main']['observations'][0]['metric_si']['pressure']
             temp = data['main']['observations'][0]['metric_si']['temp']
@@ -373,7 +487,7 @@ class bulk:
             dateNewSuper = oldData[6]
             dateNewPrecip = oldData[8]
             precipData = oldData[9]
-            if (dateArray[4] % 3) == 0:
+            if (dateArray[4] % 1) == 0:
                 if oldData[4] != dateArray[4]:
                     dateNewBase = dateArray[4]
                     baseData = grabber.getBaseData(globals.urlBase)
@@ -413,7 +527,26 @@ class bulk:
             if baseDataf[1] < superData[5]:
                 baseData[1] = superData[5]
             if fastData == False:
-                fastData = [0, 0, baseData[6], baseData[7], baseData[8], 0]      
+                fastData = [0, 0, baseData[6], baseData[7], baseData[8], 0]
+            else:
+                if fastData[0] > 3:
+                    if baseData[4] != "lightrain":
+                        if baseData[4] != "rain":
+                            if baseData[4] != "thunder":
+                                if baseData[4] != "snow":
+                                    baseData[4] = "mist"
+                if fastData[0] > 5:
+                    if baseData[4] != "rain":
+                        if baseData[4] != "thunder":
+                            if baseData[4] != "snow":
+                                baseData[4] = "lightrain"
+                if fastData[0] > 7:
+                            if baseData[4] != "thunder":
+                                if baseData[4] != "snow":
+                                    baseData[4] = "rain"
+                
+                if baseData[6] == 0:
+                    baseData[6] = fastData[2]
                 
             pIf = 0
             while pIf < len(precipData):
@@ -477,7 +610,13 @@ Time        (hh:mm)  : """ + str(dateArray[3]) + ":" + str(dateArray[4])
 def setCoords():
     globals.lat = pytools.IO.getJson("location.json")["coords"][0]
     globals.lon = pytools.IO.getJson("location.json")["coords"][1]
-
+    globals.openLatLons = pytools.IO.getJson("location.json")["openweather_update_coords"]
+    
+    i = 0
+    while i < len(globals.openLatLons):
+        globals.openLatLons[i].append(time.time() - i)
+        i = i + 1
+    
 def main():
     setCoords()
     
@@ -489,10 +628,12 @@ def main():
     data = bulk.getData(1, [], True)
     while not status.exit:
         data = bulk.getData(1, data, False)
-        print(str(pytools.clock.getDateTime()) + ' ::: ' + str(data))
+        if (pytools.clock.getDateTime()[5] % 10) == 0:
+            print(str(pytools.clock.getDateTime()) + ' ::: ' + str(data))
         time.sleep(0.5)
         if (pytools.clock.getDateTime()[5] % 20) == 0:
             pytools.IO.saveList("dataList.pyl", data)
+            status.vars["dataList"] = data
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         status.finishedLoop = True
 

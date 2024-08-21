@@ -112,10 +112,13 @@ class data:
                 baseIndex = data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()), noModif=True)
                 if baseIndex > 0:
                     windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * (150 - baseIndex) ** 0.35
+                    rainModif = dataf[0][1][0]
                 else:
                     windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 2.5
+                    rainModif = dataf[0][1][0] / 5
             except:
                 windGustModif = 0
+                rainModif = 0
             try:
                 windSpeedModif = 1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234
             except:
@@ -139,13 +142,31 @@ class data:
         else:
             return False
         
-        return lightningModif + windModif + weatherModif
+        return lightningModif + windModif + weatherModif + rainModif
             
-    # https://www.desmos.com/calculator/sd674thhfq
+    # https://www.desmos.com/calculator/cen0vzl8q4
     def getHallowIndex(timeStamp, noDay=False, noModif=False):
-        u = math.floor(timeStamp / (365 * 24 * 60 * 60))
-        w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
-        q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
+        # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
+        
+        fourYearFloat = timeStamp / (1461 * 24 * 60 * 60)
+        
+        dayOfFourYears = pytools.clock.getDayOfFourYear(pytools.clock.UTCToDateArray(timeStamp))
+        
+        dayOfYear = pytools.clock.getDayOfYear(pytools.clock.UTCToDateArray(timeStamp))
+        
+        u = pytools.clock.UTCToDateArray(timeStamp)[0]
+        
+        print(u)
+        
+        # w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
+        
+        w = ((timeStamp) - (24 * 60 * 60) - (pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])) - 1) + 86400
+        
+        print(w)
+        print(dayOfYear)
+        
+        # q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
+        q = 0
         a = 100
         b = 26265600 + q
         c = 3000000000000
@@ -1106,18 +1127,3 @@ def run():
     status.hasExited = False
     main()
     status.hasExited = True
-                        
-            
-            
-            
-            
-                        
-                    
-                        
-            
-                    
-                    
-                
-            
-            
-                    

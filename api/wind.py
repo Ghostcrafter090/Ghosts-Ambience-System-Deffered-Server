@@ -72,7 +72,7 @@ class sounds:
             
         if volume > 0:
             if status.vars["nextPlays"]["lightChimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                status.vars["nextPlays"]["lightChimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
+                status.vars["nextPlays"]["lightChimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
                 audioEvent.register("light_chimney_wind.mp3", 1, volume, speed, 0.0, 0)    
                 audioEvent.run()
@@ -95,11 +95,11 @@ class sounds:
             
         if volume > 0:
             if status.vars["nextPlays"]["lightWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                status.vars["nextPlays"]["lightWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
+                status.vars["nextPlays"]["lightWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
-                audioEvent.register("light_wind.wav", 0, volume, speed, 0.0, 0)
-                audioEvent.register("light_wind.wav", 1, volume, speed, 0.0, 0)
-                audioEvent.registerWindow("light_wind.wav;light_wind_nm.mp3", [volume, volume, volume], speed, 0.0, 0)
+                audioEvent.register("light_wind.mp3", 0, volume, speed, 0.0, 0)
+                audioEvent.register("light_wind.mp3", 1, volume, speed, 0.0, 0)
+                audioEvent.registerWindow("light_wind.mp3;light_wind_nm.mp3", [volume, volume, volume], speed, 0.0, 0)
                 audioEvent.register("light_wind.mp3", 9, volume ** 0.8, speed, 0.0, 0)
                 audioEvent.run()
                 
@@ -150,10 +150,10 @@ class sounds:
         if speed < 0.1:
             speed = 0.1
         
-        fabricChance = ((volume / 15) ** 2) * 0.7
+        fabricChance = (((volume / 15) ** 2) * 0.7) / 2
         status.vars["moodChances"]["flappingFabric"] = fabricChance
-        if fabricChance > 1:
-            fabricChance = 1
+        if fabricChance > 0.33:
+            fabricChance = 0.33
         if not getChance:
             if random.random() < fabricChance:
                 if volume > 0:
@@ -287,6 +287,9 @@ class sounds:
         status.vars["moodChances"]["windMood"] = moodChance
         if moodChance > 0.22:
             moodChance = 0.22
+            
+        moodChance = moodChance / 4
+        
         if not getChance:
             if random.random() < moodChance:
                 if volume > 0:
@@ -317,9 +320,9 @@ class sounds:
         
         if volume > 0:
             if status.vars["nextPlays"]["wind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                status.vars["nextPlays"]["wind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
+                status.vars["nextPlays"]["wind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
-                audioEvent.registerWindow("wind.wav;wind_nm.mp3;porch_wind.mp3", [volume, volume, volume], speed, 0.0, 0)
+                audioEvent.registerWindow("wind.mp3;wind_nm.mp3;porch_wind.mp3", [volume, volume, volume], speed, 0.0, 0)
                 audioEvent.register("wind_nm.mp3", 9, volume ** 0.9, speed, 0.0, 0)
                 audioEvent.run()
     
@@ -341,7 +344,7 @@ class sounds:
             
         if volume > 0:
             if status.vars["nextPlays"]["chimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                status.vars["nextPlays"]["chimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
+                status.vars["nextPlays"]["chimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
                 audioEvent.register("chimney_wind.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.run()
@@ -364,7 +367,7 @@ class sounds:
             
         if volume > 0:
             if status.vars["nextPlays"]["hurricaneWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                status.vars["nextPlays"]["hurricaneWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (194 / (speed ** 0.5))
+                status.vars["nextPlays"]["hurricaneWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
                 audioEvent.register("hurricane_wail.mp3", 0, volume, speed, 0.0, 0)
                 audioEvent.register("hurricane_wail.mp3", 1, volume, speed, 0.0, 0)
