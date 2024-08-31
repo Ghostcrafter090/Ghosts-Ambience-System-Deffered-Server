@@ -51,7 +51,7 @@ class whirr:
         while globals.isChime:
             event = audio.event()
             event.register("whirr_cont.mp3", 0, 50, 1.0, 0.0, 0, clock=False, keepLoaded=True)
-            event.run()
+            # event.run()
             time.sleep(1)
         event = audio.event()
         event.register("whirr_ed.mp3", 0, 50, 1.0, 0.0, 0, clock=False)
@@ -62,7 +62,7 @@ class whirr:
         while globals.isGong:
             event = audio.event()
             event.register("gong_whirr_cont.mp3", 0, 50, 1.0, 0.0, 0, clock=False, keepLoaded=True)
-            event.run()
+            # event.run()
             time.sleep(1)
         event = audio.event()
         event.register("gong_whirr_ed.mp3", 0, 50, 1.0, 0.0, 0, clock=False)

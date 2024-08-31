@@ -13,6 +13,9 @@ import traceback
 import threading
 import subprocess
 
+import wmi
+import psutil
+
 import random
 
 try:
@@ -255,6 +258,69 @@ class client:
             })
             time.sleep(300)
 
+class soundRegister:
+    buffer = []
+    maxSoundCount = -1
+    soundCount = 0
+    
+    lastAddCount = 0
+    lastAddRemove = 0
+    
+    def run():
+        while not flags.restart:
+            try:
+                if soundRegister.maxSoundCount == -1:
+                    # puppet.killEvents()
+                    try:
+                        puppet.suspendEvents()
+                    except:
+                        pass
+                    puppet.getMaxSoundCount()
+                    try:
+                        puppet.unsuspendEvents()
+                    except:
+                        pass
+            except:
+                print(traceback.format_exc())
+            try:
+                soundRegister.soundCount = puppet.getSoundCount()
+                i = 0
+                while i < len(soundRegister.buffer):
+                    soundRegister.soundCount = puppet.getSoundCount()
+                    if (soundRegister.soundCount < (soundRegister.maxSoundCount * 0.6)): # and (soundRegister.lastAddCount < 3):
+                        soundRegister.lastAddCount = soundRegister.lastAddCount + 1
+                        puppet.fireEvent(*soundRegister.buffer[i], fromBuffer=True)
+                        soundRegister.buffer.pop(i)
+                        i = i - 1
+                    else:
+                        try:
+                            if (soundRegister.lastAddCount >= 3):
+                                print("WARNING: Large sound influx detected. Buffering...")
+                            print("Attempting to transfer audio event...")
+                            response = pytools.net.getJsonAPI("http://" + pytools.IO.getJson(".\\serverSettings.json")["ip"] + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                                "command": "transferEvent",
+                                "data": soundRegister.buffer[i][0],
+                                "fileData": soundRegister.buffer[i][1]
+                            })))
+                            if response["status"]:
+                                print("Audio event transfered.")
+                                soundRegister.buffer.pop(i)
+                                i = i - 1
+                        except:
+                            print(traceback.format_exc())
+                    i = i + 1
+            except:
+                print(traceback.format_exc())
+            
+            if (soundRegister.lastAddRemove + 1) < time.time():
+                soundRegister.lastAddCount = soundRegister.lastAddCount - 1
+                soundRegister.lastAddRemove = time.time()
+            
+            if soundRegister.lastAddCount < 0:
+                soundRegister.lastAddCount = 0
+            
+            time.sleep(0.1)
+
 class puppet:
     def ping(data):
         hosts = pytools.IO.getJson(".\\hosts.json")
@@ -275,6 +341,10 @@ class puppet:
     def getOthers():
         return pytools.IO.getJson('.\\hosts.json')["hosts"]
     
+    def getSoundCount():
+        print("Getting sound count...")
+        return len(subprocess.getoutput("tasklist /fi \"IMAGENAME eq ambience.exe\" /fo:csv").split("\n"))
+    
     def getPluginInfo(name):
         if os.path.exists(".\\vars\\pluginVarsJson\\" + name + "_keys.json"):
             return pytools.IO.getJson(".\\vars\\pluginVarsJson\\" + name + "_keys.json")
@@ -286,6 +356,72 @@ class puppet:
         for item in listf:
             out[item] = pytools.IO.getFile(item)
         return out
+    
+    def suspendEvents():
+        print("Suspending events...")
+        f = wmi.WMI()
+        for process in f.Win32_Process():
+            if process.name == "ambience.exe":
+                p = psutil.Process(process.ProcessId)
+                p.suspend()
+    
+    def unsuspendEvents():
+        print("Unsuspending events...")
+        f = wmi.WMI()
+        for process in f.Win32_Process():
+            if process.name == "ambience.exe":
+                p = psutil.Process(process.ProcessId)
+                p.resume()
+    
+    def fireEvent(eventBytes, fileData, fromBuffer=False):
+        if puppet.getSoundCount() < (soundRegister.maxSoundCount * 0.6):
+            print("Audio events received.")
+            if not flags.restart:
+                if fileData:
+                    try:
+                        pytools.IO.saveBytes(".\\sound\\assets\\" + fileData["fileName"].split(";")[0], pytools.cipher.base64_decode(fileData["data"], isBytes=True))
+                    except:
+                        print(traceback.format_exc())
+                eventData = json.loads(pytools.cipher.base64_decode(eventBytes))
+                i = 0
+                while i < len(eventData["events"]):
+                    eventData["events"][i]["path"] = eventData["events"][i]["path"].replace("\\working\\", "\\")
+                    print("Firing Audio Event " + str(eventData["events"][i]["path"]) + "...")
+                    i = i + 1
+                eventData["wait"] = False
+                if eventData["wait"]:
+                    try:
+                        if eventData["rememberanceBypass"] or (not os.path.exists("remember.derp")):
+                            os.system("start /d \"" + os.getcwd() + "\\working" + "\" /b /wait "" .\\ambience.exe ..\\modules\\audio_event.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
+                    except:
+                        if not os.path.exists("remember.derp"):
+                            os.system("start /d \"" + os.getcwd() + "\\working" + "\" /b /wait "" .\\ambience.exe ..\\modules\\audio_event.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
+                else:
+                    try:
+                        if eventData["rememberanceBypass"] or (not os.path.exists("remember.derp")):
+                            os.system("start /d \"" + os.getcwd() + "\\working" + "\" /b "" .\\ambience.exe ..\\modules\\audio_event.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
+                    except:
+                        if not os.path.exists("remember.derp"):
+                            os.system("start /d \"" + os.getcwd() + "\\working" + "\" /b "" .\\ambience.exe ..\\modules\\audio_event.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
+        
+        elif not fromBuffer:
+            puppet.registerEvent(eventBytes, fileData)
+            
+    def registerEvent(eventBytes, fileData):
+        soundRegister.buffer.append([eventBytes, fileData])
+        
+    def getMaxSoundCount():
+        print("Running benchmark test...")
+        try:
+            if pytools.IO.getJson("manualMax.json")["isActive"]:
+                if soundRegister.maxSoundCount == -1:
+                    soundRegister.maxSoundCount = pytools.IO.getJson("manualMax.json")["max"]
+                return pytools.IO.getJson("manualMax.json")["max"]
+        except:
+            pass
+        if soundRegister.maxSoundCount == -1:
+            soundRegister.maxSoundCount = (tools.benchmark.getNumberOfPlugins(tools.benchmark.get())) + puppet.getSoundCount()
+        return soundRegister.maxSoundCount
     
     def getMultiJson(listf):
         out = {}
@@ -308,27 +444,29 @@ class puppet:
                 current = hostData[host]["current"]
                 maxf = hostData[host]["max"]
                 if current < maxf:
-                    if not fileData:
-                        try:
-                            pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                "command": "fireEvent",
-                                "data": eventBytes
-                            })))
-                            sent = True
-                            break
-                        except:
-                            print(traceback.format_exc())
-                    else:
-                        try:
-                            pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                "command": "fireEvent",
-                                "data": eventBytes,
-                                "fileData": fileData
-                            })))
-                            sent = True
-                            break
-                        except:
-                            print(traceback.format_exc())
+                    if not os.path.exists(".\\working\\host-" + str(host) + ".bl"):
+                        if not fileData:
+                            try:
+                                pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    "command": "fireEvent",
+                                    "data": eventBytes
+                                })))
+                                sent = True
+                                break
+                            except:
+                                print(traceback.format_exc())
+                        else:
+                            try:
+                                pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    "command": "fireEvent",
+                                    "data": eventBytes,
+                                    "fileData": fileData
+                                })))
+                                sent = True
+                                break
+                            except:
+                                print(traceback.format_exc())
+                            
         return sent
             
     def getLoad():
@@ -483,9 +621,30 @@ class com:
                     self.wfile.write(bytes(json.dumps({
                         "data": puppet.getLoad()
                     }), "utf-8"))
+                if request["command"] == "getMaxSoundCount":
+                    self.wfile.write(bytes(json.dumps({
+                        "maxSoundCount": puppet.getMaxSoundCount()
+                    }), "utf-8"))
                 if request["command"] == "getPluginInfo":
                     self.wfile.write(bytes(json.dumps({
                         "data": puppet.getPluginInfo(request["data"]["pluginName"])
+                    }), "utf-8"))
+                if request["command"] == "getSoundCount":
+                    self.wfile.write(bytes(json.dumps({
+                        "soundCount": puppet.getSoundCount()
+                    }), "utf-8"))
+                if request["command"] == "fireEvent":
+                    try:
+                        puppet.fireEvent(request["data"], request["fileData"])
+                    except:
+                        puppet.fireEvent(request["data"], False)
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success"
+                    }), "utf-8"))
+                if request["command"] == "setFlag":
+                    puppet.generateFlag(request["data"]["flagName"], request["data"]["bool"])
+                    self.wfile.write(bytes(json.dumps({
+                        "status": "success"
                     }), "utf-8"))
                 if request["command"] == "transferEvent":
                     self.wfile.write(bytes(json.dumps({
@@ -601,13 +760,17 @@ class com:
         threadVoicemeeter = threading.Thread(target=vm.vm.handler)
         threadVConfigure = threading.Thread(target=vm.configure.handler)
         threadWakeOnLan = threading.Thread(target=client.wakeOnLan)
+        soundHandler = threading.Thread(target=soundRegister.run)
         # threadStreams = threading.Thread(target=vm.streams.handler)
         threadVoicemeeter.daemon = True
         threadVConfigure.daemon = True
         threadWakeOnLan.daemon = True
+        soundHandler.daemon = True
+        
         threadVoicemeeter.start()
         threadVConfigure.start()
         threadWakeOnLan.start()
+        soundHandler.start()
         # threadStreams.start()
         while True:
             threadf = threading.Thread(target=com.start)

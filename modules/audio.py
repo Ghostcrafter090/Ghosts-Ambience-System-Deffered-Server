@@ -900,16 +900,17 @@ class playSoundWindow:
             played = False
             
             startms = time.time()
-            try:
-                hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
-                if "0.0.0.0" in hostList:
-                    hostList.remove("0.0.0.0")
-                    
-                hosts.listf = hostList
-            except:
-                print("Could not grab hosts list.")
                 
             def grabHostData():
+                try:
+                    hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                    if "0.0.0.0" in hostList:
+                        hostList.remove("0.0.0.0")
+                        
+                    hosts.listf = hostList
+                except:
+                    print("Could not grab hosts list.")
+                
                 try:
                     hostData = pytools.IO.getJson(".\\hostData.json")
                     if "0.0.0.0" in hostList:
@@ -923,6 +924,10 @@ class playSoundWindow:
             
             try:
                 def getHostToSendTo():
+                    
+                    if (hosts.listf == []) or (random.random() < 0.5):
+                        return pytools.IO.getJson("..\\serverSettings.json")["ip"]
+                    
                     randomInt = -1
                     while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
                         randomInt = tools.getRandomInt(hosts.soundsf)
@@ -937,6 +942,15 @@ class playSoundWindow:
                     return randomInt
                 
                 randomInt = getHostToSendTo()
+                if type(randomInt) == str:
+                    hosts.listf = [randomInt]
+                    randomInt = 0
+                
+                def getPort(host):
+                    if host == pytools.IO.getJson("..\\serverSettings.json")["ip"]:
+                        return 5597
+                    return 4507
+                
                 try:
                     if not sendFile:
                         def runSound(randomInt):
@@ -945,7 +959,7 @@ class playSoundWindow:
                                 errorCount = 0
                                 while (not hasFired) and (errorCount < 100):
                                     try:
-                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                             "command": "fireEvent",
                                             "data": pytools.cipher.base64_encode(json.dumps(self.eventData))
                                         })), timeout=10)
@@ -963,7 +977,11 @@ class playSoundWindow:
                                             log.crash(traceback.format_exc())
                                         else:
                                             log.audio("Failed to send audio event. Trying again...")
+                                        grabHostData()
                                         randomInt = getHostToSendTo()
+                                        if type(randomInt) == str:
+                                            hosts.listf = [randomInt]
+                                            randomInt = 0
                                         print("Trying again on host " + hosts.listf[randomInt] + "...")
                                     time.sleep(0.1)
                             except:
@@ -999,7 +1017,7 @@ class playSoundWindow:
                                 errorCount = 0
                                 while (not hasFired) and (errorCount < 100):
                                     try:
-                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                             "command": "fireEvent",
                                             "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
                                             "fileData": {
@@ -1021,7 +1039,11 @@ class playSoundWindow:
                                             log.crash(traceback.format_exc())
                                         else:
                                             log.audio("Failed to send audio event. Trying again...")
+                                        grabHostData()
                                         randomInt = getHostToSendTo()
+                                        if type(randomInt) == str:
+                                            hosts.listf = [randomInt]
+                                            randomInt = 0
                                         print("Trying again on host " + hosts.listf[randomInt] + "...")
                                     time.sleep(0.1)
                             except:
@@ -1392,17 +1414,18 @@ class playSoundAll:
         startms = time.time()
         
         played = False
-        
-        try:
-            hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
-            if "0.0.0.0" in hostList:
-                hostList.remove("0.0.0.0")
-                
-            hosts.listf = hostList
-        except:
-            print("Could not grab hosts list.")
             
         def grabHostData():
+            
+            try:
+                hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                if "0.0.0.0" in hostList:
+                    hostList.remove("0.0.0.0")
+                    
+                hosts.listf = hostList
+            except:
+                print("Could not grab hosts list.")
+            
             try:
                 hostData = pytools.IO.getJson(".\\hostData.json")
                 if "0.0.0.0" in hostList:
@@ -1416,6 +1439,10 @@ class playSoundAll:
         
         try:
             def getHostToSendTo():
+                
+                if (hosts.listf == []) or (random.random() < 0.5):
+                    return pytools.IO.getJson("..\\serverSettings.json")["ip"]
+                
                 randomInt = -1
                 while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
                     randomInt = tools.getRandomInt(hosts.soundsf)
@@ -1430,6 +1457,15 @@ class playSoundAll:
                 return randomInt
             
             randomInt = getHostToSendTo()
+            if type(randomInt) == str:
+                hosts.listf = [randomInt]
+                randomInt = 0
+                
+            def getPort(host):
+                if host == pytools.IO.getJson("..\\serverSettings.json")["ip"]:
+                    return 5597
+                return 4507
+            
             try:
                 if not sendFile:
                     def runSound(randomInt):
@@ -1438,7 +1474,7 @@ class playSoundAll:
                             errorCount = 0
                             while (not hasFired) and (errorCount < 100):
                                 try:
-                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
                                         "data": pytools.cipher.base64_encode(json.dumps(eventData))
                                     })), timeout=10)
@@ -1456,7 +1492,11 @@ class playSoundAll:
                                         log.crash(traceback.format_exc())
                                     else:
                                         log.audio("Failed to send audio event. Trying again...")
+                                    grabHostData()
                                     randomInt = getHostToSendTo()
+                                    if type(randomInt) == str:
+                                        hosts.listf = [randomInt]
+                                        randomInt = 0
                                     print("Trying again on host " + hosts.listf[randomInt] + "...")
                                 time.sleep(0.1)
                         except:
@@ -1492,7 +1532,7 @@ class playSoundAll:
                             errorCount = 0
                             while (not hasFired) and (errorCount < 100):
                                 try:
-                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
                                         "data": pytools.cipher.base64_encode(json.dumps(eventData)),
                                         "fileData": {
@@ -1514,7 +1554,11 @@ class playSoundAll:
                                         log.crash(traceback.format_exc())
                                     else:
                                         log.audio("Failed to send audio event. Trying again...")
+                                    grabHostData()
                                     randomInt = getHostToSendTo()
+                                    if type(randomInt) == str:
+                                        hosts.listf = [randomInt]
+                                        randomInt = 0
                                     print("Trying again on host " + hosts.listf[randomInt] + "...")
                                 time.sleep(0.1)
                         except:
@@ -1863,16 +1907,18 @@ class event:
     def run(self, spawnChild=True, sendFile=False, largeFile=False):
         played = False
         startms = time.time()
-        try:
-            hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
-            if "0.0.0.0" in hostList:
-                hostList.remove("0.0.0.0")
-                
-            hosts.listf = hostList
-        except:
-            print("Could not grab hosts list.")
         
         def grabHostData():
+            
+            try:
+                hostList = pytools.IO.getJson(".\\hosts.json")["hosts"]
+                if "0.0.0.0" in hostList:
+                    hostList.remove("0.0.0.0")
+                    
+                hosts.listf = hostList
+            except:
+                print("Could not grab hosts list.")
+            
             try:
                 hostData = pytools.IO.getJson(".\\hostData.json")
                 if "0.0.0.0" in hostList:
@@ -1886,6 +1932,10 @@ class event:
         
         try:
             def getHostToSendTo():
+                
+                if (hosts.listf == []) or (random.random() < 0.5):
+                    return pytools.IO.getJson("..\\serverSettings.json")["ip"]
+                
                 randomInt = -1
                 while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
                     randomInt = tools.getRandomInt(hosts.soundsf)
@@ -1900,6 +1950,14 @@ class event:
                 return randomInt
                     
             randomInt = getHostToSendTo()
+            if type(randomInt) == str:
+                hosts.listf = [randomInt]
+                randomInt = 0
+            
+            def getPort(host):
+                if host == pytools.IO.getJson("..\\serverSettings.json")["ip"]:
+                    return 5597
+                return 4507
             
             if sendFile and largeFile:
                 fileBytes = pytools.IO.getBytes(self.eventData["events"][0]["path"].replace(".\\working\\", ".\\"))
@@ -1910,7 +1968,7 @@ class event:
                     errorCount = 0
                     while (not hasSentBytes) and (errorCount < 100):
                         try:
-                            pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                            pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                 "command": "sendAudioData",
                                 "data": {
                                     "fileName": self.eventData["events"][0]["path"],
@@ -1933,7 +1991,11 @@ class event:
                                 log.crash(traceback.format_exc())
                             else:
                                 log.audio("Failed to send audio event. Trying again...")
+                            grabHostData()
                             randomInt = getHostToSendTo()
+                            if type(randomInt) == str:
+                                hosts.listf = [randomInt]
+                                randomInt = 0
                     bytesI = bytesI + 1
                 
                 sendFile = False
@@ -1946,7 +2008,7 @@ class event:
                             errorCount = 0
                             while (not hasFired) and (errorCount < 100):
                                 try:
-                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
                                         "data": pytools.cipher.base64_encode(json.dumps(self.eventData))
                                     })), timeout=10)
@@ -1964,7 +2026,11 @@ class event:
                                         log.crash(traceback.format_exc())
                                     else:
                                         log.audio("Failed to send audio event. Trying again...")
+                                    grabHostData()
                                     randomInt = getHostToSendTo()
+                                    if type(randomInt) == str:
+                                        hosts.listf = [randomInt]
+                                        randomInt = 0
                                     print("Trying again on host " + hosts.listf[randomInt] + "...")
                                 time.sleep(0.1)
                         except:
@@ -2000,7 +2066,7 @@ class event:
                             errorCount = 0
                             while (not hasFired) and (errorCount < 100):
                                 try:
-                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
                                         "data": pytools.cipher.base64_encode(json.dumps(self.eventData)),
                                         "fileData": {
@@ -2021,7 +2087,11 @@ class event:
                                         log.crash(traceback.format_exc())
                                     else:
                                         log.audio("Failed to send audio event. Trying again...")
+                                    grabHostData()
                                     randomInt = getHostToSendTo()
+                                    if type(randomInt) == str:
+                                        hosts.listf.append(randomInt)
+                                        randomInt = 0
                                     print("Trying again on host " + hosts.listf[randomInt] + "...")
                                 time.sleep(0.1)
                         except:
