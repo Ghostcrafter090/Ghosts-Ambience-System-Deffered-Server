@@ -83,9 +83,9 @@ class hostObject:
                     # if host not in hosts.benchCache:
                     maxf = pytools.net.getJsonAPI("http://" + self.host + ":4507?json=" + urllib.parse.quote(json.dumps({
                         "command": "getMaxSoundCount"
-                    })), timeout=30)["maxSoundCount"] * 0.6
+                    })), timeout=30)["maxSoundCount"] * 0.4
                     if maxf > 0:
-                        maxf = maxf ** 0.95
+                        maxf = maxf ** 0.9
                         # if maxf != 0:
                             # hosts.benchCache[host] = maxf
                     # else:
@@ -107,9 +107,9 @@ class hostObject:
                     print("    > Testing benchmark...")
                     maxf = pytools.net.getJsonAPI("http://" + self.host + ":4507?json=" + urllib.parse.quote(json.dumps({
                         "command": "getMaxSoundCount"
-                    })), timeout=10)["maxSoundCount"] * 0.6
+                    })), timeout=10)["maxSoundCount"] * 0.4
                     if maxf > 0:
-                        maxf = maxf ** 0.95
+                        maxf = maxf ** 0.9
                     print("Benchmark tested.")
                     if hosts.soundsf[self.host]["max"] != maxf:
                         hosts.hasUpdated = True

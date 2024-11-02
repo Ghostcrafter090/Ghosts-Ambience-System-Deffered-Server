@@ -322,7 +322,7 @@ class sounds:
             if status.vars["nextPlays"]["wind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 status.vars["nextPlays"]["wind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
                 audioEvent = audio.event()
-                audioEvent.registerWindow("wind.mp3;wind_nm.mp3;porch_wind.mp3", [volume, volume, volume], speed, 0.0, 0)
+                audioEvent.registerWindow("wind.mp3;wind_nm.mp3;porch_wind.mp3", [volume * 1.3, volume * 1.3, volume * 1.3], speed, 0.0, 0)
                 audioEvent.register("wind_nm.mp3", 9, volume ** 0.9, speed, 0.0, 0)
                 audioEvent.run()
     

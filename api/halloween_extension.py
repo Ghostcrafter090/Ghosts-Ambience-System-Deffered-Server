@@ -8,6 +8,8 @@ import time
 import threading
 import math
 import modules.logManager as log
+import pylunar
+import copy
 
 print = log.printLog
 
@@ -143,8 +145,20 @@ class data:
             return False
         
         return lightningModif + windModif + weatherModif + rainModif
-            
+    
+    def getLunarPhase(dateArray):
+        
+        try:
+            coords = pytools.IO.getJson(".\\location.json", doPrint=False)["coords"]
+        except:
+            coords = pytools.IO.getJson(".\\working\\location.json")["coords"]
+        
+        moonObj = pylunar.MoonInfo((coords[0], 0, 0), (coords[1], 0, 0))
+        moonObj.update(tuple(dateArray))
+        return (moonObj.fractional_phase() - 0.5) * 2
+    
     # https://www.desmos.com/calculator/cen0vzl8q4
+    # https://www.desmos.com/calculator/gxlcmcqbq5
     def getHallowIndex(timeStamp, noDay=False, noModif=False):
         # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
         
@@ -156,14 +170,9 @@ class data:
         
         u = pytools.clock.UTCToDateArray(timeStamp)[0]
         
-        print(u)
-        
         # w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
         
         w = ((timeStamp) - (24 * 60 * 60) - (pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])) - 1) + 86400
-        
-        print(w)
-        print(dayOfYear)
         
         # q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
         q = 0
@@ -175,24 +184,25 @@ class data:
         p = 3.14159265359
         h = 50
         e = 2.71828182846
-        j = 16 * math.sin((((p) / (1180295.8))) * ( - (w - (((1180295.8) / (2)))) - (u * (365.25 * 24 * 60 * 60))))
-        l_2 = 13 * e ** ( - (((w - 1080000) ** (2)) / (g)))
-        l_3 = 13 * e ** ( - (((w - 3758400) ** (2)) / (g)))
-        l_4 = 13 * e ** ( - ((((w - q) - 6177600) ** (2)) / (g)))
-        l_5 = 13 * e ** ( - ((((w - q) - 8856000) ** (2)) / (g)))
-        l_6 = 13 * e ** ( - ((((w - q) - 11448000) ** (2)) / (g)))
-        l_7 = 13 * e ** ( - ((((w - q) - 14126400) ** (2)) / (g)))
-        l_8 = 13 * e ** ( - ((((w - q) - 16718400) ** (2)) / (g)))
-        l_9 = 13 * e ** ( - ((((w - q) - 19396800) ** (2)) / (g)))
-        l_10 = 13 * e ** ( - ((((w - q) - 22075200) ** (2)) / (g)))
-        l_11 = 13 * e ** ( - ((((w - q) - 24667200) ** (2)) / (g)))
-        l_12 = 13 * e ** ( - ((((w - q) - 27345600) ** (2)) / (g)))
-        l_13 = 13 * e ** ( - ((((w - q) - 29937600) ** (2)) / (g)))
+        # j = 16 * math.sin((((p) / (1180295.8))) * ( - (w - (((1180295.8) / (2)))) - pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])))
+        j = 16 * ( - data.getLunarPhase(pytools.clock.UTCToDateArray(timeStamp)))
+        l_2 = 15 * e ** ( - (3 * ((w - 1080000) ** (2)) / (g)))
+        l_3 = 15 * e ** ( - (3 * ((w - 3758400) ** (2)) / (g)))
+        l_4 = 15 * e ** ( - (3 * (((w - q) - 6177600) ** (2)) / (g)))
+        l_5 = 15 * e ** ( - (3 * (((w - q) - 8856000) ** (2)) / (g)))
+        l_6 = 15 * e ** ( - (3 * (((w - q) - 11448000) ** (2)) / (g)))
+        l_7 = 15 * e ** ( - (3 * (((w - q) - 14126400) ** (2)) / (g)))
+        l_8 = 15 * e ** ( - (3 * (((w - q) - 16718400) ** (2)) / (g)))
+        l_9 = 15 * e ** ( - (3 * (((w - q) - 19396800) ** (2)) / (g)))
+        l_10 = 18 * e ** ( - (1 * (((w - q) - 22075200) ** (2)) / (g)))
+        l_11 = 15 * e ** ( - (3 * (((w - q) - 24667200) ** (2)) / (g)))
+        l_12 = 15 * e ** ( - (3 * (((w - q) - 27345600) ** (2)) / (g)))
+        l_13 = 15 * e ** ( - (3 * (((w - q) - 29937600) ** (2)) / (g)))
         r = 29376000 + q
         s = 27302400 + q
         t = - 2 * ((a * e ** ( - (((w - r) ** (2)) / (c)))) + (h * e ** ( - (((w - r) ** (2)) / (g)))))
         z = - 2 * ((a * e ** ( - (((((w - s) ** (2)) / (c))) / (0.15)))) + (h * e ** ( - (((((w - s) ** (2)) / (g))) / (0.15)))))
-        k = 18 * math.sin((((p) / (302400.0))) * ((w + 36 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))
+        k = 20 * math.sin((((p) / (302400.0))) * ((w + 36 * 60 * 60) + pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0]) - 172800))
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
@@ -208,6 +218,24 @@ class data:
             return m
         else:
             return z_2
+        
+    def forecastHallowIndex(timeStamp, noDay=False):
+        i = timeStamp
+        indexMap = []
+        while i < (timeStamp + 864000):
+            indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True))
+            i = i + 3600
+            
+        return [max(indexMap), timeStamp + (indexMap.index(max(indexMap)) * 3600)]
+
+    def forecastUncannyIndex(timeStamp, noDay=False):
+        i = timeStamp
+        indexMap = []
+        while i < (timeStamp + 864000):
+            indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True) + 10)
+            i = i + 3600
+            
+        return [max(indexMap), timeStamp + (indexMap.index(max(indexMap)) * 3600)]
 
 def dummy(var):
     pass
@@ -616,11 +644,77 @@ class sections:
 
     def runMood():
         prevMin = -1
+        prevMinWaking = -1
+        lastHGeneralSpeedModifier = 1
+        lastHGeneralWakingSpeedModifier = 1
         while not status.exit:
+            
+            doWaking = False
+            try:
+                forecastIndexValues = data.forecastHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True)
+                if forecastIndexValues[0] > 0:
+                    doWaking = True
+                    if prevMinWaking != int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier))):
+                        forecastIndex = forecastIndexValues[0] ** 2
+                        forecastIndex = forecastIndex * ((forecastIndexValues[1] - pytools.clock.dateArrayToUTC(data.dateArray)) / 864000)
+                        monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
+                        monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
+                        monthC = pytools.clock.dateArrayToUTC(data.dateArray) - monthS
+                        
+                        hGeneralVol = (42 * (0.5 + (monthC / (monthE - monthS))))
+                        if hGeneralVol > 35:
+                            hGeneralVol = 35
+                        hGeneralVol = hGeneralVol * (forecastIndex / 100)
+                        
+                        if hGeneralVol > 30:
+                            hGeneralVol = 30
+                        
+                        hGeneralSpeedModifier = 0.08
+                        midnight = pytools.clock.dateArrayToUTC(pytools.clock.getMidnight(data.dateArray))
+                        sunset = pytools.clock.dateArrayToUTC(data.dayTimes[5])
+                        civil = pytools.clock.dateArrayToUTC(data.dayTimes[2])
+                        sunrise = pytools.clock.dateArrayToUTC(data.dayTimes[3])
+                        current = pytools.clock.dateArrayToUTC(data.dateArray)
+                        try:
+                            if current > sunset:
+                                hGeneralSpeedModifier = 0.08 * (((midnight - sunset) - (midnight - current)) / (midnight - sunset))
+                            elif (midnight - current) > 82800:
+                                hGeneralSpeedModifier = 0.08 * (1 - ((midnight - current - 83160) / 3600))
+                            elif current < civil:
+                                hGeneralSpeedModifier = 0.1
+                            elif current < sunrise:
+                                hGeneralSpeedModifier =  0.1 * (((sunrise - civil) / ((sunrise - civil + 1) - (sunrise - current))) - 1)
+                            else:
+                                hGeneralSpeedModifier = 0
+                        except:
+                            pass
+                        if hGeneralSpeedModifier > 0.4:
+                            hGeneralSpeedModifier = 0.4
+                        elif hGeneralSpeedModifier < 0:
+                            hGeneralSpeedModifier = 0
+                        hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((forecastIndex / 100)) ** 0.1) - 1))
+                        # if data.dateArray[1] != 11:
+                        
+                        hGeneralSpeedModifier = hGeneralSpeedModifier + (0.1 - (((forecastIndexValues[1] - pytools.clock.dateArrayToUTC(data.dateArray)) / 864000) * 0.2))
+                        
+                        lastHGeneralWakingSpeedModifier = hGeneralSpeedModifier
+                        
+                        print("Looping h_general_waking effect at volume " + str(hGeneralVol) + ", and speed " + str(1.1 - hGeneralSpeedModifier) + ". Hallow Forecast index is at: " + str(forecastIndex))
+                        moodEvent = audio.event()
+                        moodEvent.register('h_general_waking.mp3', 0, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.register('h_general_waking.mp3', 1, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.registerWindow('h_general_waking.mp3;h_general_waking.mp3', [hGeneralVol * random.random(), hGeneralVol * random.random() * 2, 1 - hGeneralVol * random.random()], 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.run()
+                        # else:
+                            # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                        prevMinWaking = int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier)))
+            except:
+                pass
+            
             if globals.run:
                 try:
                     if ((os.path.isfile('deathmode.derp') == True) and (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0)) or (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0):
-                        if prevMin != data.dateArray[4]:
+                        if prevMin != int(data.dateArray[4] / (1.1 - lastHGeneralSpeedModifier)):
                             monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
                             monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
                             monthC = pytools.clock.dateArrayToUTC(data.dateArray) - monthS
@@ -628,7 +722,11 @@ class sections:
                             hGeneralVol = (42 * (0.5 + (monthC / (monthE - monthS))))
                             if hGeneralVol > 35:
                                 hGeneralVol = 35
-                            hGeneralVol = hGeneralVol * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)
+                            hGeneralVol = hGeneralVol * (data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100) 
+                            if (data.dateArray[2] == 13) or (data.dateArray[2] == 14):
+                                if datetime(data.dateArray[0], data.dateArray[1], 13).isoweekday() == 5:
+                                    finalArray = [data.dateArray[0], data.dateArray[1], 15, 0, 0, 0]
+                                    hGeneralVol = hGeneralVol * ((2 * (random.random() + 0.5) * (1 - (math.fabs(pytools.clock.dateArrayToUTC(finalArray) - pytools.clock.dateArrayToUTC(data.dateArray) - 86400) / 86400))) + 1)
                             hGeneralSpeedModifier = 0.08
                             midnight = pytools.clock.dateArrayToUTC(pytools.clock.getMidnight(data.dateArray))
                             sunset = pytools.clock.dateArrayToUTC(data.dayTimes[5])
@@ -653,16 +751,19 @@ class sections:
                             elif hGeneralSpeedModifier < 0:
                                 hGeneralSpeedModifier = 0
                             hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) / 100)) ** 0.1) - 1))
+                            
+                            lastHGeneralSpeedModifier = hGeneralSpeedModifier
+                            
                             # if data.dateArray[1] != 11:
-                            print("Looping h_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
+                            print("Looping h_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1.1 - hGeneralSpeedModifier) + ".")
                             moodEvent = audio.event()
-                            moodEvent.register('h_general.mp3', 0, hGeneralVol, 1, 0, 0)
-                            moodEvent.register('h_general.mp3', 1, hGeneralVol, 1, 0, 0)
-                            moodEvent.registerWindow('h_general.mp3;h_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.register('h_general.mp3', 0, hGeneralVol, 1.1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent.register('h_general.mp3', 1, hGeneralVol, 1.1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent.registerWindow('h_general.mp3;h_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1.1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.run()
                             # else:
                                 # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
-                            prevMin = data.dateArray[4]
+                            prevMin = int(data.dateArray[4] / (1.1 - lastHGeneralSpeedModifier))
                         
                         moodChance = [0, 0, 0, 0, 0, 0]
                         
@@ -699,6 +800,12 @@ class sections:
                             moodChance[i] = moodChance[i] * moodChanceModif
                             i = i + 1
                         
+                        if (data.dateArray[2] == 13) or (data.dateArray[2] == 14):
+                            if datetime(data.dateArray[0], data.dateArray[1], 13).isoweekday() == 5:
+                                finalArray = [data.dateArray[0], data.dateArray[1], 15, 0, 0, 0]
+                                moodChance[2] = moodChance[2] * ((1000 * (random.random() + 0.5) * (1 - (math.fabs(pytools.clock.dateArrayToUTC(finalArray) - pytools.clock.dateArrayToUTC(data.dateArray) - 86400) / 86400))) + 1)
+                                moodChance[3] = moodChance[3] * ((1000 * (random.random() + 0.5) * (1 - (math.fabs(pytools.clock.dateArrayToUTC(finalArray) - pytools.clock.dateArrayToUTC(data.dateArray) - 86400) / 86400))) + 1)
+                                
                         if random.randrange(0, 25000) < moodChance[0]:
                             moodEvent = audio.event()
                             moodEvent.register('h_general_mood.mp3', 0, hGeneralVol, 1, 0, 0)
@@ -746,9 +853,14 @@ class sections:
                     pass
                 time.sleep(0.1)
             wait = True
+            
             for n in sections.moodChance:
                 if n > 0:
                     wait = False
+            
+            if doWaking:
+                wait = False
+            
             if wait:
                 time.sleep(1)
 
@@ -756,11 +868,78 @@ class sections:
 
     def runUncannyMood():
         prevMin = -1
+        prevMinWaking = -1
+        lastHGeneralWakingSpeedModifier = 0
+        lastHGeneralSpeedModifier = 0
         while not status.exit:
+            
+            doWaking = False
+            try:
+                forecastIndexValues = data.forecastUncannyIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True)
+                if (forecastIndexValues[0] > 0) and (forecastIndexValues[0] < 10) and (pytools.clock.UTCToDateArray(forecastIndexValues[1])[1] == 10):
+                    doWaking = True
+                    if prevMinWaking != int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier))):
+                        forecastIndex = forecastIndexValues[0] ** 2
+                        forecastIndex = forecastIndex * ((forecastIndexValues[1] - pytools.clock.dateArrayToUTC(data.dateArray)) / 864000)
+                        doWaking = True
+                        monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
+                        monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
+                        monthC = pytools.clock.dateArrayToUTC(data.dateArray) - monthS
+                        
+                        hGeneralVol = (42 * (0.5 + (monthC / (monthE - monthS))))
+                        if hGeneralVol > 35:
+                            hGeneralVol = 35
+                        hGeneralVol = hGeneralVol * (forecastIndex / 100)
+                        
+                        if hGeneralVol > 30:
+                            hGeneralVol = 30
+                        
+                        hGeneralSpeedModifier = 0.08
+                        midnight = pytools.clock.dateArrayToUTC(pytools.clock.getMidnight(data.dateArray))
+                        sunset = pytools.clock.dateArrayToUTC(data.dayTimes[5])
+                        civil = pytools.clock.dateArrayToUTC(data.dayTimes[2])
+                        sunrise = pytools.clock.dateArrayToUTC(data.dayTimes[3])
+                        current = pytools.clock.dateArrayToUTC(data.dateArray)
+                        try:
+                            if current > sunset:
+                                hGeneralSpeedModifier = 0.08 * (((midnight - sunset) - (midnight - current)) / (midnight - sunset))
+                            elif (midnight - current) > 82800:
+                                hGeneralSpeedModifier = 0.08 * (1 - ((midnight - current - 83160) / 3600))
+                            elif current < civil:
+                                hGeneralSpeedModifier = 0.1
+                            elif current < sunrise:
+                                hGeneralSpeedModifier =  0.1 * (((sunrise - civil) / ((sunrise - civil + 1) - (sunrise - current))) - 1)
+                            else:
+                                hGeneralSpeedModifier = 0
+                        except:
+                            pass
+                        if hGeneralSpeedModifier > 0.4:
+                            hGeneralSpeedModifier = 0.4
+                        elif hGeneralSpeedModifier < 0:
+                            hGeneralSpeedModifier = 0
+                        hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((forecastIndex / 100)) ** 0.1) - 1))
+                        
+                        hGeneralSpeedModifier = hGeneralSpeedModifier + (0.1 - (((forecastIndexValues[1] - pytools.clock.dateArrayToUTC(data.dateArray)) / 864000) * 0.2))
+                        
+                        lastHGeneralWakingSpeedModifier = hGeneralSpeedModifier
+                        
+                        # if data.dateArray[1] != 11:
+                        print("Looping hu_general_waking effect at volume " + str(hGeneralVol) + ", and speed " + str(1.1 - hGeneralSpeedModifier) + ". Uncanny Forecast index is at: " + str(forecastIndex))
+                        moodEvent = audio.event()
+                        moodEvent.register('hu_general_waking.mp3', 0, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.register('hu_general_waking.mp3', 1, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.registerWindow('hu_general_waking.mp3;hu_general_waking.mp3', [hGeneralVol * random.random(), hGeneralVol * random.random() * 2, hGeneralVol * random.random()], 1.1 - hGeneralSpeedModifier, 0, 0)
+                        moodEvent.run()
+                        # else:
+                            # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                        prevMinWaking = int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier)))
+            except:
+                pass
+            
             if globals.runUncanny:
                 try:
                     if (os.path.isfile('deathmode.derp') and (-data.getHallowIndex(pytools.clock.dateArrayToUTC(data.dateArray), noDay=True) > 0)):
-                        if prevMin != data.dateArray[4]:
+                        if prevMin != int(data.dateArray[4] / (1 - lastHGeneralSpeedModifier)):
                             monthS = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1], 1, 0, 0, 0])
                             monthE = pytools.clock.dateArrayToUTC([data.dateArray[0], data.dateArray[1] + 1, 1, 0, 0, 0])
                             monthC = pytools.clock.dateArrayToUTC(data.dateArray) - monthS
@@ -797,16 +976,18 @@ class sections:
                             if type(hGeneralSpeedModifier) == complex:
                                 hGeneralSpeedModifier = hGeneralSpeedModifier.real
                             
+                            lastHGeneralSpeedModifier = hGeneralSpeedModifier
+                            
                             # if data.dateArray[1] != 11:
                             print("Looping hu_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
                             moodEvent = audio.event()
-                            moodEvent.register('hu_general.mp3', 0, hGeneralVol, 1, 0, 0)
-                            moodEvent.register('hu_general.mp3', 1, hGeneralVol, 1, 0, 0)
-                            moodEvent.registerWindow('hu_general.mp3;hu_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1, 0, 0)
+                            moodEvent.register('hu_general.mp3', 0, hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent.register('hu_general.mp3', 1, hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
+                            moodEvent.registerWindow('hu_general.mp3;hu_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.run()
                             # else:
                                 # audio.playSoundAll('hu_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
-                            prevMin = data.dateArray[4]
+                            prevMin = int(data.dateArray[4] / (1 - lastHGeneralSpeedModifier))
                         
                         uncannyMoodChance = [0, 0, 0, 0, 0, 0]
                         
@@ -890,9 +1071,14 @@ class sections:
                     pass
                 time.sleep(0.1)
             wait = True
+            
             for n in sections.uncannyMoodChance:
                 if n > 0:
                     wait = False
+            
+            if doWaking:
+                wait = False
+            
             if wait:
                 time.sleep(1)
         

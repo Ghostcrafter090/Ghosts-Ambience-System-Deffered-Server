@@ -199,10 +199,16 @@ class haunts:
             hallowFactor = (a * e ** (-(((current - b) ** 2) / c))) + (h * e ** (-(((current - f) ** 2) / g))) + j + k + l
             pytools.IO.saveFile("hallowFactor.cx", str(hallowFactor))
             
-            hallowFactor = hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
+            horrorForecast = hallow.data.forecastHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
+            horrorFactorForecast = horrorForecast[0] * (1 - (math.fabs(horrorForecast[1] - pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - 432000.0) / 432000))
+            horrorIndex = hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
+            if horrorIndex < horrorFactorForecast:
+                hallowFactor = 6 + horrorFactorForecast
+            else:
+                hallowFactor = 6 + horrorIndex
             
-            if hallowFactor < 6:
-                hallowFactor = 6
+            if hallowFactor < 0:
+                hallowFactor = 0
             while len(haunts.getGhosts()) < (hallowFactor / 6):
                 haunts.randomRegister()
             haunts.purgeGhosts()
@@ -274,7 +280,7 @@ class ghost:
                 if random.random() < (((0.00004 * self.activity * math.fabs(self.mood))) / (4 - self.prop["type"])):
                     chance = random.random()
                     if (chance * 1000) > (math.fabs(self.mood) * self.activity):
-                        chance = self.mood * self.activity
+                        chance = math.fabs(self.mood) * self.activity
                     else:
                         chance = chance * 1000
                     ghSpeaker = 5
@@ -432,7 +438,7 @@ class ghost:
         def echo(selff, dateArray):
             self = selff
             self.activity = self.getActivity(self.prop["details"]["activity"])
-            self.mood = ((self.mood * 3) + (((2 * random.random()) - 1)) / 4) + (0.1 * random.random() * self.prop["details"]["hatrid"]) + (0.1 * random.random() * self.prop["details"]["love"]) 
+            self.mood = (((self.mood * 3) + ((self.mood + ((2 * ((random.random() - 0.5) * 2))) - (0.01 * random.random() * self.prop["details"]["hatrid"]) + (0.01 * random.random() * self.prop["details"]["love"])))) / 4) 
             if self.wallAnger > 200:
                 if self.activeMemmory != False:
                     self.prop["details"]["completedMemmories"][str(self.activeMemmory)] = True
@@ -452,7 +458,7 @@ class ghost:
                 if wall == False:
                     # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(0, 0, (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
-                    self.mood = self.mood - (5 / (self.prop["details"]["hatrid"] - self.prop["details"]["love"]))
+                    self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 40))
                 else:
                     self.wallAnger = self.wallAnger - math.fabs((self.mood / 400))
                     if self.wallAnger < 1:
@@ -474,7 +480,7 @@ class ghost:
         def spirit(selff, dateArray):
             self = selff
             self.activity = self.getActivity(self.prop["details"]["activity"]) * self.getSpm()
-            self.mood = ((self.mood * 3) + (((4 * random.random()) - 1)) / 4) + (0.1 * random.random() * self.prop["details"]["hatrid"]) + (0.1 * random.random() * self.prop["details"]["love"]) 
+            self.mood = (((self.mood * 4) + ((self.mood + ((4 * ((random.random() - 0.5) * 2))) - (0.05 * random.random() * self.prop["details"]["hatrid"]) + (0.05 * random.random() * self.prop["details"]["love"])))) / 5) 
             if self.wallAnger > 200:
                 if self.activeMemmory != False:
                     self.prop["details"]["completedMemmories"][str(self.activeMemmory)] = True
@@ -496,7 +502,7 @@ class ghost:
                 if wall == False:
                     # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
-                    self.mood = self.mood - (5 / (self.prop["details"]["hatrid"] - self.prop["details"]["love"]))
+                    self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 30))
                 else:
                     self.wallAnger = self.wallAnger - math.fabs((self.mood / 400))
                     if self.wallAnger < 1:
@@ -546,7 +552,7 @@ class ghost:
         def poltergeist(selff, dateArray):
             self = selff
             self.activity = self.getActivity(self.prop["details"]["activity"]) * self.getSpm()
-            self.mood = ((self.mood * 3) + (((8 * random.random()) - 1)) / 4) + (0.1 * random.random() * self.prop["details"]["hatrid"]) + (0.1 * random.random() * self.prop["details"]["love"]) 
+            self.mood = (((self.mood * 6) + ((self.mood + ((8 * ((random.random() - 0.5) * 2))) - (0.1 * random.random() * self.prop["details"]["hatrid"]) + (0.1 * random.random() * self.prop["details"]["love"])))) / 7) 
             if self.wallAnger > 200:
                 if self.activeMemmory != False:
                     self.prop["details"]["completedMemmories"][str(self.activeMemmory)] = True
@@ -568,7 +574,7 @@ class ghost:
                 if wall == False:
                     # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
-                    self.mood = self.mood - (5 / (self.prop["details"]["hatrid"] - self.prop["details"]["love"]))
+                    self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 20))
                 else:
                     self.wallAnger = self.wallAnger - math.fabs((self.mood / 400))
                     if self.wallAnger < 1:
@@ -686,7 +692,7 @@ class ghost:
         def demon(selff, dateArray):
             self = selff
             self.activity = self.getActivity(self.prop["details"]["activity"]) * self.getSpm()
-            self.mood = ((self.mood * 3) + (((16 * random.random()) - 1)) / 4) + (0.1 * random.random() * self.prop["details"]["hatrid"]) + (0.1 * random.random() * self.prop["details"]["love"]) 
+            self.mood = (((self.mood * 12) + ((self.mood + ((16 * ((random.random() - 0.5) * 2))) - (0.12 * random.random() * self.prop["details"]["hatrid"]) + (0.12 * random.random() * self.prop["details"]["love"])))) / 13) 
             if self.wallAnger > 200:
                 if self.activeMemmory != False:
                     self.prop["details"]["completedMemmories"][str(self.activeMemmory)] = True
@@ -708,7 +714,7 @@ class ghost:
                 if wall == False:
                     # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
-                    self.mood = self.mood - (5 / (self.prop["details"]["hatrid"] - self.prop["details"]["love"]))
+                    self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 10))
                 else:
                     self.wallAnger = self.wallAnger - math.fabs((self.mood / 400))
                     if self.wallAnger < 1:
@@ -899,7 +905,7 @@ def main():
             threads.register(n)
     
     for n in threads.list:
-            threads.list[n].start()
+        threads.list[n].start()
     
     while not status.exit:
         haunts.handler.handle()

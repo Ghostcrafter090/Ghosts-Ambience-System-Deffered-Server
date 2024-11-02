@@ -14,18 +14,39 @@ import subprocess
 import urllib.parse
 import json
 import random
+import math
 
 def getNewJson(path, doPrint=True):
     import traceback
     error = 0
+    
+    if path in globals.jsonDictionary:
+        if (globals.jsonDictionary[path][1] + 1) > time.time():
+            return globals.jsonDictionary[path][0]
+    
     try:
         if path[0:2] == "\\\\":
-            jsonData = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
-                "command": "getJson",
-                "data": {
-                    "path": ".\\" + path.split("\\ambience\\")[1]
-                }
-            })))["data"]
+            ifn = 0
+            _doStop = False
+            while (ifn < 2) and (not _doStop):
+                try:
+                    jsonData = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                        "command": "getJson",
+                        "data": {
+                            "path": ".\\" + path.split("\\ambience\\")[1]
+                        }
+                    })), timeout=1)["data"]
+                    _doStop = True
+                except:
+                    ifn = ifn + 1
+                
+            if ifn >= 2:
+                jsonData = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                        "command": "getJson",
+                        "data": {
+                            "path": ".\\" + path.split("\\ambience\\")[1]
+                        }
+                    })), timeout=1)["data"]
         else:
             file = open(path, "r")
             jsonData = json.loads(file.read())
@@ -38,16 +59,22 @@ def getNewJson(path, doPrint=True):
         error = 1
     if error != 0:
         jsonData = error
+    globals.jsonDictionary[path] = [jsonData, time.time()]
     return jsonData
 
 def getMultiFile(listf, doPrint=False):
     try:
-        return pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+        if str(listf) in globals.multifileDictionary:
+            if (globals.multifileDictionary[str(listf)][1] + 2) > time.time():
+                return globals.multifileDictionary[str(listf)][0]
+        data = pytools.net.getJsonAPI("http://" + flags.remote + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
             "command": "getMultiFile",
             "data": {
                 "list": listf.values()
             }
         })))["data"]
+        globals.multifileDictionary[str(listf)] = [data, time.time()]
+        return data
     except:
         if doPrint:
             print(traceback.format_exc())
@@ -116,7 +143,7 @@ class flags:
     remote = False
     defaultSystemState = False
     server = False
-    timeout = 1000
+    timeout = 3000
     bypass = False
     unpack = True
     webMode = False
@@ -134,6 +161,9 @@ class flags:
 class globals:
     maxY = 0
     lastSSTCGrabs = {}
+    multifileDictionary = {}
+    jsonDictionary = {}
+    multijsonDictionary = {}
     
 class tools:
     def max_window(lines=None):
@@ -959,10 +989,10 @@ def main():
                             clientsData = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\hostData.json", doPrint=False)
                         
                         if flags.displayOnScreen:
-                            pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information                ")
-                            pytools.IO.console.printAt(130, globals.maxY - 2, "-------------------------------------------")
-                            pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR SSTC OPEN")
-                            pytools.IO.console.printAt(130, globals.maxY - 4, "                                           ")
+                            pytools.IO.console.printAt(130, globals.maxY - 1, "Ambience Client Information                     ")
+                            pytools.IO.console.printAt(130, globals.maxY - 2, "------------------------------------------------")
+                            pytools.IO.console.printAt(130, globals.maxY - 3, " IP            STATUS     MAX CUR SSTC MCPU OPEN")
+                            pytools.IO.console.printAt(130, globals.maxY - 4, "                                                ")
                         
                         totalSounds = 0
                         maxSounds = 0
@@ -974,16 +1004,30 @@ def main():
 
                                         try:
                                             if not client in globals.lastSSTCGrabs:
-                                                globals.lastSSTCGrabs[client] = [0, 0]
+                                                globals.lastSSTCGrabs[client] = [0, 0, 0]
                                             if globals.lastSSTCGrabs[client][0] < time.time():
-                                                SSTCData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getSleepStateCount"})), timeout=1)["sleepStateCount"]
-                                                globals.lastSSTCGrabs[client][0] = time.time() + 10
+                                                if ((int(math.floor(time.time() / 5)) * 5) % 10) == 0:
+                                                    SSTCData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getSleepStateCount"})), timeout=1)["sleepStateCount"]
+                                                    MCPUData = globals.lastSSTCGrabs[client][2]
+                                                else:
+                                                    SSTCData = globals.lastSSTCGrabs[client][1]
+                                                    try:
+                                                        MCPUData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getCPUUsageThreshold"})), timeout=1)["cpuUsageThreshold"]
+                                                    except:
+                                                        try:
+                                                            MCPUData = globals.lastSSTCGrabs[client][2]
+                                                        except:
+                                                            MCPUData = -1
+                                                globals.lastSSTCGrabs[client][0] = time.time() + 5
                                                 globals.lastSSTCGrabs[client][1] = SSTCData
+                                                globals.lastSSTCGrabs[client][2] = MCPUData
                                             else:
                                                 SSTCData = globals.lastSSTCGrabs[client][1]
+                                                MCPUData = globals.lastSSTCGrabs[client][2]
+                                            
                                         except:
                                             SSTCData = 0
-                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (5 - len(str(SSTCData))))  + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(MCPUData)) + (" " * (5 - len(str(MCPUData)))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
                                         if clientsData[client]["current"] > clientsData[client]["max"] + 1:
                                             if flags.displayOnScreen:
                                                 printColor(145, globals.maxY - 3 - i, "overload", "red")
@@ -994,7 +1038,17 @@ def main():
                                         else:
                                             if flags.displayOnScreen:
                                                 try:
-                                                    if pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".bl", doPrint=False) != 1:
+                                                    try:
+                                                        lastErrorTimestamp = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\lastBufferErrorTime_" + str(client) + ".json", doPrint=False)["timeStamp"]
+                                                    except:
+                                                        lastErrorTimestamp = [1, 1, 1, 0, 0, 0]
+                                                    if (pytools.clock.dateArrayToUTC(lastErrorTimestamp) + 15) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                                                        if flash == 0:
+                                                            printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                        else:
+                                                            printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                        printColor(145, globals.maxY - 3 - i, "underrun", "magenta")
+                                                    elif pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".bl", doPrint=False) != 1:
                                                         if flash == 0:
                                                             printColor(130, globals.maxY - 3 - i, "!", "magenta")
                                                         else:

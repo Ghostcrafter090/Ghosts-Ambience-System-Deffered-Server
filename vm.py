@@ -314,12 +314,28 @@ class configure:
             clients = server.grabOtherComputers()["hosts"]
             permaClients = pytools.IO.getJson(".\\permaclients.json")
             if permaClients["primary"] in clients:
-                clients.remove(permaClients["primary"])
+                try:
+                    clients.remove(permaClients["primary"])
+                except:
+                    pass
+                try:
+                    for ignoreClient in permaClients["ignore"]:
+                        if ignoreClient in clients:
+                            clients.remove(ignoreClient)
+                except:
+                    pass
                 # sortedClients = sorted(clients, key = lambda s: sum(map(ord, s[1])), reverse=False)
                 sortedClients = clients
-                sortedClients.remove("0.0.0.0")
+                try:
+                    sortedClients.remove("0.0.0.0")
+                except:
+                    pass
                 sortedClients.append(permaClients["primary"])
             else:
+                try:
+                    clients.remove("0.0.0.0")
+                except:
+                    pass
                 sortedClients = clients
             selfIndex = 0
             while selfIndex < len(sortedClients):
@@ -455,6 +471,8 @@ class configure:
     
     outsideVolume = -30.0
     outsideLimiter = -14.0
+    porchVolume = -30.0
+    porchLimiter = -14.0
                
     def getOutsideVolumeBeforeHalloween(dateArray=False):
         
@@ -489,6 +507,62 @@ class configure:
 
             if out > 0:
                 return out
+            else:
+                return 0
+        except OverflowError:
+            return 0
+        except:
+            print(traceback.format_exc())
+            return 0
+        
+    def getLimiterModifierOnDayBeforeHalloween():
+        
+        try:
+            dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+            halloweenOfYear = (pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 10, 30, 0, 0, 0]) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+            
+            x = (dayOfYear - halloweenOfYear) * 24
+            
+            a = 3.1061
+            b = 0.292463
+            c = -0.923161
+            d = -0.0000066956
+            e = 2.71828182846
+            f = -80.5216
+            g = 16.7116
+            
+            out = a ** (b * (x + c)) + d * e ** ((((x - f) ** (2)) / (2 * g ** (2))))
+
+            if out > 0:
+                return out / 2
+            else:
+                return 0
+        except OverflowError:
+            return 0
+        except:
+            print(traceback.format_exc())
+            return 0
+        
+    def getLimiterModifierOnDay(setDay, modifier=1):
+        
+        try:
+            dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+            halloweenOfYear = (pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 10, 31, 0, 0, 0]) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+            
+            x = ((dayOfYear - halloweenOfYear) + (304 - setDay)) * 24
+            
+            a = 3.1061
+            b = 0.292463
+            c = -0.923161
+            d = -0.0000066956
+            e = 2.71828182846
+            f = -80.5216
+            g = 16.7116
+            
+            out = a ** (b * (x + c)) + d * e ** ((((x - f) ** (2)) / (2 * g ** (2))))
+
+            if out > 0:
+                return out * modifier
             else:
                 return 0
         except OverflowError:
@@ -552,43 +626,115 @@ class configure:
         except:
             return prevVal + ((((-20 - prevVal) * (modif / 13.1)) + (modif / adderDivider)) / 1)
     
-    def getOutsideVolumeOnHoliday(peakDateArray, peakModif=1, afterHour=False):
+    def getIsHoliday():
+        isHalloween = ((pytools.clock.getDateTime()[1] == 10) and (pytools.clock.getDateTime()[2] == 31) and (pytools.clock.getDateTime()[3] > 6)) or ((pytools.clock.getDateTime()[1] == 11) and (pytools.clock.getDateTime()[2] == 1) and (pytools.clock.getDateTime()[2] < 6))
+        isChristmas = (pytools.clock.getDateTime()[1] == 12) and ((pytools.clock.getDateTime()[2] == 25) or (pytools.clock.getDateTime()[2] == 24))
+        return isHalloween or isChristmas
+    
+    def getIsWeekend():
+        return (pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 7) or (pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 6) or ((pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 5) and (pytools.clock.getDateTime()[3] > 12))
+    
+    def getTimeModifier(prevVal, isLimiter=False, isPorch=False, noTime=False):
+        if not noTime:
+            if configure.getIsHoliday():
+                if 7 < pytools.clock.getDateTime()[3] < 22:
+                    percent = 0
+                elif pytools.clock.getDateTime()[3] == 7:
+                    percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
+                elif pytools.clock.getDateTime()[3] == 22:
+                    percent = ((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) / 5
+                elif pytools.clock.getDateTime()[3] > 22:
+                    percent = 0.2
+                elif pytools.clock.getDateTime()[3] == 0:
+                     percent = (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2)) + 0.2
+                     if percent > 1:
+                        percent = 1
+                else:
+                    percent = 1
+            elif configure.getIsWeekend():
+                if 8 < pytools.clock.getDateTime()[3] < 21:
+                    percent = 0
+                elif pytools.clock.getDateTime()[3] == 8:
+                    percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
+                elif pytools.clock.getDateTime()[3] == 21:
+                    percent = (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2
+                else:
+                    percent = 1
+            else:
+                if 10 < pytools.clock.getDateTime()[3] < 19:
+                    percent = 0
+                elif pytools.clock.getDateTime()[3] == 10:
+                    percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
+                elif pytools.clock.getDateTime()[3] == 19:
+                    percent = (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2
+                else:
+                    percent = 1
+                
+                if percent < 0.1:
+                    percent = 0.1
+        else:
+            percent = 0
+        
+        
+        if isPorch:
+            if (not isLimiter) and (percent > 0.3):
+                percent = 0.3
+            elif isLimiter:
+                percent = percent * -0.15
+        
+        if not isLimiter:
+            return (prevVal - (60 * percent))
+        else:
+            return prevVal - (28 * percent)
+    
+    def getOutsideVolumeOnHoliday(peakDateArray, peakModif=1, afterHour=False, timeScaleModif=1):
         # https://www.desmos.com/calculator/esomopbiwk
         dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
         peakDayOfYear = (pytools.clock.dateArrayToUTC(peakDateArray) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
         if afterHour:
             if dayOfYear > peakDayOfYear:
                 if (dayOfYear <= (peakDayOfYear + 0.041666666666666664)):
-                    return ((5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) * (1 - ((dayOfYear - peakDayOfYear) / 0.041666666666666664))) / peakModif
+                    return ((5 * 2 ** ( - (2 / timeScaleModif) * (dayOfYear - peakDayOfYear) ** (2))) * (1 - ((dayOfYear - peakDayOfYear) / 0.041666666666666664))) / peakModif
                 else:
                     return 0
             else:
-                return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
+                return (5 * 2 ** ( - (2 / timeScaleModif) * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
         else:
-            return (5 * 2 ** ( - 2 * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
+            return (5 * 2 ** ( - (2 / timeScaleModif) * (dayOfYear - peakDayOfYear) ** (2))) / (peakModif * 6)
     
-    def getOutsideVolume():
+    def getOutsideVolume(isPorch=False, noTime=False):
         dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
         actualDayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], 1, 1, 0, 0, 0])) / 60 / 60 / 24
+        
+        customModif = 0
+        if not isPorch:
+            customModif = configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 17, 23, 59, 59], peakModif=0.04, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 18, 23, 59, 59], peakModif=0.1, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 19, 23, 59, 59], peakModif=0.1, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 20, 23, 59, 59], peakModif=0.093, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 26, 23, 59, 59], peakModif=0.083, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 27, 23, 59, 59], peakModif=0.08, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 30, 12, 0, 0], peakModif=0.06)
+        
         if dayOfYear > 304:
             if dayOfYear > 304.0208333333333:
                 if configure.getOutsideVolumeAfterHalloween() <= -19:
-                    return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                    return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)), noTime=noTime, isPorch=isPorch)
                 else:
-                    return configure.getOutsideVolumeWeatherModifier(-19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                    return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(-19 + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)), noTime=noTime, isPorch=isPorch)
             else:
                 if configure.getOutsideVolumeAfterHalloween() <= -19:
-                    newValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                    newValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
                 else:
-                    newValue = configure.getOutsideVolumeWeatherModifier(-19 + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=5.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
-                oldValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween(dateArray=[2023, 11, 1, 0, 0, 0]) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5)) 
+                    newValue = configure.getOutsideVolumeWeatherModifier(-19 + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
+                oldValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween(dateArray=[2023, 11, 1, 0, 0, 0]) + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5)) 
         
                 percentage = (304.0208333333333 - dayOfYear) / 0.0208333333333
-                return (oldValue * (percentage)) + (newValue * (1 - percentage))
+                return configure.getTimeModifier((oldValue * (percentage)) + (newValue * (1 - percentage)), noTime=noTime, isPorch=isPorch)
         else:
-            return configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=2.3) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5))
+            return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.6) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5)), noTime=noTime, isPorch=isPorch)
     
-    def getOutsideLimiter(volume):
+    def getOutsideLimiter(volume, isPorch=False):
         # https://www.desmos.com/calculator/hgfrmpjpqs
         
         dayOfYear = (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - pytools.clock.dateArrayToUTC([2023, 1, 1, 0, 0, 0])) / 60 / 60 / 24
@@ -625,21 +771,30 @@ class configure:
         
         lim = (a * x ** (b) + (c * x) + d - (g * x ** (4) * math.sin((i * x) - j) + k)) + y
         
-        lim = lim + configure.getLimiterModifierOnHalloween()
+        tempModifier = configure.getLimiterModifierOnDay(300, modifier=0.1)
+        tempModifier = tempModifier + configure.getLimiterModifierOnDay(299, modifier=0.1)
+        tempModifier = tempModifier + configure.getLimiterModifierOnDay(293, modifier=0.05)
+        tempModifier = tempModifier + configure.getLimiterModifierOnDay(292, modifier=0.025)
+        tempModifier = tempModifier + configure.getLimiterModifierOnDay(290, modifier=0.025)
+        tempModifier = tempModifier + configure.getLimiterModifierOnDay(303, modifier=0.025)
+        lim = lim + configure.getLimiterModifierOnHalloween() + configure.getLimiterModifierOnDayBeforeHalloween() + tempModifier
         
         if lim > 0:
             lim = 0.0
         
         if (lim < 0) and (lim > -9):
-            return (-math.fabs(lim) ** (math.fabs(lim / -9) ** 4)) / 1.1
+            return configure.getTimeModifier((-math.fabs(lim) ** (math.fabs(lim / -9) ** 4)) / 1.1, isLimiter=True, isPorch=isPorch)
         else:
-            return lim / 1.1
+            return configure.getTimeModifier(lim / 1.1, isLimiter=True, isPorch=isPorch)
     
     def setOutsideVolume():
         configure.outsideVolume = configure.getOutsideVolume()
-        configure.outsideLimiter = configure.getOutsideLimiter(configure.outsideVolume)
+        configure.porchVolume = configure.getOutsideVolume(isPorch=True)
+        configure.outsideLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True))
+        configure.porchLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True), isPorch=True)
         globals.instance.set("Strip[0].Limit", configure.outsideLimiter)
-        globals.instance.set("Strip[1].Limit", configure.outsideLimiter)
+        globals.instance.set("Strip[1].Limit", configure.porchLimiter)
+        globals.instance.set("Strip[1].Gain", -13 + (configure.porchVolume - configure.outsideVolume))
         globals.instance.set("Bus[0].Gain", configure.outsideVolume)
         pytools.IO.saveJson("outsideProperties.json", {
             "volume": configure.outsideVolume,
@@ -665,6 +820,7 @@ class configure:
                 time.sleep(1)
 
 class streams:
+    
     lastUpdated = time.time()
 
     def handler():
@@ -846,7 +1002,7 @@ class streams:
 if __name__ == '__main__':
     if sys.argv[1] == "--runStreams":
         try:
-            if (float(pytools.IO.getFile("lastStreamsLoop.cx")) + 120) < time.time():
+            if (float(pytools.IO.getFile("lastStreamsLoop.cx")) + 30) < time.time():
                 streams.handler()
         except:
             streams.handler()

@@ -182,7 +182,7 @@ def main():
                         audioEvent.register("s9_music.mp3", 9, 100, 1, 0, 1)
                         audioEvent.run()
                         time.sleep(60)
-                if dateArray[3] == 18:
+                if dateArray[3] == 19:
                     if dateArray[4] == 30:
                         audioEvent = audio.event()
                         audioEvent.registerWindow("s10_window_vocals.mp3;s10_outside_vocals.mp3", [100, 35, 50], 1, 0, 0)
@@ -197,8 +197,8 @@ def main():
                         audioEvent.register("s10_music.mp3", 9, 50, 1, 0, 1)
                         audioEvent.run()
                         time.sleep(60)
-                if dateArray[3] == 21:
-                    if dateArray[4] == 0:
+                if dateArray[3] == 22:
+                    if dateArray[4] == 35:
                         audioEvent = audio.event()
                         audioEvent.registerWindow("s11_window_vocals.mp3;s11_outside_vocals.mp3", [100, 20, 60], 1, 0, 0)
                         audioEvent.register("s11_wall_vocals.mp3", 0, 100, 1, 0, 0, clock=False)
@@ -212,7 +212,7 @@ def main():
                         audioEvent.register("s11_music.mp3", 9, 60, 1, 0, 1)
                         audioEvent.run()
                         time.sleep(60)
-                if dateArray[3] == 22:
+                if dateArray[3] == 23:
                     if dateArray[4] == 30:
                         audioEvent = audio.event()
                         audioEvent.registerWindow("s12_window_vocals.mp3;s12_outside_vocals.mp3", [100, 20, 50], 1, 0, 0)

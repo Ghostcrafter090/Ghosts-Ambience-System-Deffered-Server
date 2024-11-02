@@ -6,6 +6,7 @@ import traceback
 import time
 import threading
 import random
+import os
 
 from ..packet import VBANPacket
 from ..const import *
@@ -235,6 +236,8 @@ class VBAN_Receiver:
                     else:
                         waitTime = time.time() + 1
                         print("Buffer underrun for " + str(self._stream_name) + " detected. Network thread running status: " + str(not self._networkHasStopped) + ". Collecting samples...")
+                        if not os.path.exists("stream_buffer_underrun"):
+                            log.pytools.IO.saveFile("stream_buffer_underrun", "")
                         samplesToCollect = ((self._current_pyaudio_config["rate"] / self.samplesPerFrame) * 1)
                         while (len(allf.packetBuffers[self._stream_name]) < samplesToCollect) and (waitTime > time.time()):
                             self.lastStreamActivityTimestamp = time.time()

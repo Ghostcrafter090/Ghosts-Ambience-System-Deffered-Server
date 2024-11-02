@@ -197,7 +197,7 @@ def main():
                     audio.playSoundWindow("cicada_windowclosed.mp3;cicada_windowopen.mp3", [50, 50, 25], speed, 0, 0)
         status.vars['locustChances'] = chance
         try:
-            time.sleep(30 / speed)
+            time.sleep(60 / speed)
         except:
             time.sleep(60)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

@@ -42,7 +42,7 @@ class secs:
         if globals.windowBroken == 1:
             windowf = 1
         if dataList[0][7] >= 12:
-            if dataList[0][1] <= 15:
+            if dataList[0][1] <= 14:
                 if dataList[0][4] != "rain":
                     if dataList[0][4] != "lightrain":
                         if dataList[0][4] != "thunder":

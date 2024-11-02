@@ -2,6 +2,7 @@ import modules.audio as audio
 import modules.pytools as pytools
 import time
 import modules.logManager as log
+import api.halloween_extension as hallow
 
 print = log.printLog
 
@@ -44,6 +45,10 @@ def main():
                 volume = 20
             else:
                 volume = 100
+            
+            if hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) > 5:
+                volume = 100
+            
             audioEvent = audio.event()
             audioEvent.registerWindow("tornado_sirens.mp3;tornado_sirens_nm.mp3", volume, 1.0, 0.0, 0)
             audioEvent.register("tornado_sirens_wall.mp3", 0, volume * 0.8, 1.0, 0.0, 0)
