@@ -138,13 +138,6 @@ class main:
             monthn = 1
             
             wolfChance = math.fabs(wolfChance)
-            
-            # if dateArray[1] <= 5:
-                # monthn = ((((dateArray[1] - 1) * 31) + dateArray[2]) / 31) ** 2.16
-            # elif dateArray[1] <= 10:
-                # monthn = ((10 * 31) / (((dateArray[1] - 1) * 31) + dateArray[2])) ** 5
-            # else:
-                # monthn = ((((dateArray[1] - 1) * 31) + dateArray[2]) / ((10 * 31))) ** 8
                 
             # https://www.desmos.com/calculator/xpesswsrlf
             monthn = ((dateArray[1] - 1) + (dateArray[2] / pytools.clock.getMonthEnd(dateArray[1])))
@@ -169,7 +162,6 @@ class main:
                 print(str(dateArray) + " ::: " + str(illumChance) + " " + str(wolfChance / monthn))
                 print("Wolf Activity: " + str(((wolfChance) / monthn) / ((int(illumChance) / 300000) + 1)))
                 
-                # print(globals.timeTic)
                 minN = int(dateArray[5] / 10)
             try:
                 if random.randrange(0, int(illumChance)) / 300000 < ((wolfChance) / monthn):
@@ -185,8 +177,6 @@ class main:
 
 def run():
     status.hasExited = False
-    # while pytools.sound.audioObj == False:
-#         pytools.sound.audioObj = status.audioObj
     seta = threading.Thread(target=main.workHandler)
     setb = threading.Thread(target=main.dataGrabber)
     seta.start()

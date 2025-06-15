@@ -26,7 +26,6 @@ class utils:
         return dayTimes
     
     def getHallowIndex(timeStamp):
-        # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
         
         fourYearFloat = timeStamp / (1461 * 24 * 60 * 60)
         
@@ -38,14 +37,11 @@ class utils:
         
         print(u)
         
-        # w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
-        
         w = ((timeStamp) - (24 * 60 * 60) - (pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])) - 1) + 86400
         
         print(w)
         print(dayOfYear)
         
-        # q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
         q = 0
         a = 100
         b = 26265600 + q
@@ -55,7 +51,7 @@ class utils:
         p = 3.14159265359
         h = 50
         e = 2.71828182846
-        # j = 16 * math.sin((((p) / (1180295.8))) * ( - (w - (((1180295.8) / (2)))) - (u * (365.25 * 24 * 60 * 60))))
+        
         friday13Coeff = 50
         j = 16 * ( hallow.data.getLunarPhase(pytools.clock.UTCToDateArray(timeStamp)))
         l_2 = (11 * e ** ( - friday13Coeff * (((w - 1080000) ** (2)) / (g)))) + (4 * e ** ( - (3 * ((w - 1080000) ** (2)) / (g))))

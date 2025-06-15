@@ -55,7 +55,6 @@ def playSound():
     
     device = findDevice(PLAY_DEVICE)
     audioStream = sd.OutputStream(
-        # format=self.itsStream.p.get_format_from_width(self.itsStream.sample_width),
         channels=soundFile[0].channels,
         device=device["index"],
         samplerate=soundFile[0].frame_rate,

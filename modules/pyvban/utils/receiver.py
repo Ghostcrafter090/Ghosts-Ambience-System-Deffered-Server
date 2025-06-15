@@ -102,19 +102,11 @@ class VBAN_Receiver:
             self._socket.bind(("0.0.0.0", port))
             self._port = port
 
-            self._p = False # pyaudio.PyAudio()
+            self._p = False
             self._current_pyaudio_config = {
                 "channels": 2,
                 "rate": 48000
             }
-            
-            # self._stream = self._p.open(
-            #     format=self._p.get_format_from_width(2), 
-            #     channels=self._current_pyaudio_config["channels"],
-            #     rate=self._current_pyaudio_config["rate"],
-            #     output=True,
-            #     output_device_index=self._device_index
-            # )
 
             self._stream = sd.OutputStream(
             dtype='int16',
@@ -214,8 +206,6 @@ class VBAN_Receiver:
                 except:
                     print("Unnable to close socket.")
                     
-                # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                # self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._socket.bind(("0.0.0.0", self._port))
 
     def run(self):
@@ -249,8 +239,7 @@ class VBAN_Receiver:
                             self._stream.write(allf.packetBuffers[self._stream_name][0][0])
                             allf.maxFrame = allf.packetBuffers[self._stream_name][0][1]
                         allf.packetBuffers[self._stream_name].pop(0)
-                        # else:
-                        #     print(str(self._stream_name) + " is skipping frames...")
+                        
                     else:
                         waitTime = time.time() + 1
                         print("Buffer underrun for " + str(self._stream_name) + " detected. Network thread running status: " + str(not self._networkHasStopped) + ". Collecting samples...")
@@ -314,7 +303,6 @@ class VBAN_Receiver:
             self._socket.close()
         except:
             print("Unnable to close socket.")
-        # self._stream = None
 
 if __name__ == "__main__":
     import argparse

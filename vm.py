@@ -124,7 +124,6 @@ class server:
         except:
             print("Connection Failed.")
             while True:
-                # server.startConnection()
                 try:
                     return pytools.net.getJsonAPI("http://localhost:5597?json=" + urllib.parse.quote(json.dumps({
                         "command": "getOtherComputers"
@@ -325,7 +324,6 @@ class configure:
                             clients.remove(ignoreClient)
                 except:
                     pass
-                # sortedClients = sorted(clients, key = lambda s: sum(map(ord, s[1])), reverse=False)
                 sortedClients = clients
                 try:
                     sortedClients.remove("0.0.0.0")

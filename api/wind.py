@@ -417,17 +417,12 @@ def main():
     while not status.exit:
         
         dataList = utils.dataGrabber()
-        # if (dataList[0][1] > 13) or (dataList[0][0] > 8):
+        
         sounds.lightChimneyWind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 9) or (dataList[0][0] > 6):
         sounds.lightWind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 16) or (dataList[0][0] > 11):
         sounds.wind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 24) or (dataList[0][0] > 16):
         sounds.chimneyWind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 30) or (dataList[0][0] > 28):
         sounds.hurricaneWind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 36) or (dataList[0][0] > 32):
         sounds.trainFromHell(dataList[0][1], dataList[0][0])
         
         if globals.windChime:

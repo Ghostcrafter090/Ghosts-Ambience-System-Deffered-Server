@@ -42,7 +42,7 @@ def main():
             texts = pytools.net.getTextAPI("https://www.weather.gc.ca/warnings/report_e.html?ns16").split(" Access city")[1].split("Weather shortcuts")[0].split("\n")
             textHTML = pytools.net.getRawAPI("https://www.weather.gc.ca/warnings/report_e.html?ns16=", False)
             soup = bs(textHTML, 'html.parser')
-            # soup.attrs("innerText")
+            
             mainContent = soup.find_all("main")[0].find_all("section")[0]
             texts = mainContent.get_text(separator="\n").replace("Pictou County\n Pictou County", "Pictou County\n").split('\n')
         except:

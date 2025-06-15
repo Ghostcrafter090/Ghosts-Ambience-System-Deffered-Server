@@ -96,8 +96,7 @@ def main():
             tempSub = 5
         windSub = dataList[0][1] - 23 + api.wind.globals.windModif
         humidSub = -1 * ((((dataList[0][8] * 10) - 380) / 100) - 1)
-        # if tempSub < 0:
-        #     tempSub = (8 - dataList[0][7]) / 20
+        
         if tempSub > 5:
             tempSub = 5
         if windSub < 0:

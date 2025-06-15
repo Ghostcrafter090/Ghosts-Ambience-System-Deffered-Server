@@ -73,7 +73,7 @@ class data:
                             "aeth": data.dayTimes[8][3],
                             "aetm": data.dayTimes[8][4]
                         }
-                        # data.sunJson = json.loads(("{\"" + getFile('data.dayTimes.cmd').replace("set ", "").replace("\n", "\", \"").replace("=", "\": \"") + "}").replace(", \"}", "}").replace(" \",", "\",").replace(" \"}", "\"}"))
+                        
                         doNull(data.sunJson['ceth'])
                         doNull(data.sunJson['cetm'])
                         doNull(data.sunJson['csth'])
@@ -164,7 +164,6 @@ class data:
     # https://www.desmos.com/calculator/gxlcmcqbq5
     # https://www.desmos.com/calculator/iaxogvk6jt
     def getHallowIndex(timeStamp, noDay=False, noModif=False):
-        # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
         
         fourYearFloat = timeStamp / (1461 * 24 * 60 * 60)
         
@@ -174,11 +173,8 @@ class data:
         
         u = pytools.clock.UTCToDateArray(timeStamp)[0]
         
-        # w = (timeStamp - (24 * 60 * 60) - (u * (365 * 24 * 60 * 60)) - 1)
-        
         w = ((timeStamp) - (24 * 60 * 60) - (pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])) - 1) + 86400
         
-        # q = math.floor(math.floor(((u) / (4))) - (((u) / (4))) + 1) * 24 * 60 * 60
         q = 0
         a = 100
         b = 26265600 + q
@@ -188,7 +184,7 @@ class data:
         p = 3.14159265359
         h = 50
         e = 2.71828182846
-        # j = 16 * math.sin((((p) / (1180295.8))) * ( - (w - (((1180295.8) / (2)))) - pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])))
+        
         friday13Coeff = 50
         j = 16 * ( data.getLunarPhase(pytools.clock.UTCToDateArray(timeStamp)))
         l_2 = (11 * e ** ( - friday13Coeff * (((w - 1080000) ** (2)) / (g)))) + (4 * e ** ( - (3 * ((w - 1080000) ** (2)) / (g))))
@@ -230,8 +226,6 @@ class data:
             m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
-        
-        # print([j, l_2, l_3, l_4, l_5, l_6, l_7, l_8, l_9, l_10, l_11, l_12, l_13, r, s, t, z, k, z_1, o, m, n, z_2])
         
         if noDay:
             return m
@@ -735,7 +729,6 @@ class sections:
                         elif hGeneralSpeedModifier < 0:
                             hGeneralSpeedModifier = 0
                         hGeneralSpeedModifier = (hGeneralSpeedModifier * (monthC / (monthE - monthS))) * (1.05 - (1 + (((forecastIndex / 100)) ** 0.1) - 1))
-                        # if data.dateArray[1] != 11:
                         
                         hGeneralSpeedModifier = hGeneralSpeedModifier + (0.1 - (((forecastIndexValues[1] - pytools.clock.dateArrayToUTC(data.dateArray)) / 864000) * 0.2))
                         
@@ -747,8 +740,7 @@ class sections:
                         moodEvent.register('h_general_waking.mp3', 1, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
                         moodEvent.registerWindow('h_general_waking.mp3;h_general_waking.mp3', [hGeneralVol * random.random(), hGeneralVol * random.random() * 2, 1 - hGeneralVol * random.random()], 1.1 - hGeneralSpeedModifier, 0, 0)
                         moodEvent.run()
-                        # else:
-                            # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                        
                         prevMinWaking = int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier)))
             except:
                 pass
@@ -796,15 +788,13 @@ class sections:
                             
                             lastHGeneralSpeedModifier = hGeneralSpeedModifier
                             
-                            # if data.dateArray[1] != 11:
                             print("Looping h_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1.1 - hGeneralSpeedModifier) + ".")
                             moodEvent = audio.event()
                             moodEvent.register('h_general.mp3', 0, hGeneralVol, 1.1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.register('h_general.mp3', 1, hGeneralVol, 1.1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.registerWindow('h_general.mp3;h_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1.1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.run()
-                            # else:
-                                # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                            
                             prevMin = int(data.dateArray[4] / (1.1 - lastHGeneralSpeedModifier))
                         
                         moodChance = [0, 0, 0, 0, 0, 0]
@@ -965,15 +955,13 @@ class sections:
                         
                         lastHGeneralWakingSpeedModifier = hGeneralSpeedModifier
                         
-                        # if data.dateArray[1] != 11:
                         print("Looping hu_general_waking effect at volume " + str(hGeneralVol) + ", and speed " + str(1.1 - hGeneralSpeedModifier) + ". Uncanny Forecast index is at: " + str(forecastIndex))
                         moodEvent = audio.event()
                         moodEvent.register('hu_general_waking.mp3', 0, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
                         moodEvent.register('hu_general_waking.mp3', 1, hGeneralVol * random.random(), 1.1 - hGeneralSpeedModifier, 0, 0)
                         moodEvent.registerWindow('hu_general_waking.mp3;hu_general_waking.mp3', [hGeneralVol * random.random(), hGeneralVol * random.random() * 2, hGeneralVol * random.random()], 1.1 - hGeneralSpeedModifier, 0, 0)
                         moodEvent.run()
-                        # else:
-                            # audio.playSoundAll('h_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                        
                         prevMinWaking = int(data.dateArray[4] / (2 / (1.1 - lastHGeneralWakingSpeedModifier)))
             except:
                 pass
@@ -1020,15 +1008,13 @@ class sections:
                             
                             lastHGeneralSpeedModifier = hGeneralSpeedModifier
                             
-                            # if data.dateArray[1] != 11:
                             print("Looping hu_general effect at volume " + str(hGeneralVol) + ", and speed " + str(1 - hGeneralSpeedModifier) + ".")
                             moodEvent = audio.event()
                             moodEvent.register('hu_general.mp3', 0, hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.register('hu_general.mp3', 1, hGeneralVol, 1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.registerWindow('hu_general.mp3;hu_general.mp3', [hGeneralVol, hGeneralVol * 2, hGeneralVol], 1 - hGeneralSpeedModifier, 0, 0)
                             moodEvent.run()
-                            # else:
-                                # audio.playSoundAll('hu_general.mp3', hGeneralVol * (1 - (((data.dateArray[3] * 60 * 60) + (data.dateArray[4] * 60) + (data.dateArray[5])) / ((data.sunJson["csth"] * 60 * 60) + (data.sunJson["cstm"] * 60)))), 1 - hGeneralSpeedModifier, 0, 0)
+                            
                             prevMin = int(data.dateArray[4] / (1 - lastHGeneralSpeedModifier))
                         
                         uncannyMoodChance = [0, 0, 0, 0, 0, 0]

@@ -536,7 +536,6 @@ class menu:
             if f:
                 error = subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "choice /c m /n")[0]
             f = True
-            # subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "mode con cols=200 lines=63")
             flags.display = False
             time.sleep(0.5)
             i = 0
@@ -657,9 +656,6 @@ class menu:
                 error = subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "choice /c rv /n")[0]
                 if os.path.exists(".\\vars\\plugins\\plugin." + plugin.split("_keys")[0] + ".run()-error.cx"):
                     if error == 2:
-                        # print(os.listdir())
-                        # print(os.listdir(".\\working"))
-                        # print(".\\working\\plugin." + plugin + ".run()_errorlog.log")
                         f = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\" + plugin.split("_keys.json")[0] + "_errorlog.log", False).split("\n")
                         printColor(40 + menu.plugI, menu.plugN + 3, "", "green")
                         menu.plugN = menu.plugN + 1
@@ -773,7 +769,6 @@ def getSection():
 def main():
     try:
         i = 0
-        # subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "mode con cols=200 lines=63")
         flash = 0
         restartMod = 0
         while i < globals.maxY:
@@ -800,7 +795,6 @@ def main():
                     try:
                         if (pytools.clock.dateArrayToUTC(pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\systemLoop.json", False)["loopTime"]) + 20) < (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())):
                             system.status.active = False
-                            # subprocess.getstatusoutput("echo {\"loopTime\":[9999, 0, 0, 0, 0, 0]} > \\\\" + tools.getRemote() + "\\ambience\\systemLoop.json")[0]
                         else:
                             system.status.active = True
                     except:
@@ -811,7 +805,6 @@ def main():
                 exit()
             if flags.display:
                 if (pytools.clock.getDateTime()[5] % 30) == 0:
-                    # subprocess.getstatusoutput("cd \"\\" + tools.getRemote() + "\\ambience\" & " + "mode con cols=200 lines=63")
                     i = 0
                     while i < globals.maxY:
                         n = 0
@@ -1163,10 +1156,7 @@ def main():
                                 if flags.displayOnScreen:
                                     pytools.IO.console.printAt(130, globals.maxY - 3 - i - 3, spaces[0:40])
                                 i = i + 1
-                        # i = 1
-                        # while i < 10:
-                        #     pytools.IO.console.printAt(140, globals.maxY - len(clients["hosts"]) - len(clients["hosts"]) - len(clients["hosts"]) - i, spaces[0:30])
-                        #     i = i + 1
+
                     except:
                         pass
                         

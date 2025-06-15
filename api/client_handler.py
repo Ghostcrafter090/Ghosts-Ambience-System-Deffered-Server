@@ -80,16 +80,13 @@ class hostObject:
                     print("    > Waiting...")
                     time.sleep(5)
                     print("    > Testing benchmark...")
-                    # if host not in hosts.benchCache:
+                    
                     maxf = pytools.net.getJsonAPI("http://" + self.host + ":4507?json=" + urllib.parse.quote(json.dumps({
                         "command": "getMaxSoundCount"
                     })), timeout=30)["maxSoundCount"] * 0.4
                     if maxf > 0:
                         maxf = maxf ** 0.9
-                        # if maxf != 0:
-                            # hosts.benchCache[host] = maxf
-                    # else:
-                        # maxf = hosts.benchCache[host]
+                    
                     print("Deleting bm file...")
                     os.system("del \".\\host-" + self.host + ".bm\" /f /q")
                     print("Benchmark tested.")

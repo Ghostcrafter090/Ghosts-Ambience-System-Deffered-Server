@@ -1,4 +1,3 @@
-# Read in a WAV and find the freq's
 import pyaudio
 import wave
 from scipy.signal import lfilter
@@ -161,12 +160,9 @@ class speakerManager:
                         x1 = (y2 - y0) * .5 / (2 * y1 - y2 - y0)
                         # find the frequency and output it
                         thefreq = (which + x1) * RATE / globals.chunk
-                        # print("The freq is %f Hz." % (thefreq))
                     else:
                         thefreq = which*RATE/globals.chunk
-                        # print("The freq is %f Hz." % (thefreq))
                     if not (19950 < thefreq < 20050):
-                        # print("error: Frequency Buffer Overload.")
                         theFreqFixDo = True
                     # read some more data
                     data = wf.readframes(globals.chunk)

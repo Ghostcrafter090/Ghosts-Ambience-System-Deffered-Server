@@ -83,7 +83,6 @@ def audio(dataList, depth):
     
     status.vars["slowSpeed"] = slowSpeed
          
-    # audioMain.playSoundWindow("snowonwindow.mp3;snowwindow.mp3", [volume, volume], 1, 0, 0)
     event = audioMain.event()
     event.registerWindow("snowonwindow_slow.mp3;snowwindow_slow.mp3", [slowVolume, slowVolume], slowSpeed, 0, 0)
     event.registerWindow("snowonwindow.mp3;snowwindow.mp3", [normalVolume, normalVolume - clickVolume], speed, 0, 0)
@@ -91,22 +90,6 @@ def audio(dataList, depth):
     event.run()
     
     globals.speed = speed
-    # if utils.testWindow():
-    #     print("Blowing snow with window open...")
-    #     if volume > 100:
-    #         volume = 100
-    #     audioEvent = audioMain.event()
-    #     audioEvent.register('snowwindow.mp3', 6, volume, 1, 0, 0)
-    #     audioEvent.run()
-    # else:
-    #     print("Blowing snow with window closed...")
-    #     if volume > 100:
-    #         volume = 100
-    #     audioEvent = audioMain.event()
-    #     audioEvent.register('snowonwindow.mp3', 2, volume, 1, 0, 0)
-    #     audioEvent.register('snowwindow.mp3', 3, volume, 1, 0, 0)
-    #     audioEvent.register('snowwindow.mp3', 9, volume, 1, 0, 0)
-    #     audioEvent.run()
 
 def main():
     while not status.exit:

@@ -35,7 +35,7 @@ class tools:
             percent = (utc - dayTimesUTC[curr]) / dayTimesUTC[curr + 1]
         except:
             percent = (utc - dayTimesUTC[curr]) / (dayTimesUTC[0] + 86400)
-        # print((weights[curr + 1] * (1 - percent)))
+            
         return (weights[curr] * (1 - percent)) + (weights[curr + 1] * percent)
     
     def isWater(bird):

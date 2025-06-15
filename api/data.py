@@ -364,12 +364,9 @@ class grabber:
         try:
             hail = data["particleType"]["hail"]
         except:
-            hail = 0.0     
-        # try:
-        #     lightLevel = data["data"]["main"]["sensorReadings"]["laserOffAmbientReading"]
-        # except:
+            hail = 0.0
         lightLevel = 0
-        # precipDataOld = data
+        
         return [snow, rain, hail, lightLevel]
     
     class lightning:
@@ -392,20 +389,6 @@ class grabber:
         
         def getDangerLevel(distance):
             return 6 - (distance / 10)
-        
-            # tests
-            if distance < 10:
-                return 5
-            elif distance < 20:
-                return 4
-            elif distance < 30:
-                return 3
-            elif distance < 40:
-                return 2
-            elif distance < 50:
-                return 1
-            else:
-                return 0
         
         def on_message(wsapp, message):
             messagea = '{"v":24,"i":{},"s":false,"x":0,"w":0,"tx":0,"tw":1,"a":6,"z":6,"b":true,"h":"","l":1,"t":1,"from_lightningmaps_org":true,"p":[51.7,-54.8,38.1,-73.1],"r":"A"}'
@@ -568,26 +551,6 @@ class bulk:
                 w = (temp * math.atan(0.151977 * math.sqrt(humidity + 8.313659))) + (0.00391838 * math.sqrt(humidity ** 3) * math.atan(0.023101 * humidity)) - math.atan(humidity - 1.676331) + math.atan(temp + humidity) - 4.686035
                 if (w < 0.5) and (precipData[1] < precipData[0]):
                     baseData[4] = "snow"
-                elif False: # else:
-                    if (precipData[1] + precipData[2]) > 0.06:
-                        baseData[4] = "rain"
-                    elif (precipData[1] + precipData[2]) > 0.03:
-                        baseData[4] = "lightrain"
-                    elif (precipData[1] + precipData[2]) > 0:
-                        baseData[4] = "mist"
-            elif False: # (precipData[1] + precipData[2]) > 0.06:
-                baseData[4] = "rain"
-            elif False: # (precipData[1] + precipData[2]) > 0.03:
-                baseData[4] = "lightrain"
-            elif False: # (precipData[1] + precipData[2]) > 0:
-                baseData[4] = "mist"
-            if False:
-                if precipData[2] > 0.25:
-                    baseData[4] = "rain"
-                if precipData[3] > 700:
-                    baseData[4] = "clear"
-                elif precipData[3] > 600:
-                    baseData[4] = "clouds"
             
             if superData[3] > 0:
                 baseData[4] = "mist"

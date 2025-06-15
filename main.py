@@ -17,8 +17,6 @@ print = log.printLog
 pytools.IO.saveFile(".\\errorlog.log", "")
 time.sleep(1)
 
-# pytools.soundEngine.handles.speaker = pytools.soundEngine.speakerPlayer("fireplace", 0, True)
-
 class flags:
     deffered = False
 
@@ -107,20 +105,17 @@ class handlers:
             os.system("del .\\vars\\plugins\\*.cx /f /s /q")
             os.system("del .\\working\\*_errorlog.log")
             pytools.IO.saveFile(".\\vars\\pluginsList.pyn", keys)
-            # time.sleep(0.3)
         
         def loadPlugins():
             for pluginf in plugins.list:
                 print("Loading plugin " + pluginf + "...")
                 plugins.load(pluginf)
-                # time.sleep(0.3)
         
         def launchPlugins():
             os.chdir(".\\working")
             for threadf in threads.list:
                 print("Launching plugin " + threadf + "...")
                 threads.launch(threadf)
-                # time.sleep(2)
                 
         def activeModify():
             while True:
@@ -142,7 +137,6 @@ class handlers:
                                 if pluginf.find(".py") != -1:
                                     plugins.list[n.split(".py")[0]].obj = importlib.reload(plugins.list[n.split(".py")[0]].obj)
                                     handlers.main.pluginSignature[pluginf.split(".py")[0]] = defferedTools.cipher.hash(pytools.IO.getBytes("..\\api\\" + n))
-                                    # keys.append(pluginf.split(".py")[0])
                                     plugins.load(n.split(".py")[0])
                                     threads.launch(n.split(".py")[0])
                     except:
@@ -189,67 +183,6 @@ def soundsReporter():
         except:
             print(traceback.format_exc())
         time.sleep(10)
-    
-    while False:
-        try:
-            window = "\n"
-            clock = "\n"
-            fireplace = "\n"
-            outside = "\n"
-            try:
-                pluginList = os.listdir("..\\vars\\pluginVarsJson")
-            except:
-                pluginList = os.listdir(".\\vars\\pluginVarsJson")
-            i = 0
-            while i < len(pluginList):
-                pluginf = pluginList[i].split("_keys.json")[0]
-                try:
-                    try:
-                        sounds = plugins.list[pluginf].obj.audio.obj.activeSounds
-                    except:
-                        sounds = {}
-                    try:
-                        for n in sounds:
-                            print(str(sounds[n][0]) + " " + str(sounds[n][2]) + " " + str(sounds[n][3]))
-                            
-                            if (pytools.clock.dateArrayToUTC(sounds[n][2]) + sounds[n][3]) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-                                if sounds[n][1] == "window":
-                                    if window.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        window = window + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                                elif sounds[n][1] == "clock":
-                                    if clock.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        clock = clock + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                                elif sounds[n][1] == "fireplace":
-                                    if fireplace.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        fireplace = fireplace + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                                elif sounds[n][1] == "outside":
-                                    if outside.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        outside = outside + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                                elif sounds[n][1] == "windown":
-                                    if outside.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        outside = outside + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                                    if window.find("\n"+ sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n") == -1:
-                                        print(sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_"))
-                                        window = window + sounds[n][0].replace(".mp3", "").replace(".vbs", "").replace("_", " ").replace("active ghost.", "g_") + "\n"
-                    except:
-                        print(traceback.format_exc())
-                except:
-                    print(traceback.format_exc())
-                i = i + 1
-            pytools.IO.saveJson("..\\vars\\sounds.json", {
-                "clock": clock,
-                "fireplace": fireplace,
-                "window": window,
-                "outside": outside
-            })
-        except:
-            print(traceback.format_exc())
-        time.sleep(1)
        
 def run():
     
@@ -294,7 +227,6 @@ def run():
                     compat = False
                     for n in sys.argv:
                         if n.split("=")[0] == "--apiKey":
-                            # pytools.IO.saveFile(".\\access.key", n.split("=")[1])
                             pass
                     pytools.IO.saveJson('..\\vars\\\\pluginVarsJson\\' + pluginf + '_keys.json', plugins.list[pluginf].obj.status.vars)
                 except:

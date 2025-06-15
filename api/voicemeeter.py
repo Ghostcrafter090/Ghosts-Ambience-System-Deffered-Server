@@ -44,8 +44,6 @@ class tools:
                 "wdm": []
             }
         }
-        # Outputs xml['VBAudioVoicemeeterSettings']['VoiceMeeterDeviceConfiguration']['OutputDev']
-        # Inputs xml['VBAudioVoicemeeterSettings']['VoiceMeeterDeviceConfiguration']['InputDev']
         for n in xml['VBAudioVoicemeeterSettings']['VoiceMeeterDeviceConfiguration']['OutputDev']:
             try:
                 out["outputs"][typef[n['@type']]].append(n["@name"])
@@ -189,36 +187,7 @@ def main():
     n = 0
     j = 0
     while not status.exit:
-        # vm.checkStatus()
         time.sleep(10)
-        if False:
-            for n in indexs["mme"]:
-                sd.default.device = [n, n]
-                vm.checkStatus()
-                if (n in blacklist) == False:
-                    try:
-                        print("Checking device " + sd.query_devices()[n]["name"] + " on interface mme...")
-                        if audio.check(0):
-                            time.sleep(5)
-                            j = 0
-                    except:
-                        blacklist.append(n)
-            for n in indexs["wdm"]:
-                sd.default.device = [n, n]
-                vm.checkStatus()
-                if (n in blacklist) == False:
-                    try:
-                        print("Checking device " + sd.query_devices()[n]["name"] + " on interface wdm...")
-                        if audio.check(1):
-                            time.sleep(5)
-                            j = 0
-                    except:
-                        blacklist.append(n)
-            if j > 3:
-                time.sleep(60)
-                j = 0
-            else:
-                j = j + 1
         
 
 def run():

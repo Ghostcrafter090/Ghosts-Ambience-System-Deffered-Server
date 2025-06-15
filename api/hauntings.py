@@ -320,10 +320,7 @@ class ghost:
                         audio.playSoundWindow("g_window_" + fn + ".mp3;g_window_" + fn + ".mp3", [vol / 1.3, vol], 1.0, 0.0, 0, keepLoaded=True)                      
 
     def move(self, x, y, r=False, d=1):
-        # while self.rotation != r:
-        #     self.rotation = self.rotation + 1
-        #     if self.rotation > 359:
-        #         self.rotation = 0
+        
         self.percuss(type="walk")
         if r == False:
             dial = self.getRot(x, y)
@@ -407,7 +404,6 @@ class ghost:
                 out = 10
                 
             return out
-        # print((weights[curr + 1] * (1 - percent)))
         return (weights[curr] * (1 - percent)) + (weights[curr + 1] * percent)
     
     def memmoryTrigger(self):
@@ -427,6 +423,7 @@ class ghost:
     chType = 0
     
     def speak(self, words, type):
+        # Functionality is currently broken.
         if False:
             try:
                 if random.random() < 0.05:
@@ -488,7 +485,6 @@ class ghost:
             if self.activeMemmory != False:
                 wall = self.move(self.activeMemmory[1][0], self.activeMemmory[1][1])
                 if wall == False:
-                    # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(0, 0, (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
                     self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 40))
                 else:
@@ -532,7 +528,6 @@ class ghost:
             if self.activeMemmory != False:
                 wall = self.move(self.activeMemmory[1][0], self.activeMemmory[1][1])
                 if wall == False:
-                    # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
                     self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 30))
                 else:
@@ -604,7 +599,6 @@ class ghost:
             if self.activeMemmory != False:
                 wall = self.move(self.activeMemmory[1][0], self.activeMemmory[1][1])
                 if wall == False:
-                    # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
                     self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 20))
                 else:
@@ -744,7 +738,6 @@ class ghost:
             if self.activeMemmory != False:
                 wall = self.move(self.activeMemmory[1][0], self.activeMemmory[1][1])
                 if wall == False:
-                    # self.wallAnger = self.wallAnger + math.fabs((self.mood / 100))
                     self.move(self.activeMemmory[1][0], self.activeMemmory[1][1], (random.random() * 2) - 1, self.wallAnger * tools.getMin(self.getRot(self.activeMemmory[1][0], self.activeMemmory[1][1])))
                     self.mood = self.mood - (5 / ((self.prop["details"]["hatrid"] - self.prop["details"]["love"]) * 10))
                 else:

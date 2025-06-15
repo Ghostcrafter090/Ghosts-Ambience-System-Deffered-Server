@@ -80,13 +80,6 @@ class VBAN_Sender:
             try:
 
                 self._p = False
-                # self._stream = self._p.open(
-                #     format=self._p.get_format_from_width(2),
-                #     channels=self._channels,
-                #     rate=self._sample_rate,
-                #     input=True,
-                #     input_device_index=self._device_index
-                #)
 
                 self._stream = sd.InputStream(
                     dtype='int16',
@@ -193,7 +186,6 @@ class VBAN_Sender:
         
     def run_once(self):
 
-        # threading.Thread(target=self.run_once_sec0).start()
         self.run_once_sec0()
 
         try:

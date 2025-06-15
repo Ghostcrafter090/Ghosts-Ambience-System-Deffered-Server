@@ -64,6 +64,8 @@ def main():
                         speakerg = 5
                         while (speakerg == 5) or (speakerg == 3) or (speakerg == 4):
                             speakerg = random.randint(0, 7)
+                        # Sadly this one was to lewd lmao
+                        
                         # audioEvent = audio.event()
                         # audioEvent.register("porn_troll.mp3", speakerg, 100, 1.0, 0.0, 1)
                         # audioEvent.run()

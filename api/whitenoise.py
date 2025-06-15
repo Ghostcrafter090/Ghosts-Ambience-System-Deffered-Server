@@ -202,8 +202,6 @@ class secs:
                         print(globals.windowFixUtc)
                     else:
                         audioEvent = audio.event()
-                        # audioEvent.register("windowsmash_plywood_inside.mp3", 2, 100, 1.0, 0.0, 0)
-                        # audioEvent.register("windowsmash_plywood_outside.mp3", 3, 50, 1.0, 0.0, 0)
                         audioEvent.registerWindow("windowsmash_plywood_inside.mp3;windowsmash_plywood_outside.mp3;windowsmash_plywood_outside.mp3", [100, 50, 1], 0.97 + (random.random() * 0.06), 0.0, 0)
                         audioEvent.run()
                         time.sleep(47)
@@ -224,8 +222,6 @@ class secs:
             if (randf / 4) < (rand / 3):
                 if globals.windowBoarded[windowIndex]:
                     audioEvent = audio.event()
-                    # audioEvent.register("plywood_falling.mp3", 2, 100, 1.0, 0.0, 0)
-                    # audioEvent.register("plywood_falling.mp3", 3, 10, 1.0, 0.0, 0)
                     audioEvent.registerWindow("plywood_falling.mp3;plywood_falling.mp3;plywood_falling.mp3", [100, 10, 1], 0.97 + (random.random() * 0.06), 0.0, 0)
                     audioEvent.run()
                     time.sleep(6)
@@ -250,8 +246,6 @@ class secs:
                     globals.windowBoarded[secs.fixWindowIndex] = False
                 hasFixed = True
                 audioEvent = audio.event()
-                # audioEvent.register("windowrepair.mp3", 2, 100, 1.0, 0.0, 0)
-                # audioEvent.register("windowrepair.mp3", 3, 35, 1.0, 0.0, 0)
                 audioEvent.registerWindow("windowrepair.mp3;windowrepair.mp3;windowrepair.mp3", [10, 100, 5], 0.97 + (random.random() * 0.06), 0.0, 0)
                 audioEvent.run()
                 time.sleep(510)
@@ -262,8 +256,6 @@ class secs:
         
     def boardWindow(dataList, windowIndex):
         audioEvent = audio.event()
-        # audioEvent.register("boarding_windows_inside.mp3", 2, 100, 1.0, 0.0, 0)
-        # audioEvent.register("boarding_windows_outside.mp3", 3, 75, 1.0, 0.0, 0)
         audioEvent.registerWindow("boarding_windows_inside.mp3;boarding_windows_outside.mp3;boarding_windows_outside.mp3", [100, 75, 5], 0.97 + (random.random() * 0.06), 0.0, 0)
         audioEvent.run()
         time.sleep(4)
