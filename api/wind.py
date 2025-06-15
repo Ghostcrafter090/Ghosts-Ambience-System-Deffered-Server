@@ -20,7 +20,8 @@ class status:
             "lightChimneyWind": 0,
             "wind": 0,
             "chimneyWind": 0,
-            "hurricaneWind": 0
+            "hurricaneWind": 0,
+            "trainFromHell": 0
         },
         "moodChances": {
             "windMood": 0,
@@ -340,7 +341,7 @@ class sounds:
         if speed < 0.1:
             speed = 0.1
             
-        volume = volume * 1.7
+        volume = volume * 1.5
             
         if volume > 0:
             if status.vars["nextPlays"]["chimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
@@ -373,6 +374,34 @@ class sounds:
                 audioEvent.register("hurricane_wail.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.registerWindow("hurricane_wail.mp3;hurricane_wail_nm.mp3", [volume, volume], speed, 0.0, 0)
                 audioEvent.run()
+                
+    def trainFromHell(xGust, xSpeed):
+        
+        # https://www.desmos.com/calculator/xwofuoux5g
+        
+        volumeGust = (utils.handleComplex(((xGust - 37.3 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
+        volumeSpeed = (utils.handleComplex(((xSpeed - 34 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
+        if volumeGust > volumeSpeed:
+            volume = volumeGust
+        else:
+            volume = volumeSpeed
+        if volume > 10:
+            speed = (((volume / 10) - 1) / 4) + 1
+        else:
+            speed = volume / 10
+        if speed < 0.1:
+            speed = 0.1
+            
+        volume = volume * 1.3
+            
+        if volume > 0:
+            if status.vars["nextPlays"]["trainFromHell"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                status.vars["nextPlays"]["trainFromHell"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
+                audioEvent = audio.event()
+                audioEvent.register("train_from_hell.mp3", 0, volume, speed, 0.0, 0)
+                audioEvent.register("train_from_hell.mp3", 1, volume, speed, 0.0, 0)
+                audioEvent.registerWindow("train_from_hell.mp3;train_from_hell_nm.mp3", [volume, volume], speed, 0.0, 0)
+                audioEvent.run()
 
 def main():
     
@@ -396,8 +425,10 @@ def main():
         sounds.wind(dataList[0][1], dataList[0][0])
         # if (dataList[0][1] > 24) or (dataList[0][0] > 16):
         sounds.chimneyWind(dataList[0][1], dataList[0][0])
-        # if (dataList[0][1] > 30) or (dataList[0][0] > 30):
+        # if (dataList[0][1] > 30) or (dataList[0][0] > 28):
         sounds.hurricaneWind(dataList[0][1], dataList[0][0])
+        # if (dataList[0][1] > 36) or (dataList[0][0] > 32):
+        sounds.trainFromHell(dataList[0][1], dataList[0][0])
         
         if globals.windChime:
             sounds.lightWindChimeMood(dataList[0][1], dataList[0][0])

@@ -31,7 +31,24 @@ class utils:
         if out == 1:
             out = [[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
         return out
-
+    
+    def checkShutTheFuckUp():
+        
+        try:
+            if (globals.dateArray[2] == 24) or (globals.dateArray[2] == 25):
+            
+                for shutupTime in globals.shutupTimes:
+                    
+                    timeStamp = pytools.clock.dateArrayToUTC([globals.dateArray[0], globals.dateArray[1], globals.dateArray[2], shutupTime[0], shutupTime[1], 0])
+                    
+                    if (timeStamp - 400) < pytools.clock.dateArrayToUTC(globals.dateArray) < (timeStamp + 900):
+                        return True
+        except:
+            print("ERROR: Could not check shutup state.")
+        
+        return False
+                
+        
 class globals:
     run = False
     tic = 0
@@ -39,6 +56,27 @@ class globals:
     dateArray = [2022, 1, 1, 0, 0, 0]
     dayTimes = []
     dataArray = [[2.57, 4.4217330551255625, 10000.0, 0, 'clouds', 3.0, 0.0, 18.388888888888886, 69.0], [0.0, 0.0, 1002.71, 18.0, 69.0, 0], [18.388888888888886, 69.0, 0.0, 0.0, 2.4936961399999995, 4.4217330551255625], 'set temp=291\n    set tempc=18\n    set windspeed=2\n    set windgust=4\n    set pressure=0\n    set humidity=69\n    set weather=clouds\n    set modifier=3', 8, 10, 0, [2.57, 0]]
+    shutupTimes = [
+        [15, 0],
+        [16, 20],
+        [17, 40],
+        [18, 0],
+        [18, 10],
+        [19, 30],
+        [22, 35],
+        [23, 30],
+        [1, 0],
+        [1, 20],
+        [1, 30],
+        [1, 50],
+        [2, 0],
+        [2, 20],
+        [2, 40],
+        [3, 0],
+        [3, 45],
+        [4, 0],
+        [9, 30]
+    ]
     
 class tools:
     def getOutStatus():
@@ -95,9 +133,10 @@ class sections:
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         if globals.playBells:
-                            audioEvent = audio.event()
-                            audioEvent.register('sleighbells_' + str(random.randrange(0, 5)) + ".mp3", ghSpeaker, 40, 1, 0, 0)
-                            audioEvent.run()
+                            if not utils.checkShutTheFuckUp():
+                                audioEvent = audio.event()
+                                audioEvent.register('sleighbells_' + str(random.randrange(0, 5)) + ".mp3", ghSpeaker, 40, 1, 0, 0)
+                                audioEvent.run()
                     sections.bellsChance = bellsChance
                     time.sleep(0.1)
                 except:
@@ -115,14 +154,16 @@ class sections:
                 try:
                     outsideBandChance = 0
                     outsideBandChance = calc.bellCurve(2, 1900, 7800, 43200, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 650000) < outsideBandChance:
-                        if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
-                            if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
-                                audioEvent = audio.event()
-                                audioEvent.register("outside_band.mp3", 0, 10, 1, 0, 0)
-                                audioEvent.register("outside_band.mp3", 1, 10, 1, 0, 0)
-                                audioEvent.registerWindow("outside_band.mp3;outside_band_nm.mp3", 10, 1, 0, 1)
-                                audioEvent.run()
+                    if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
+                        if random.randrange(0, 650000) < outsideBandChance:
+                            if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
+                                if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
+                                    if not utils.checkShutTheFuckUp():
+                                        audioEvent = audio.event()
+                                        audioEvent.register("outside_band.mp3", 0, 10, 1, 0, 0)
+                                        audioEvent.register("outside_band.mp3", 1, 10, 1, 0, 0)
+                                        audioEvent.registerWindow("outside_band.mp3;outside_band_nm.mp3", 10, 1, 0, 1)
+                                        audioEvent.run()
                     sections.outsideBandChance = outsideBandChance
                     time.sleep(0.1)
                 except:
@@ -140,15 +181,17 @@ class sections:
                 try:
                     outsideBellsChance = 0
                     outsideBellsChance = calc.bellCurve(2, 1900, 8800, 39600, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 400000) < outsideBellsChance:
-                        if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
-                            if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
-                                if globals.playBells:
-                                    audioEvent = audio.event()
-                                    audioEvent.register("outside_bells.mp3", 0, 10, 1, 0, 0)
-                                    audioEvent.register("outside_bells.mp3", 1, 10, 1, 0, 0)
-                                    audioEvent.registerWindow("outside_bells.mp3;outside_bells_nm.mp3", 10, 1, 0, 1)
-                                    audioEvent.run()
+                    if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
+                        if random.randrange(0, 400000) < outsideBellsChance:
+                            if int(globals.dayTimes[6][3]) > globals.dateArray[3]:
+                                if int(globals.dayTimes[3][3]) < globals.dateArray[3]:
+                                    if globals.playBells:
+                                        if not utils.checkShutTheFuckUp():
+                                            audioEvent = audio.event()
+                                            audioEvent.register("outside_bells.mp3", 0, 10, 1, 0, 0)
+                                            audioEvent.register("outside_bells.mp3", 1, 10, 1, 0, 0)
+                                            audioEvent.registerWindow("outside_bells.mp3;outside_bells_nm.mp3", 10, 1, 0, 1)
+                                            audioEvent.run()
                     sections.outsideBellsChance = outsideBellsChance
                     time.sleep(0.1)
                 except:
@@ -166,21 +209,24 @@ class sections:
                 try:
                     musicBoxChance = 0
                     musicBoxChance = calc.bellCurve(2, 1900, 8800, 72000, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if not os.path.exists(".\\ch_music_playing.derp"):
-                        if random.randrange(0, 35000) < musicBoxChance:
-                            ghSpeaker = 5
-                            while ghSpeaker == 5:
-                                ghSpeaker = random.randrange(0, 10)
-                            if random.randrange(0, 2) == 1:
-                                if globals.playBells:
-                                    audioEvent = audio.event()
-                                    audioEvent.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                    audioEvent.run()
-                            else:
-                                if globals.playBells:
-                                    audioEvent = audio.event()
-                                    audioEvent.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                    audioEvent.run()
+                    if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
+                        if not os.path.exists(".\\ch_music_playing.derp"):
+                            if random.randrange(0, 35000) < musicBoxChance:
+                                ghSpeaker = 5
+                                while ghSpeaker == 5:
+                                    ghSpeaker = random.randrange(0, 10)
+                                if random.randrange(0, 2) == 1:
+                                    if globals.playBells:
+                                        if not utils.checkShutTheFuckUp():
+                                            audioEvent = audio.event()
+                                            audioEvent.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                            audioEvent.run()
+                                else:
+                                    if globals.playBells:
+                                        if not utils.checkShutTheFuckUp():
+                                            audioEvent = audio.event()
+                                            audioEvent.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                            audioEvent.run()
                     sections.musicBoxChance = musicBoxChance
                     time.sleep(0.1)
                 except:
@@ -205,12 +251,14 @@ class sections:
                             if sections.events.threeAmBells != globals.dateArray[2]:
                                 if (random.random * calc.getDayTic(globals.dateArray)) < 3:
                                     if (((globals.dateArray[1] == 11) and ((globals.dataArray[0][7] <= 0.5) or (globals.dataArray[0][3] != 0) or (globals.dataArray[0][4] == "snow"))) or (globals.dateArray[1] == 12)):
-                                        audio.playSoundAll("3am_bells.mp3", 5, 1, 0, 0)
+                                        if not utils.checkShutTheFuckUp():
+                                            audio.playSoundAll("3am_bells.mp3", 5, 1, 0, 0)
                                 sections.events.threeAmBells = globals.dateArray[2]
                     if globals.dateArray[3] == 18:
                         if globals.dateArray[4] == 10:
                             if (globals.dateArray[2] != sections.events.sixPmDinner):
-                                audio.playSoundAll("6pm_ch.mp3", 15, 1, 0, 0)
+                                if not utils.checkShutTheFuckUp():
+                                    audio.playSoundAll("6pm_ch.mp3", 15, 1, 0, 0)
                                 sections.events.sixPmDinner = globals.dateArray[2]
                     if globals.dateArray[3] == 21:
                         if globals.dateArray[4] == 23:
@@ -220,7 +268,8 @@ class sections:
                                         if (calc.getDayTic(globals.dateArray) > 2) and (((globals.dateArray[1] == 11) and ((globals.dataArray[0][7] <= 0.5) or (globals.dataArray[0][3] != 0) or (globals.dataArray[0][4] == "snow"))) or (globals.dateArray[1] == 12)):
                                             globals.playBells = False
                                             time.sleep((random.random() + 0.5) * 40)
-                                            audio.playSoundAll("mmcbells.mp3", 100, 1, 0, 1)
+                                            if not utils.checkShutTheFuckUp():
+                                                audio.playSoundAll("mmcbells.mp3", 100, 1, 0, 1)
                                             time.sleep((random.random() + 0.5) * 10)
                                             globals.playBells = True
                                     sections.events.mmcBells = globals.dateArray[2]
@@ -236,9 +285,11 @@ class sections:
                 try:
                     lateDayBellsChance = 0
                     lateDayBellsChance = (calc.bellCurve(2, 1900, 7200, 82800, globals.tic) + calc.bellCurve(2, 1900, 7200, 25200, globals.tic)) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < lateDayBellsChance:
-                        if globals.playBells:
-                            audio.playSoundAll("lateday_bells.mp3", 10, 1, 0, 1)
+                    if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
+                        if random.randrange(0, 35000) < lateDayBellsChance:
+                            if globals.playBells:
+                                if not utils.checkShutTheFuckUp():
+                                    audio.playSoundAll("lateday_bells.mp3", 10, 1, 0, 1)
                     sections.lateDayBellsChance = lateDayBellsChance
                     time.sleep(0.1)
                 except:
@@ -257,7 +308,8 @@ class sections:
                     lateNightChoirChance = 0
                     lateNightChoirChance = calc.bellCurve(2, 1900, 7200, 10800, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
                     if random.randrange(0, 35000) < lateNightChoirChance:
-                        audio.playSoundAll("latenight_choir.mp3", 10, 1, 0, 1)
+                        if not utils.checkShutTheFuckUp():
+                            audio.playSoundAll("latenight_choir.mp3", 10, 1, 0, 1)
                     sections.lateNightChoirChance = lateNightChoirChance
                     time.sleep(0.1)
                 except:
@@ -276,7 +328,8 @@ class sections:
                     mmcIdleChance = 0
                     mmcIdleChance = calc.bellCurve(2, 1900, 12600, 43200, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
                     if random.randrange(0, 350000) < mmcIdleChance:
-                        audio.playSoundWindow("mmcidle.mp3;mmcidle.mp3", [20, 30], 1, 0, 1)
+                        if not utils.checkShutTheFuckUp():
+                            audio.playSoundWindow("mmcidle.mp3;mmcidle.mp3", [20, 30], 1, 0, 1)
                     sections.mmcIdleChance = mmcIdleChance
                     time.sleep(0.1)
                 except:
@@ -302,11 +355,12 @@ class sections:
                         if sections.events.santaLanding != globals.dateArray[2]:
                             if random.randrange(0, 35000) < sections.santa.landingChance:
                                 if globals.playBells:
-                                    audioEvent = audio.event()
-                                    audioEvent.register("santalanding.mp3", 0, 10, 1, 0, 0)
-                                    audioEvent.register("santalanding.mp3", 1, 10, 1, 0, 0)
-                                    audioEvent.registerWindow("santalanding_wn.mp3;santalanding_nm.mp3", [10, 10], 1, 0, 0)
-                                    audioEvent.run()
+                                    if not utils.checkShutTheFuckUp():
+                                        audioEvent = audio.event()
+                                        audioEvent.register("santalanding.mp3", 0, 10, 1, 0, 0)
+                                        audioEvent.register("santalanding.mp3", 1, 10, 1, 0, 0)
+                                        audioEvent.registerWindow("santalanding_wn.mp3;santalanding_nm.mp3", [10, 10], 1, 0, 0)
+                                        audioEvent.run()
                                 sections.events.santaLanding = globals.dateArray[2]
                             time.sleep(0.1)
                         else:
@@ -326,11 +380,12 @@ class sections:
                         if sections.events.santaLanding != globals.dateArray[2]:
                             if random.randrange(0, 35000) < sections.santa.sleighPassingChance:
                                 if globals.playBells:
-                                    audioEvent = audio.event()
-                                    audioEvent.register("sleigh_passing.mp3", 0, 10, 1, 0, 0)
-                                    audioEvent.register("sleigh_passing.mp3", 1, 10, 1, 0, 0)
-                                    audioEvent.registerWindow("sleigh_passing_wn.mp3;sleigh_passing_nm.mp3", [10, 10], 1, 0, 1)
-                                    audioEvent.run()
+                                    if not utils.checkShutTheFuckUp():
+                                        audioEvent = audio.event()
+                                        audioEvent.register("sleigh_passing.mp3", 0, 10, 1, 0, 0)
+                                        audioEvent.register("sleigh_passing.mp3", 1, 10, 1, 0, 0)
+                                        audioEvent.registerWindow("sleigh_passing_wn.mp3;sleigh_passing_nm.mp3", [10, 10], 1, 0, 1)
+                                        audioEvent.run()
                             time.sleep(0.1)
                         else:
                             time.sleep(1)

@@ -140,7 +140,7 @@ class candles:
                         status.vars["lastFireplaceLoop"] =  pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())
         
         if (candles.lastWindowLoop + 30) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
-            if (os.path.exists("nomufflewn.derp")) or (not os.path.exists("nomufflewn.derp") and ((tools.dataGrabber()[0][4] == "rain") or (tools.dataGrabber()[0][4] == "lightrain") or (tools.dataGrabber()[0][1] > (18 - wind.globals.windModif)) or (tools.dataGrabber()[0][0] > (13 - wind.globals.windModif)))):
+            if (not os.path.exists("nomufflewn.derp")) or (os.path.exists("nomufflewn.derp") and ((tools.dataGrabber()[0][4] == "rain") or (tools.dataGrabber()[0][4] == "lightrain") or (tools.dataGrabber()[0][1] > (18 - wind.globals.windModif)) or (tools.dataGrabber()[0][0] > (13 - wind.globals.windModif)))):
                 candles.windowFailCounter = candles.windowFailCounter - 1
                 if candles.windowWaxRemaining > 0:
                     if candles.windowFailCounter < 3:
@@ -248,7 +248,7 @@ class candles:
         status.vars["nextCandleStart"] = currentDayTimes[6]
         status.vars["nextCandleEnd"] = currentDayTimes[3]
         
-        if (pytools.clock.dateArrayToUTC(currentDayTimes[6]) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) or (pytools.clock.dateArrayToUTC(currentDayTimes[3]) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) or (tools.dataGrabber()[0][4] == "rain") or (tools.dataGrabber()[0][4] == "lightrain") or (tools.dataGrabber()[0][4] == "snow"):
+        if ((((pytools.clock.getDateTime()[2] != 24) and (pytools.clock.dateArrayToUTC(currentDayTimes[6]) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))) or ((pytools.clock.getDateTime()[2] == 24) and (pytools.clock.dateArrayToUTC([pytools.clock.getDateTime()[0], pytools.clock.getDateTime()[1], pytools.clock.getDateTime()[2], 19, 30, 0]) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())))) or (pytools.clock.dateArrayToUTC(currentDayTimes[3]) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime())) or (tools.dataGrabber()[0][4] == "rain") or (tools.dataGrabber()[0][4] == "lightrain") or ((pytools.clock.getDateTime()[2] != 24) and (tools.dataGrabber()[0][4] == "snow"))):
             if not candles.candlesAreRunning:
                 candles.playLightCandles()
                 candles.candlesAreRunning = True

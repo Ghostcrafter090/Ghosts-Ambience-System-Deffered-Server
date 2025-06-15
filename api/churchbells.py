@@ -67,6 +67,19 @@ class globals:
             else:
                 return phases[12]
 
+class utils:        
+    def dayTimesGrabber():
+        dayTimes = pytools.IO.getList('daytimes.pyl')[1]
+        if dayTimes == 1:
+            dayTimes = [[2022, 5, 11, 3, 45, 15], [2022, 5, 11, 4, 34, 10], [2022, 5, 11, 5, 16, 33], [2022, 5, 11, 5, 48, 29], [2022, 5, 11, 13, 10, 47], [2022, 5, 11, 20, 33, 6], [2022, 5, 11, 21, 5, 2], [2022, 5, 11, 21, 47, 25], [2022, 5, 11, 22, 36, 20]]
+        return dayTimes
+    
+    def dataGrabber():
+        out = pytools.IO.getList('.\\dataList.pyl')[1]
+        if out == 1:
+            out = [[0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        return out
+
 def playDeath(typef=1):
     if os.path.isfile("halloweenmode.derp"):
         if typef == 1:
@@ -111,29 +124,71 @@ def main():
     while not status.exit:
         weekDay = pytools.clock.getDayOfWeek()
         dateArray = pytools.clock.getDateTime()
+        dayTimes = utils.dayTimesGrabber()
+        
+        volumeModifier = 1
+        if dateArray[1] == 12:
+            if (dateArray[2] == 24) or (dateArray[2] == 25):
+                volumeModifier = 1.333333333333333333333
+        
         if dateArray[3] == 9:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb1.mp3;cb1.mp3", [10, 75, 35], 1.0, 0, 1)
+                audio.playSoundWindow("cb1.mp3;cb1.mp3", [10, 75 * volumeModifier, 35 * volumeModifier], 1.0, 0, 1)
                 playDeath()
         if dateArray[3] == 14:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb4.mp3;cb4.mp3", [10, 75, 35], 1.0, 0, 1)
+                audio.playSoundWindow("cb4.mp3;cb4.mp3", [10, 75 * volumeModifier, 35 * volumeModifier], 1.0, 0, 1)
                 playDeath()
         if dateArray[3] == 18:
             if dateArray[4] == 5:
-                audio.playSoundWindow("cb5.mp3;cb5.mp3", [10, 75, 35], 1.0, 0, 1)
+                audio.playSoundWindow("cb5.mp3;cb5.mp3", [10, 75 * volumeModifier, 35 * volumeModifier], 1.0, 0, 1)
                 playDeath()
         if (weekDay == 0) or ((dateArray[1] == 10) and (getWeekDayOfMonthNumber(dateArray) == 2) and (weekDay == 1)) or ((dateArray[1] == 11) and (dateArray[2] == 11)) or ((dateArray[1] == 7) and (dateArray[2] == 1))  or ((dateArray[1] == 10) and (dateArray[2] == 31)) or ((dateArray[1] == 10) and (dateArray[2] == 13)) or ((dateArray[1] == 12) and (dateArray[2] == 24)) or ((dateArray[1] == 12) and (dateArray[2] == 25)):
             if dateArray[3] == 10:
                 if dateArray[4] == 35:
-                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 35], 1.0, 0, 1)
+                    audio.playSoundWindow("cb2.mp3;cb2.mp3", [10, 75 * volumeModifier, 35 * volumeModifier], 1.0, 0, 1)
                     playDeath()
             if dateArray[3] == 11:
                 if dateArray[4] == 50:
-                    audio.playSoundWindow("cb2.mp3;cb3.mp3", [10, 75, 35], 1.0, 0, 1)
+                    audio.playSoundWindow("cb3.mp3;cb3.mp3", [10, 75 * volumeModifier, 35 * volumeModifier], 1.0, 0, 1)
                     playDeath()
         
         playDnwbell()
+        
+        if dateArray[3] == 0:
+            if dateArray[4] == 0:
+                os.system("del \".\\played_cbc_let-it-snow.derp\" /f /q")
+        
+        if (dateArray[2] == 24) and (dateArray[3] == 18) and (dateArray[4] == 30):
+            os.system("del \".\\played_cbc_24.derp\" /f /q")
+        
+        if (dateArray[2] == 25) and (dateArray[3] == 18) and (dateArray[4] == 30):
+            os.system("del \".\\played_cbc_25.derp\" /f /q")
+        
+        if dateArray[1] == 12:
+            if (dateArray[2] > 12) and (dateArray[2] < 26):
+                if pytools.clock.dateArrayToUTC(dayTimes[5]) < pytools.clock.dateArrayToUTC(dateArray):
+                    if dayTimes[5][2] == dateArray[2]:
+                        if not os.path.exists(".\\played_cbc_" + str(dateArray[2]) + ".derp"):
+                            if (dateArray[2] == 24) or (dateArray[2] == 25):
+                                audio.playSoundWindow("cbc_" + str(dateArray[2]) + ".mp3;cbc_" + str(dateArray[2]) + ".mp3", [10, 100, 35], 1.0, 0, 1)
+                            else:
+                                audio.playSoundWindow("cbc_" + str(dateArray[2]) + ".mp3;cbc_" + str(dateArray[2]) + ".mp3", [10, 75, 35], 1.0, 0, 1)
+                            pytools.IO.saveFile(".\\played_cbc_" + str(dateArray[2]) + ".derp", "")
+                        
+            if (utils.dataGrabber()[0][4] == "snow"):
+                if pytools.clock.dateArrayToUTC(dayTimes[5]) > pytools.clock.dateArrayToUTC(dateArray):
+                    if pytools.clock.dateArrayToUTC(dayTimes[4]) < pytools.clock.dateArrayToUTC(dateArray):
+                        if (dayTimes[4][2] == dateArray[2]) and (dayTimes[5][2] == dateArray[2]):
+                            if not os.path.exists(".\\played_cbc_let-it-snow.derp"):
+                                if (dateArray[2] == 24) or (dateArray[2] == 25):
+                                    audio.playSoundWindow("cbc_let-it-snow.mp3;cbc_let-it-snow.mp3", [10, 100, 35], 1.0, 0, 1)
+                                else:
+                                    audio.playSoundWindow("cbc_let-it-snow.mp3;cbc_let-it-snow.mp3", [10, 75, 35], 1.0, 0, 1)
+                                pytools.IO.saveFile(".\\played_cbc_let-it-snow.derp", "")
+            
+        else:
+            os.system("del \".\\played_cbc_*.derp\" /f /q")
         
         time.sleep(60)
         status.vars['lastLoop'] = pytools.clock.getDateTime()

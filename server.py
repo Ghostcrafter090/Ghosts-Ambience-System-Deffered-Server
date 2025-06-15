@@ -67,11 +67,19 @@ class client:
     
     neededHosts = 1
     
+    lastRestarted = {}
+    
     def wakeOnLan():
         
-        if os.path.exists("..\\clientsLastHeardFrom.json"):
-            lastHeardInfo = pytools.IO.getJson("..\\clientsLastHeardFrom.json")
+        if os.path.exists(".\\clientsLastHeardFrom.json"):
+            try:
+                lastHeardInfo = pytools.IO.getJson(".\\clientsLastHeardFrom.json")
+            except:
+                lastHeardInfo = {}
         else:
+            lastHeardInfo = {}
+            
+        if str(lastHeardInfo) != "{":
             lastHeardInfo = {}
         
         while True:
@@ -98,24 +106,34 @@ class client:
                     lastHeardInfo[host] = time.time()
                     
                 if updated:
-                    pytools.IO.saveJson("..\\clientsLastHeardFrom.json", lastHeardInfo)
+                    pytools.IO.saveJson(".\\clientsLastHeardFrom.json", lastHeardInfo)
                 
-                for client in permaClients:
-                    if not client in lastHeardInfo:
-                        print("Waking host " + str(client) + " to check if is alive...")
+                for _client in permaClients:
+                    if not _client in lastHeardInfo:
+                        print("Waking host " + str(_client) + " to check if is alive...")
                         try:
-                            wakeComputer(permaClients[client], interface=offlineInterface)
-                            lastHeardInfo[client] = 0
+                            wakeComputer(permaClients[_client], interface=offlineInterface)
+                            lastHeardInfo[_client] = 0
                         except:
                             print("Host failed check. Moving on.")
                         
-                for client in lastHeardInfo:
-                    if ((lastHeardInfo[client] + 3600) < time.time()) or ((load[1] / load[0]) > 0.9):
-                        print("Force waking host " + str(client) + "...")
+                for _client in lastHeardInfo:
+                    if ((lastHeardInfo[_client] + 3600) < time.time()) or ((load[1] / load[0]) > 0.9):
+                        print("Force waking host " + str(_client) + "...")
                         try:
-                            wakeComputer(permaClients[client], interface=offlineInterface)
+                            wakeComputer(permaClients[_client], interface=offlineInterface)
                         except:
                             print("Failed to wake client. Moving on.")
+                    
+                    if ((lastHeardInfo[_client] + 7200) < time.time()):
+                        print("Attempting to force restart host...")
+                        if _client not in client.lastRestarted:
+                            client.lastRestarted[_client] = 0
+                        
+                        if (client.lastRestarted[_client] + 2400) < time.time():
+                            os.system("start \"\" shutdown /m " + _client + " /r /t 1")
+                            client.lastRestarted[_client] = time.time()
+                    
             except:
                 print(traceback.format_exc())
             
@@ -182,7 +200,9 @@ class client:
             except:
                 print(traceback.format_exc())
             time.sleep(1)
-            
+    
+    fatalFaultCount = {}
+    
     def run():
         
         errorCounts = {}
@@ -304,6 +324,30 @@ class client:
                 "hosts": blackHosts
             })
             time.sleep(300)
+            
+    def forceRestart(rclient):
+        print("WARNING: Faulty Client Detected! Shutting down client " + str(rclient) + "...")
+        # if client.hostErrors[rclient][2] and ((client.hostErrors[rclient][2] + 1440) < time.time()):
+        print("ERROR: Faulty Client " + rclient + " Is Misbehaving. Punishing...")
+        pytools.IO.saveFile("", "host-" + rclient + ".bg")
+        os.system("shutdown /m \\\\" + str(rclient) + " /r /t 1")
+        hostsFile = pytools.IO.getJson(".\\hosts.json")
+        try:
+            hostsFile["hosts"].remove(rclient)
+        except:
+            pass
+        try:
+            hostsFile["hosts"].pop(rclient)
+        except:
+            pass
+        pytools.IO.saveJson("hosts.json", hostsFile)
+        
+        try:
+            pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
+                "command": "performSystemRestart"
+            })), timeout=1)
+        except:
+            pass
 
 class soundRegister:
     buffer = []
@@ -324,7 +368,17 @@ class soundRegister:
     def run():
         while not flags.restart:
             try:
-                if os.path.exists("stream_buffer_underrun"):
+                if os.path.exists("unexpected_sender"):
+                    response = pytools.net.getJsonAPI("http://localhost:" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                        "command": "clientMessage",
+                        "data": {
+                            "to": pytools.IO.getFile("unexpected_sender"),
+                            "message": "unexpectedSender"
+                        }
+                    })))
+                    os.system("del stream_buffer_underrun /f /q")
+                    os.system("del unexpected_sender /f /q")
+                elif os.path.exists("stream_buffer_underrun"):
                     response = pytools.net.getJsonAPI("http://localhost:" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
                         "command": "clientMessage",
                         "data": {
@@ -332,9 +386,6 @@ class soundRegister:
                             "message": "bufferUnderrun"
                         }
                     })))
-                    soundRegister.CPUUsageThreshold = soundRegister.CPUUsageThreshold - 5
-                    if soundRegister.CPUUsageThreshold < 0:
-                        soundRegister.CPUUsageThreshold = 0
                     os.system("del stream_buffer_underrun /f /q")
             except:
                 print(traceback.format_exc())
@@ -357,7 +408,17 @@ class soundRegister:
                 i = 0
                 while i < len(soundRegister.buffer):
                     try:
-                        if os.path.exists("stream_buffer_underrun"):
+                        if os.path.exists("unexpected_sender"):
+                            response = pytools.net.getJsonAPI("http://localhost:" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
+                                "command": "clientMessage",
+                                "data": {
+                                    "to": pytools.IO.getFile("unexpected_sender"),
+                                    "message": "unexpectedSender"
+                                }
+                            })))
+                            os.system("del stream_buffer_underrun /f /q")
+                            os.system("del unexpected_sender /f /q")
+                        elif os.path.exists("stream_buffer_underrun"):
                             response = pytools.net.getJsonAPI("http://localhost:" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
                                 "command": "clientMessage",
                                 "data": {
@@ -365,9 +426,6 @@ class soundRegister:
                                     "message": "bufferUnderrun"
                                 }
                             })))
-                            soundRegister.CPUUsageThreshold = soundRegister.CPUUsageThreshold - 5
-                            if soundRegister.CPUUsageThreshold < 0:
-                                soundRegister.CPUUsageThreshold = 0
                             os.system("del stream_buffer_underrun /f /q")
                     except:
                         print(traceback.format_exc())
@@ -405,9 +463,6 @@ class soundRegister:
                 soundRegister.lastAddCount = 0
             
             if (soundRegister.lastCPUThresholdAdd + 15) < time.time():
-                soundRegister.CPUUsageThreshold = soundRegister.CPUUsageThreshold + 1
-                if soundRegister.CPUUsageThreshold > soundRegister.maxCPUUsage:
-                    soundRegister.CPUUsageThreshold = soundRegister.maxCPUUsage
             
                 soundRegister.lastCPUThresholdAdd = time.time()
             
@@ -430,23 +485,75 @@ class puppet:
                 pytools.IO.saveJson(".\\working\\hosts.json", hosts)
                 # client(data["ipAddress"]).thread.start()
     
-    def sendClientMessage(message, rclient, clientFrom):
+    def sendClientMessage(message, rclient, clientFrom, streamType=False):
         if message == "bufferUnderrun":
             try:
-                pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
-                    "command": "bufferUnderrun"
-                })), timeout=1)
+                
+                try:
+                    savedHostFile = pytools.IO.getJson("hosts.json")["hosts"]
+                    savedHostDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                    newHostFile = pytools.IO.getJson("hosts.json")["hosts"]
+                        
+                    if rclient not in client.fatalFaultCount:
+                        client.fatalFaultCount[rclient] = 0
                     
+                    dontResetFaultCount = False
+                    if rclient in savedHostDataFile:
+                        if savedHostDataFile[rclient]["max"] == 0:
+                            if savedHostDataFile[rclient]["current"] == 0:
+                                if not savedHostDataFile[rclient]["play"]:
+                                    client.fatalFaultCount[rclient] = client.fatalFaultCount[rclient] + 1
+                                    print("Fatal fault on client " + rclient + " detected. Fatal fault count is now at " + str(client.fatalFaultCount[rclient]))
+                                    dontResetFaultCount = True
+                    
+                    if client.fatalFaultCount[rclient] > 5:
+                        client.fatalFaultCount[rclient] = 0
+                        newHostFile.remove(rclient)
+                        
+                    if not dontResetFaultCount:
+                        client.fatalFaultCount[rclient] = 0
+
+                    if newHostFile != savedHostFile:
+                        pytools.IO.saveJson("hosts.json", {
+                            "hosts": newHostFile
+                        })
+                except:
+                    print(traceback.format_exc())
+                    print("__FATAL_FAULT_DETECT_FAIL__")
+                
                 pytools.IO.saveJson("lastBufferErrorTime_" + str(clientFrom) + ".json", {
                     "timeStamp": pytools.clock.getDateTime(),
                     "receiveFrom": rclient
                 })
                 if rclient in client.hostErrors:
-                    if (client.hostErrors[rclient][0] + 90) < time.time():
-                        client.hostErrors[rclient] = [time.time(), time.time(), client.hostErrors[rclient][2]]
+                    
+                    if (client.hostErrors[rclient][0] + 30) < time.time():
+                        client.hostErrors[rclient] = [time.time(), time.time(), client.hostErrors[rclient][2], client.hostErrors[rclient][3]]
+                        if (client.hostErrors[rclient][0] + 90) < time.time():
+                            if vm.configure.vban.getDaisyChain()[0] == rclient:
+                                client.previousRClient = rclient
                     else:
-                        client.hostErrors[rclient] = [time.time(), client.hostErrors[rclient][1], client.hostErrors[rclient][2]]
-                        if (client.hostErrors[rclient][1] + 180) < time.time():
+                        if (client.hostErrors[rclient][0] + 15) >= time.time():
+                            try:
+                                
+                                if not streamType:
+                                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "bufferUnderrun"
+                                    })), timeout=1)
+                                else:
+                                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                        "command": "bufferUnderrun",
+                                        "data": {
+                                            "stream": streamType
+                                        }
+                                    })), timeout=1)
+                            except:
+                                print("Buffer Underrun message sent to client " + rclient + " failed. Assuming it's dead...")
+                                client.hostErrors[rclient][1] = client.hostErrors[rclient][1] - 10
+                        
+                        client.hostErrors[rclient] = [time.time(), client.hostErrors[rclient][1], client.hostErrors[rclient][2], client.hostErrors[rclient][3]]
+                        
+                        if (client.hostErrors[rclient][1] + 270) < time.time():
                             
                             performFullRestart = True
                             if vm.configure.vban.getDaisyChain()[0] == rclient:
@@ -458,34 +565,21 @@ class puppet:
                                 os.system("del lastStreamsLoop.cx /f /q")
                                 os.system("copy /y \"" + executable + "\" \"" + "\\".join(sys.executable.split("\\")[:-1]) + "\\vban_streams.exe\"")
                                 os.system("start \"\" \"" + "\\".join(sys.executable.split("\\")[:-1]) + "\\vban_streams.exe\" .\\vm.py --runStreams")
-                                client.previousRClient = rclient
                             
-                            if performFullRestart:
-                                print("WARNING: Faulty Client Detected! Shutting down client " + str(rclient) + "...")
-                                # if client.hostErrors[rclient][2] and ((client.hostErrors[rclient][2] + 1440) < time.time()):
-                                print("ERROR: Faulty Client " + rclient + " Is Misbehaving. Punishing...")
-                                pytools.IO.saveFile("", "host-" + rclient + ".bg")
-                                os.system("shutdown /m \\\\" + str(rclient) + " /r /t 1")
-                                hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                try:
-                                    hostsFile["hosts"].remove(rclient)
-                                except:
-                                    pass
-                                try:
-                                    hostsFile["hosts"].pop(rclient)
-                                except:
-                                    pass
-                                pytools.IO.saveJson("hosts.json", hostsFile)
-                                
-                                try:
-                                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                        "command": "performSystemRestart"
-                                    })), timeout=1)
-                                except:
-                                    pass
-                            client.hostErrors[rclient] = [time.time(), time.time(), time.time()]
+                            if performFullRestart and ((client.hostErrors[rclient][3] + 300) < time.time()):
+                                client.forceRestart(rclient)
+                                client.hostErrors.pop(rclient)
+                            else:
+                                client.hostErrors[rclient] = [time.time(), time.time(), time.time(), client.hostErrors[rclient][3]]
                 else:
-                    client.hostErrors[rclient] = [time.time(), time.time(), False]
+                    client.hostErrors[rclient] = [time.time(), time.time(), False, time.time()]
+                    if vm.configure.vban.getDaisyChain()[0] == rclient:
+                        print("New Primary Client Detected. Restarting Stream Handler...")
+                        executable = sys.executable
+                        os.system("taskkill /f /im vban_streams.exe")
+                        os.system("del lastStreamsLoop.cx /f /q")
+                        os.system("copy /y \"" + executable + "\" \"" + "\\".join(sys.executable.split("\\")[:-1]) + "\\vban_streams.exe\"")
+                        os.system("start \"\" \"" + "\\".join(sys.executable.split("\\")[:-1]) + "\\vban_streams.exe\" .\\vm.py --runStreams")
                 try:
                     pytools.IO.saveJson("clientFaults.json", client.hostErrors)
                 except:
@@ -501,6 +595,10 @@ class puppet:
                 except:
                     pass
                 return False
+        
+        elif message == "unexpectedSender":
+            client.forceRestart(rclient)
+        
         return False
     
     def getOthers():
@@ -539,7 +637,10 @@ class puppet:
                 p.resume()
     
     def fireEvent(eventBytes, fileData, fromBuffer=False):
-        if puppet.getSoundCount() < (soundRegister.maxSoundCount * 0.6):
+        if (puppet.getSoundCount() < (soundRegister.maxSoundCount * 0.6)) and (soundRegister.cpuUsage < soundRegister.CPUUsageThreshold):
+            soundRegister.maxSoundCount = soundRegister.maxSoundCount + 1
+            if soundRegister.maxSoundCount > pytools.IO.getJson("manualMax.json")["max"]:
+                soundRegister.maxSoundCount = pytools.IO.getJson("manualMax.json")["max"]
             print("Audio events received.")
             if not flags.restart:
                 if fileData:
@@ -570,7 +671,17 @@ class puppet:
                             os.system("start /d \"" + os.getcwd() + "\\working" + "\" /b "" .\\ambience.exe ..\\modules\\audio_event.py --event=\"" + pytools.cipher.base64_encode(json.dumps(eventData)) + "\"")
         
         elif not fromBuffer:
+            if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 1
+                if soundRegister.maxSoundCount < 8:
+                    soundRegister.maxSoundCount = 8
+                
             puppet.registerEvent(eventBytes, fileData)
+        else:
+            if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 1
+                if soundRegister.maxSoundCount < 8:
+                    soundRegister.maxSoundCount = 8
             
     def registerEvent(eventBytes, fileData):
         soundRegister.buffer.append([eventBytes, fileData])
@@ -581,7 +692,7 @@ class puppet:
             if pytools.IO.getJson("manualMax.json")["isActive"]:
                 if soundRegister.maxSoundCount == -1:
                     soundRegister.maxSoundCount = pytools.IO.getJson("manualMax.json")["max"]
-                return pytools.IO.getJson("manualMax.json")["max"]
+                return soundRegister.maxSoundCount
         except:
             pass
         if soundRegister.maxSoundCount == -1:
@@ -646,9 +757,14 @@ class puppet:
                     current = current + hostData[host]["current"]
                 except:
                     pass
+        
         if max == 0:
             if current == 0:
-                return [10, 0]
+                return [10, 10]
+            
+        if len(hostList) < 1:
+            current = current * 1.6
+            
         return [max, current]
     
 class comMulti:
@@ -767,7 +883,10 @@ class com:
                         "status": "success"
                     }), "utf-8"))
                 if request["command"] == "clientMessage":
-                    successEvent = puppet.sendClientMessage(request["data"]["message"], request["data"]["to"], self.client_address[0])
+                    if "stream" in request["data"]:
+                        successEvent = puppet.sendClientMessage(request["data"]["message"], request["data"]["to"], self.client_address[0], streamType=request["data"]["stream"])
+                    else:
+                        successEvent = puppet.sendClientMessage(request["data"]["message"], request["data"]["to"], self.client_address[0])
                     self.wfile.write(bytes(json.dumps({
                         "status": ("success" * successEvent) + ("failed" * (not successEvent))
                     }), "utf-8"))
@@ -802,6 +921,10 @@ class com:
                 if request["command"] == "getSoundCount":
                     self.wfile.write(bytes(json.dumps({
                         "soundCount": puppet.getSoundCount()
+                    }), "utf-8"))
+                if request["command"] == "getCpuUsage":
+                    self.wfile.write(bytes(json.dumps({
+                        "cpuUsage": soundRegister.cpuUsage
                     }), "utf-8"))
                 if request["command"] == "fireEvent":
                     try:
@@ -946,24 +1069,31 @@ class com:
             threadf = threading.Thread(target=com.start)
             threadf.daemon = True
             threadf.start()
-            time.sleep(1)
+            soundRegister.cpuUsage = pytools.system.getCPU(1)
             try:
                 while pytools.net.getJsonAPI("http://localhost:5597?json=" + urllib.parse.quote(json.dumps({
                     "command": "ping"
                 })), timeout=1)["status"] == "success":
                     webServerErrorCount = 0
-                    time.sleep(15)
+                    try:
+                        xw = 0
+                        while xw < 15:
+                            soundRegister.cpuUsage = pytools.system.getCPU(1)
+                            time.sleep(1)
+                            xw = xw + 1
+                    except:
+                        time.sleep(15)
                 webServerErrorCount = webServerErrorCount + 1
                 threadf = threading.Thread(target=com.start)
                 threadf.daemon = True
                 threadf.start()
-                time.sleep(1)
+                soundRegister.cpuUsage = pytools.system.getCPU(1)
             except:
                 webServerErrorCount = webServerErrorCount + 1
                 threadf = threading.Thread(target=com.start)
                 threadf.daemon = True
                 threadf.start()
-                time.sleep(1)
+                soundRegister.cpuUsage = pytools.system.getCPU(1)
     
     multiThreaders = []
         

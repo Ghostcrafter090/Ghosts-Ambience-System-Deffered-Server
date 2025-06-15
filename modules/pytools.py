@@ -1142,13 +1142,13 @@ class clock:
         dateArray[5] = int(str(daten).split(" ")[1].split(":")[2].split(".")[0])
         return dateArray
 
-    def utcFormatToArray(string):
-        year = int(string.split("-")[0])
-        month = int(string.split("-")[1])
-        day = int(string.split("-")[2].split("T")[0])
-        hour = int(string.split("T")[1].split(":")[0])
-        minute = int(string.split("T")[1].split(":")[1])
-        second = int(string.split("T")[1].split(":")[2].split("+")[0])
+    def utcFormatToArray(string, seperators="-T:+"):
+        year = int(string.split(seperators[0])[0])
+        month = int(string.split(seperators[0])[1])
+        day = int(string.split(seperators[0])[2].split(seperators[1])[0])
+        hour = int(string.split(seperators[1])[1].split(seperators[2])[0])
+        minute = int(string.split(seperators[1])[1].split(seperators[2])[1])
+        second = int(string.split(seperators[1])[1].split(seperators[2])[2].split(seperators[3])[0])
         millis = 0
         return [year, month, day, hour, minute, second]
 

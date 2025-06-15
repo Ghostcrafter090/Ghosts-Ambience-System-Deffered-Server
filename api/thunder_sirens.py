@@ -51,7 +51,7 @@ def main():
             
             audioEvent = audio.event()
             audioEvent.registerWindow("tornado_sirens.mp3;tornado_sirens_nm.mp3", volume, 1.0, 0.0, 0)
-            audioEvent.register("tornado_sirens_wall.mp3", 0, volume * 0.8, 1.0, 0.0, 0)
+            audioEvent.register("tornado_sirens_wall.mp3", 0, volume, 1.0, 0.0, 0)
             audioEvent.register("tornado_sirens_wall.mp3", 1, volume * 0.8, 1.0, 0.0, 0)
             audioEvent.run()
             if count == 2:

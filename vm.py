@@ -11,6 +11,7 @@ import traceback
 import modules.audio as audio
 import random
 import copy
+import math
 import sys
 
 import modules.logManager as log
@@ -585,12 +586,16 @@ class configure:
         
         if dataf:
             lightningModif = (1.14898 ** (0.997531 * (dataf[1] + 0.00708756)) - 0.000982331) * 2
-            windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5
-            windSpeedModif = 1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234
+            windGustModif = ((1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5) ** 1.4
+            windSpeedModif = (1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234) ** 1.4
             if windGustModif > windSpeedModif:
                 windModif = windGustModif
             else:
                 windModif = windSpeedModif
+                
+            if windModif > 8:
+                windModif = 8
+                
             weatherModif = 0
             if dataf[0][0][4] == "mist":
                 weatherModif = 1.2
@@ -601,7 +606,14 @@ class configure:
             elif dataf[0][0][4] == "snow":
                 weatherModif = 3
             elif dataf[0][0][4] == "thunder":
-                weatherModif = 4.5
+                if dataf[0][2][3] > 0:
+                    weatherModif = 3
+                
+            if dataf[0][2][3] < 7.5:
+                weatherModif = weatherModif + (dataf[0][2][3] / 1.5)
+            else:
+                weatherModif = weatherModif + 7.5
+            
         else:
             lightningModif = 0
             windModif = 0
@@ -635,6 +647,9 @@ class configure:
         return (pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 7) or (pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 6) or ((pytools.datetime.isoweekday(pytools.datetime(*pytools.clock.getDateTime())) == 5) and (pytools.clock.getDateTime()[3] > 12))
     
     def getTimeModifier(prevVal, isLimiter=False, isPorch=False, noTime=False):
+        
+        dayTimes = pytools.IO.getList(".\\working\\dayTimes.pyl")[1]
+        
         if not noTime:
             if configure.getIsHoliday():
                 if 7 < pytools.clock.getDateTime()[3] < 22:
@@ -652,26 +667,72 @@ class configure:
                 else:
                     percent = 1
             elif configure.getIsWeekend():
-                if 8 < pytools.clock.getDateTime()[3] < 21:
+                
+                dayEndTime = dayTimes[7][3] + 1 + (dayTimes[7][4] / 60)
+                
+                if dayEndTime < 21:
+                    dayEndTime = 21
+                    
+                if dayEndTime > 22.5:
+                    dayEndTime = 22.5
+                
+                if 8 < (pytools.clock.getDateTime()[3] + (pytools.clock.getDateTime()[4] / 60)) < dayEndTime:
                     percent = 0
-                elif pytools.clock.getDateTime()[3] == 8:
+                elif math.floor(pytools.clock.getDateTime()[3] + (pytools.clock.getDateTime()[4] / 60)) == 8:
                     percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
-                elif pytools.clock.getDateTime()[3] == 21:
-                    percent = (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2
+                elif (dayEndTime + 1) > (pytools.clock.getDateTime()[3] + (pytools.clock.getDateTime()[4] / 60)) > dayEndTime:
+                    percent = (1 - ((dayEndTime + 1) - (pytools.clock.getDateTime()[3] + (pytools.clock.getDateTime()[4] / 60)))) ** 2
                 else:
                     percent = 1
+                    
+                if pytools.clock.getDateTime()[3] == 21:
+                    percent = percent + ((0.08333333333333333 / 2) * ((pytools.clock.getDateTime()[4] / 60) + (pytools.clock.getDateTime()[5] / 3600)))
+                elif pytools.clock.getDateTime()[3] == 22:
+                    percent = percent + (0.08333333333333333 / 2) + (0.08333333333333333 * ((pytools.clock.getDateTime()[4] / 60) + (pytools.clock.getDateTime()[5] / 3600)))
+                elif pytools.clock.getDateTime()[3] == 23:
+                    percent = percent + (0.08333333333333333 / 2) + 0.08333333333333333
+                
             else:
-                if 10 < pytools.clock.getDateTime()[3] < 19:
+                
+                dayEndTime = dayTimes[7][3] + 1
+                
+                if dayEndTime < 19:
+                    dayEndTime = 19
+                    
+                if dayEndTime > 22:
+                    dayEndTime = 22
+                
+                if 10 < pytools.clock.getDateTime()[3] < dayEndTime:
                     percent = 0
                 elif pytools.clock.getDateTime()[3] == 10:
                     percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
-                elif pytools.clock.getDateTime()[3] == 19:
+                elif pytools.clock.getDateTime()[3] == dayEndTime:
                     percent = (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2
                 else:
                     percent = 1
                 
                 if percent < 0.1:
                     percent = 0.1
+                    
+                if pytools.clock.getDateTime()[3] == 12:
+                    percent = 0.1 - (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) * 0.05)
+                if pytools.clock.getDateTime()[3] == 13:
+                    percent = 0.05 - (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) * 0.05)
+                if pytools.clock.getDateTime()[3] == 14:
+                    percent = 0
+                if pytools.clock.getDateTime()[3] == 15:
+                    percent = (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) * 0.05)
+                if pytools.clock.getDateTime()[3] == 16:
+                    percent = 0.05 + (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) * 0.05)
+                
+                if pytools.clock.getDateTime()[3] == 21:
+                    percent = percent + ((0.08333333333333333 / 2) * ((pytools.clock.getDateTime()[4] / 60) + (pytools.clock.getDateTime()[5] / 3600)))
+                elif pytools.clock.getDateTime()[3] == 22:
+                    percent = percent + (0.08333333333333333 / 2) + (0.08333333333333333 * ((pytools.clock.getDateTime()[4] / 60) + (pytools.clock.getDateTime()[5] / 3600)))
+                elif pytools.clock.getDateTime()[3] == 23:
+                    percent = percent + (0.08333333333333333 / 2) + 0.08333333333333333
+                    
+                    
         else:
             percent = 0
         
@@ -681,6 +742,8 @@ class configure:
                 percent = 0.3
             elif isLimiter:
                 percent = percent * -0.15
+        
+        print(percent)
         
         if not isLimiter:
             return (prevVal - (60 * percent))
@@ -715,13 +778,16 @@ class configure:
             customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 26, 23, 59, 59], peakModif=0.083, timeScaleModif=0.25)
             customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 27, 23, 59, 59], peakModif=0.08, timeScaleModif=0.25)
             customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 30, 12, 0, 0], peakModif=0.06)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=0.14, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 25, 23, 59, 59], peakModif=0.2, timeScaleModif=0.25)
+            
         
         if dayOfYear > 304:
             if dayOfYear > 304.0208333333333:
                 if configure.getOutsideVolumeAfterHalloween() <= -19:
-                    return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)), noTime=noTime, isPorch=isPorch)
+                    return configure.getOutsideVolumeWeatherModifier(configure.getTimeModifier(configure.getOutsideVolumeAfterHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5), noTime=noTime, isPorch=isPorch))
                 else:
-                    return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(-19 + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5)), noTime=noTime, isPorch=isPorch)
+                    return configure.getOutsideVolumeWeatherModifier(configure.getTimeModifier(-19 + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5), noTime=noTime, isPorch=isPorch))
             else:
                 if configure.getOutsideVolumeAfterHalloween() <= -19:
                     newValue = configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeAfterHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.06, afterHour=True) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=22) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=7.5))
@@ -732,7 +798,7 @@ class configure:
                 percentage = (304.0208333333333 - dayOfYear) / 0.0208333333333
                 return configure.getTimeModifier((oldValue * (percentage)) + (newValue * (1 - percentage)), noTime=noTime, isPorch=isPorch)
         else:
-            return configure.getTimeModifier(configure.getOutsideVolumeWeatherModifier(configure.getOutsideVolumeBeforeHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.6) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5)), noTime=noTime, isPorch=isPorch)
+            return configure.getOutsideVolumeWeatherModifier(configure.getTimeModifier(configure.getOutsideVolumeBeforeHalloween() + customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.6) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 13, 23, 59, 59], peakModif=1.5) + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=2.5), noTime=noTime, isPorch=isPorch))
     
     def getOutsideLimiter(volume, isPorch=False):
         # https://www.desmos.com/calculator/hgfrmpjpqs
@@ -809,6 +875,19 @@ class configure:
         }
         pytools.IO.saveJson("serverOutputs.json", outputs)
     
+    def printOutsideVolume():
+        configure.outsideVolume = configure.getOutsideVolume()
+        configure.porchVolume = configure.getOutsideVolume(isPorch=True)
+        configure.outsideLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True))
+        configure.porchLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True), isPorch=True)
+        
+        print("Porch Volume (Logical)  : " + str(configure.porchVolume))
+        print("Porch Volume (Modif)    : " + str(-13 + (configure.porchVolume - configure.outsideVolume)))
+        print("Porch Volume (Actual)   : " + str((-13 + (configure.porchVolume - configure.outsideVolume)) + configure.outsideVolume))
+        print("Porch Limiter           : " + str(configure.porchLimiter))
+        print("Outside Volume (Actual) : " + str(configure.outsideVolume))
+        print("Outside Limiter         : " + str(configure.outsideLimiter))
+
     def handler():
         while True:
             try:

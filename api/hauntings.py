@@ -147,6 +147,9 @@ class haunts:
                 i = i + 1
             mem.append([dob, [floorplan.level[0][1][0] * random.random(), floorplan.level[0][1][1] * random.random()]])
             mem.append([dod, [floorplan.level[0][1][0] * random.random(), floorplan.level[0][1][1] * random.random()]])
+            halfLife = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (random.random() * 100 * 24 * 60 * 60)
+            if (pytools.clock.getDateTime()[1] == 12) and (pytools.clock.getDateTime()[2] == 24):
+                halfLife = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (random.random() * 24 * 60 * 60)
             prop = {
                 "name": name,
                 "type": typf, 
@@ -159,7 +162,7 @@ class haunts:
                     "completedMemmories": {}
                 },
                 "dateAdded": pytools.clock.getDateTime(),
-                "halfLife": pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (random.random() * 100 * 24 * 60 * 60)
+                "halfLife": halfLife
             }
             haunts.save(prop)
             haunts.register(prop)
@@ -209,6 +212,10 @@ class haunts:
             
             if hallowFactor < 0:
                 hallowFactor = 0
+                
+            if (dateArray[1] == 12) and (dateArray[2] == 24):
+                hallowFactor = hallowFactor + (dateArray[3] * 3)
+            
             while len(haunts.getGhosts()) < (hallowFactor / 6):
                 haunts.randomRegister()
             haunts.purgeGhosts()
@@ -377,6 +384,29 @@ class ghost:
             percent = (utc - dayTimesUTC[curr]) / dayTimesUTC[curr + 1]
         except:
             percent = (utc - dayTimesUTC[curr]) / (dayTimesUTC[0] + 86400)
+            
+        emccsAdd = 0
+        if pytools.clock.getDateTime()[1] == 12:
+            if pytools.clock.getDateTime()[2] == 24:
+                if pytools.clock.getDateTime()[3] == 22:
+                    emccsAdd = 2 + ((pytools.clock.getDateTime()[4] / 35) * 8)
+        
+        if pytools.clock.getDateTime()[1] == 12:
+            if pytools.clock.getDateTime()[2] == 24:
+                if pytools.clock.getDateTime()[3] == 21:
+                    emccsAdd = (pytools.clock.getDateTime()[4] / 60) * 2
+        
+        if emccsAdd > 0:
+            out = (weights[curr] * (1 - percent)) + (weights[curr + 1] * percent)
+            if emccsAdd > 10:
+                out = out + 10
+            else:
+                out = out + emccsAdd
+            
+            if out > 10:
+                out = 10
+                
+            return out
         # print((weights[curr + 1] * (1 - percent)))
         return (weights[curr] * (1 - percent)) + (weights[curr + 1] * percent)
     
@@ -393,6 +423,8 @@ class ghost:
                         self.activeMemmory = n
     
     spm = 0
+    
+    chType = 0
     
     def speak(self, words, type):
         if False:
@@ -855,14 +887,17 @@ class ghost:
         
         dateArray = pytools.clock.getDateTime()
         self.speechModifier = self.sM / (self.activity + 1)
-        if self.prop["type"] == type.echo:
-            self.ai.echo(self, dateArray)
-        if self.prop["type"] == type.spirit:
-            self.ai.spirit(self, dateArray)
-        if self.prop["type"] == type.poltergeist:
-            self.ai.poltergeist(self, dateArray)
-        if self.prop["type"] == type.demon:
+        if (dateArray[1] == 12) and (dateArray[2] == 24):
             self.ai.demon(self, dateArray)
+        else:
+            if self.prop["type"] == type.echo:
+                self.ai.echo(self, dateArray)
+            if self.prop["type"] == type.spirit:
+                self.ai.spirit(self, dateArray)
+            if self.prop["type"] == type.poltergeist:
+                self.ai.poltergeist(self, dateArray)
+            if self.prop["type"] == type.demon:
+                self.ai.demon(self, dateArray)
         
         status.vars["ghostInfo"][self.prop["name"]]["type"] = self.prop["type"]
         status.vars["ghostInfo"][self.prop["name"]]["mood"] = self.mood

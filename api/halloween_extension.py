@@ -8,6 +8,7 @@ import time
 import threading
 import math
 import modules.logManager as log
+import modules.weather as weather
 import pylunar
 import copy
 
@@ -101,8 +102,10 @@ class data:
             data.hourZ = data.hourZ - 1
             
     # https://www.desmos.com/calculator/jertocumt3
-    def getWeatherHallowModifier():
+    def getWeatherHallowModifier(timeStamp=pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()), weatherData=False):
         
+        if type(weatherData) == list:
+            dataf = [weatherData, 0]
         dataf = data.grabWeatherData()
         
         if dataf:
@@ -111,7 +114,7 @@ class data:
             except:
                 lightningModif = 0
             try:
-                baseIndex = data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()), noModif=True)
+                baseIndex = data.getHallowIndex(timeStamp, noModif=True)
                 if baseIndex > 0:
                     windGustModif = (1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * (150 - baseIndex) ** 0.35
                     rainModif = dataf[0][1][0]
@@ -159,6 +162,7 @@ class data:
     
     # https://www.desmos.com/calculator/cen0vzl8q4
     # https://www.desmos.com/calculator/gxlcmcqbq5
+    # https://www.desmos.com/calculator/iaxogvk6jt
     def getHallowIndex(timeStamp, noDay=False, noModif=False):
         # u = math.floor(timeStamp / (365 * 24 * 60 * 60))
         
@@ -185,54 +189,92 @@ class data:
         h = 50
         e = 2.71828182846
         # j = 16 * math.sin((((p) / (1180295.8))) * ( - (w - (((1180295.8) / (2)))) - pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0])))
-        j = 16 * ( - data.getLunarPhase(pytools.clock.UTCToDateArray(timeStamp)))
-        l_2 = 15 * e ** ( - (3 * ((w - 1080000) ** (2)) / (g)))
-        l_3 = 15 * e ** ( - (3 * ((w - 3758400) ** (2)) / (g)))
-        l_4 = 15 * e ** ( - (3 * (((w - q) - 6177600) ** (2)) / (g)))
-        l_5 = 15 * e ** ( - (3 * (((w - q) - 8856000) ** (2)) / (g)))
-        l_6 = 15 * e ** ( - (3 * (((w - q) - 11448000) ** (2)) / (g)))
-        l_7 = 15 * e ** ( - (3 * (((w - q) - 14126400) ** (2)) / (g)))
-        l_8 = 15 * e ** ( - (3 * (((w - q) - 16718400) ** (2)) / (g)))
-        l_9 = 15 * e ** ( - (3 * (((w - q) - 19396800) ** (2)) / (g)))
-        l_10 = 18 * e ** ( - (1 * (((w - q) - 22075200) ** (2)) / (g)))
-        l_11 = 15 * e ** ( - (3 * (((w - q) - 24667200) ** (2)) / (g)))
-        l_12 = 15 * e ** ( - (3 * (((w - q) - 27345600) ** (2)) / (g)))
-        l_13 = 15 * e ** ( - (3 * (((w - q) - 29937600) ** (2)) / (g)))
+        friday13Coeff = 50
+        j = 16 * ( data.getLunarPhase(pytools.clock.UTCToDateArray(timeStamp)))
+        l_2 = (11 * e ** ( - friday13Coeff * (((w - 1080000) ** (2)) / (g)))) + (4 * e ** ( - (3 * ((w - 1080000) ** (2)) / (g))))
+        l_3 = (11 * e ** ( - friday13Coeff * (((w - 3758400) ** (2)) / (g)))) + (4 * e ** ( - (3 * ((w - 3758400) ** (2)) / (g))))
+        l_4 = (11 * e ** ( - friday13Coeff * ((((w - q) - 6177600) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 6177600) ** (2)) / (g))))
+        l_5 = (11 * e ** ( - friday13Coeff * ((((w - q) - 8856000) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 8856000) ** (2)) / (g))))
+        l_6 = (11 * e ** ( - friday13Coeff * ((((w - q) - 11448000) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 11448000) ** (2)) / (g))))
+        l_7 = (11 * e ** ( - friday13Coeff * ((((w - q) - 14126400) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 14126400) ** (2)) / (g))))
+        l_8 = (11 * e ** ( - friday13Coeff * ((((w - q) - 16718400) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 16718400) ** (2)) / (g))))
+        l_9 = (11 * e ** ( - friday13Coeff * ((((w - q) - 19396800) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 19396800) ** (2)) / (g))))
+        l_10 = 18 * e ** ( - (friday13Coeff / 5) * (1 * (((w - q) - 22075200) ** (2)) / (g)))
+        l_11 = (11 * e ** ( - friday13Coeff * ((((w - q) - 24667200) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 24667200) ** (2)) / (g))))
+        l_12 = (11 * e ** ( - friday13Coeff * ((((w - q) - 27345600) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 27345600) ** (2)) / (g))))
+        l_13 = (11 * e ** ( - friday13Coeff * ((((w - q) - 29937600) ** (2)) / (g)))) + (4 * e ** ( - (3 * (((w - q) - 29937600) ** (2)) / (g))))
         r = 29376000 + q
         s = 27302400 + q
         t = - 2 * ((a * e ** ( - (((w - r) ** (2)) / (c)))) + (h * e ** ( - (((w - r) ** (2)) / (g)))))
         z = - 2 * ((a * e ** ( - (((((w - s) ** (2)) / (c))) / (0.15)))) + (h * e ** ( - (((((w - s) ** (2)) / (g))) / (0.15)))))
         k = 20 * math.sin((((p) / (302400.0))) * ((w + 36 * 60 * 60) + pytools.clock.dateArrayToUTC([u, 1, 1, 0, 0, 0]) - 172800))
+        
+        # https://www.desmos.com/calculator/yhvhjm3tms
+        # https://www.desmos.com/calculator/ca2x63vefa
+        if j < 0:
+            tCoeff = l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13 + k
+            j = j + ((1 - (- 10509.535 ** (0.0299375 * (tCoeff - 38.30504)) + 1.00002)) * 40)
+        
+        
         z_1 = 16 * math.sin((((p) / (1180295.8))) * ( - (24778000.0 - (((1180295.8) / (2)))) - (u * (356.25 * 24 * 60 * 60)))) + (7 * math.sin((((p) / (302400.0))) * ((24778000.0 + 12 * 60 * 60) + (u * 365.25 * 24 * 60 * 60) - 6))) + 13
         o = - 3 * ((a * e ** ( - (((w - f) ** (2)) / (c)))) + (h * e ** ( - (((w - f) ** (2)) / (g)))))
         m = (1.11 * (((((math.fabs(z_1 )) / (2)) + 15) / (15)) ** (1) * (a * e ** ( - 0.65 * (((w - b) ** (2)) / (c))))) + (h * e ** ( - 0.65 * (((w - b) ** (2)) / (g))))) + j + k + (2 * (l_2 + l_3 + l_4 + l_5 + l_6 + l_7 + l_8 + l_9 + l_10 + l_11 + l_12 + l_13)) + o + t + z - 40
-        if not noModif:
+        
+        if (not noModif) or (type(noModif) == list):
             weatherModif = data.getWeatherHallowModifier()
+        elif (type(noModif) == list):
+            weatherModif = data.getWeatherHallowModifier(timeStamp=timeStamp, weatherData=noModif)
         else:
             weatherModif = 0
         if weatherModif:
             m = m + weatherModif
         n = - 10 * math.sin(((p) / (12 * 60 * 60)) * (w - 6 * 60 * 60))
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
+        
+        # print([j, l_2, l_3, l_4, l_5, l_6, l_7, l_8, l_9, l_10, l_11, l_12, l_13, r, s, t, z, k, z_1, o, m, n, z_2])
+        
         if noDay:
             return m
         else:
             return z_2
         
     def forecastHallowIndex(timeStamp, noDay=False):
-        i = timeStamp
+        i = copy.deepcopy(timeStamp)
         indexMap = []
         while i < (timeStamp + 864000):
-            indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True))
+            if weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i)):
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i))))
+            else:
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True))
             i = i + 3600
             
         return [max(indexMap), timeStamp + (indexMap.index(max(indexMap)) * 3600)]
 
-    def forecastUncannyIndex(timeStamp, noDay=False):
-        i = timeStamp
+    def forecastStartHallowIndex(timeStamp, noDay=False):
+        i = copy.deepcopy(timeStamp)
         indexMap = []
         while i < (timeStamp + 864000):
-            indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True) + 10)
+            if weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i)):
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i))))
+            else:
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True))
+            i = i + 3600
+        
+        def _first(indexMap):
+            for n in indexMap:
+                if n > 0:
+                    return n
+        
+        return [_first(indexMap), timeStamp + (indexMap.index(_first(indexMap)) * 3600)]
+
+    def forecastUncannyIndex(timeStamp, noDay=False):
+        i = copy.deepcopy(timeStamp)
+        indexMap = []
+        while i < (timeStamp + 864000):
+            if weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i)):
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=weather.forecast.getForecastAtTime(pytools.clock.UTCToDateArray(i))) + 10)
+            else:
+                indexMap.append(data.getHallowIndex(i, noDay=noDay, noModif=True) + 10)
             i = i + 3600
             
         return [max(indexMap), timeStamp + (indexMap.index(max(indexMap)) * 3600)]

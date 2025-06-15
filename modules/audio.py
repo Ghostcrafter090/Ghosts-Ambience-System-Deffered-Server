@@ -2383,7 +2383,10 @@ class command:
         do = True
         loc = False
         try:
-            hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+            if os.path.exists(".\\working\\hostData.json"):
+                hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+            else:
+                hostsDataFile = pytools.IO.getJson(".\\hostData.json")
         except:
             try:
                 hostsDataFile = pytools.IO.getJson(".\\hostData.json")
@@ -2405,7 +2408,7 @@ class command:
                             })))
                             if not target:
                                 if boolf:
-                                    pytools.IO.saveFile(".\\" + flagName + ".derp", "")
+                                    pytools.IO.saveFile(".\\" + flagName + ".derp", boolf)
                                 else:
                                     pytools.IO.saveFile("del \".\\" + flagName + ".derp\" /f /q")
                             print("Flag Set.")
@@ -2415,7 +2418,7 @@ class command:
                             hostsDataFile.pop(host)
                         except:
                             pass
-                if loc:
+                if os.path.exists(".\\hostData.json"):
                     pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
                 else:
                     pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)

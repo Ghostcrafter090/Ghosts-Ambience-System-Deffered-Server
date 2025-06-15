@@ -83,24 +83,40 @@ class speakerManager:
             try:
                 if checkCount > 5:
                     try:
-                        speakerName = pytools.IO.getJson(".\\serverOutputs.json")[self.speakerType]
+                        if self.speakerType in pytools.IO.getJson(".\\serverOutputs.json"):
+                            speakerName = pytools.IO.getJson(".\\serverOutputs.json")[self.speakerType]
+                            
+                            for device in sd.query_devices():
+                                if device["name"] == "CABLE Output (" + speakerName.split("(")[1].split("-")[0] + "- VB-Audio Virtu":
+                                    self.deviceIndex = device["index"]
+                                    print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
+                        else:
+                            speakerName = pytools.IO.getJson(".\\soundOutputs.json")[self.speakerType][0]
                     
-                        for device in sd.query_devices():
-                            if device["name"] == "CABLE Output (" + speakerName.split("(")[1].split("-")[0] + "- VB-Audio Virtu":
-                                self.deviceIndex = device["index"]
-                                print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
+                            for device in sd.query_devices():
+                                if device["name"] == speakerName:
+                                    self.deviceIndex = device["index"]
+                                    print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
                     except:
                         if not self.deviceIndex:
                             print(traceback.format_exc())
                     
                     while (self.deviceIndex == False) and not status.exit:
                         try:
-                            speakerName = pytools.IO.getJson(".\\serverOutputs.json")[self.speakerType]
-                        
-                            for device in sd.query_devices():
-                                if device["name"] == "CABLE Output (" + speakerName.split("(")[1].split("-")[0] + "- VB-Audio Virtu":
-                                    self.deviceIndex = device["index"]
-                                    print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
+                            if self.speakerType in pytools.IO.getJson(".\\serverOutputs.json"):
+                                speakerName = pytools.IO.getJson(".\\serverOutputs.json")[self.speakerType]
+                            
+                                for device in sd.query_devices():
+                                    if device["name"] == "CABLE Output (" + speakerName.split("(")[1].split("-")[0] + "- VB-Audio Virtu":
+                                        self.deviceIndex = device["index"]
+                                        print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
+                            else:
+                                speakerName = pytools.IO.getJson(".\\soundOutputs.json")[self.speakerType][0]
+                    
+                                for device in sd.query_devices():
+                                    if device["name"] == speakerName:
+                                        self.deviceIndex = device["index"]
+                                        print("Found Speaker " + self.speakerType + " On Index: " + str(self.deviceIndex))
                         except:
                             if not self.deviceIndex:
                                 print(traceback.format_exc())
@@ -159,8 +175,10 @@ class speakerManager:
                     print("Buffer overload counter at " + str(globals.theFreqFix))
                 else:
                     globals.theFreqFix = 0
-                if globals.theFreqFix >= 15:
+                if globals.theFreqFix >= 120:
                     os.system('"C:\\Program Files (x86)\\VB\\Voicemeeter\\voicemeeter8.exe" -r')
+                    os.system('"C:\\Program Files (x86)\\VB\\Voicemeeter\\VBAudioMatrixCoconut.exe" -r')
+                    
                     print("Buffer Overload Detected. Refreshing Voicemeeter...")
                     globals.theFreqFix = 0
                     

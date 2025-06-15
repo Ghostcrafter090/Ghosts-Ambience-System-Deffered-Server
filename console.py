@@ -165,6 +165,9 @@ class globals:
     jsonDictionary = {}
     multijsonDictionary = {}
     
+    lastServerGrab = 0
+    serverData = {}
+    
 class tools:
     def max_window(lines=None):
         fd = os.open('CONOUT$', os.O_RDWR)
@@ -830,7 +833,7 @@ def main():
                         lightningDanger = 0
                     
                     weather = weather.replace("\nCondition", "\nLightning   (danger) : " + str(lightningDanger) + "\nCondition")
-                    
+
                     system.status.active = True 
                     
                     if flags.displayOnScreen:
@@ -998,6 +1001,43 @@ def main():
                         maxSounds = 0
                         i = 2
                         if flags.displayOnScreen:
+                            if "127.0.0.1" not in clients["hosts"]:
+                                clients["hosts"].append("127.0.0.1")
+                                
+                            if "127.0.0.1" not in clientsData:
+                                
+                                if globals.lastServerGrab < time.time():
+                                    clientsData["127.0.0.1"] = {}
+                                    try:
+                                        clientsData["127.0.0.1"]["max"] = pytools.net.getJsonAPI("http://" + str(flags.remote) + ":5597?json=" + urllib.parse.quote(json.dumps({
+                                            "command": "getMaxSoundCount"
+                                        })), timeout=1)["maxSoundCount"]
+                                    except:
+                                        clientsData["127.0.0.1"]["max"] = 0
+                                        
+                                    try:
+                                        clientsData["127.0.0.1"]["current"] = pytools.net.getJsonAPI("http://" + str(flags.remote) + ":5597?json=" + urllib.parse.quote(json.dumps({
+                                            "command": "getSoundCount"
+                                        })), timeout=1)["soundCount"]
+                                    except:
+                                        clientsData["127.0.0.1"]["current"] = 0
+                                        
+                                    if clientsData["127.0.0.1"]["current"] >= clientsData["127.0.0.1"]["max"]:
+                                        clientsData["127.0.0.1"]["play"] = False
+                                    else:
+                                        clientsData["127.0.0.1"]["play"] = True
+                                    
+                                    try:
+                                        clientsData["127.0.0.1"]["MCPU"] = pytools.net.getJsonAPI("http://" + str(flags.remote) + ":5597?json=" + urllib.parse.quote(json.dumps({"command":"getCpuUsage"})), timeout=1)["cpuUsage"]
+                                    except:
+                                        if "MCPU" not in clientsData["127.0.0.1"]:
+                                            clientsData["127.0.0.1"]["MCPU"] = 0
+                                            
+                                    globals.serverData = clientsData["127.0.0.1"]
+                                    globals.lastServerGrab = time.time() + 5
+                                else:
+                                    clientsData["127.0.0.1"] = globals.serverData
+                                    
                             for client in clients["hosts"]:
                                 if client != "0.0.0.0":
                                     try:
@@ -1007,12 +1047,18 @@ def main():
                                                 globals.lastSSTCGrabs[client] = [0, 0, 0]
                                             if globals.lastSSTCGrabs[client][0] < time.time():
                                                 if ((int(math.floor(time.time() / 5)) * 5) % 10) == 0:
-                                                    SSTCData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getSleepStateCount"})), timeout=1)["sleepStateCount"]
+                                                    if str(client) != "127.0.0.1":
+                                                        SSTCData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getSleepStateCount"})), timeout=1)["sleepStateCount"]
+                                                    else:
+                                                        SSTCData = globals.lastSSTCGrabs[client][1]
                                                     MCPUData = globals.lastSSTCGrabs[client][2]
                                                 else:
                                                     SSTCData = globals.lastSSTCGrabs[client][1]
                                                     try:
-                                                        MCPUData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getCPUUsageThreshold"})), timeout=1)["cpuUsageThreshold"]
+                                                        if str(client) != "127.0.0.1":
+                                                            MCPUData = pytools.net.getJsonAPI("http://" + str(client) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getCPUUsageThreshold"})), timeout=1)["cpuUsageThreshold"]
+                                                        else:
+                                                            MCPUData = pytools.net.getJsonAPI("http://" + str(flags.remote) + ":5597?json=" + urllib.parse.quote(json.dumps({"command":"getCpuUsage"})), timeout=1)["cpuUsage"]
                                                     except:
                                                         try:
                                                             MCPUData = globals.lastSSTCGrabs[client][2]
@@ -1027,14 +1073,36 @@ def main():
                                             
                                         except:
                                             SSTCData = 0
-                                        pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(MCPUData)) + (" " * (5 - len(str(MCPUData)))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                        
+                                        _clientSpaceAdder = 12 - len(client)
+                                        if _clientSpaceAdder < 0:
+                                            _clientSpaceAdder = 0
+                                            
+                                        if client == "127.0.0.1":
+                                            pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + (" " * _clientSpaceAdder) + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(round(clientsData["127.0.0.1"]["MCPU"], 1))) + (" " * (5 - len(str(round(clientsData["127.0.0.1"]["MCPU"], 1))))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                        else:
+                                            pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + (" " * _clientSpaceAdder) + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(round(MCPUData, 1))) + (" " * (5 - len(str(round(MCPUData, 1))))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
                                         if clientsData[client]["current"] > clientsData[client]["max"] + 1:
                                             if flags.displayOnScreen:
-                                                printColor(145, globals.maxY - 3 - i, "overload", "red")
-                                                if flash == 0:
-                                                    printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                
+                                                try:
+                                                    lastErrorTimestamp = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\lastBufferErrorTime_" + str(client) + ".json", doPrint=False)["timeStamp"]
+                                                except:
+                                                    lastErrorTimestamp = [1, 1, 1, 0, 0, 0]
+                                            
+                                                if (pytools.clock.dateArrayToUTC(lastErrorTimestamp) + 15) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                                                    if flash == 0:
+                                                        printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                    else:
+                                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                    printColor(145, globals.maxY - 3 - i, "problem", "cyan")
                                                 else:
-                                                    printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                    
+                                                    printColor(145, globals.maxY - 3 - i, "overload", "red")
+                                                    if flash == 0:
+                                                        printColor(130, globals.maxY - 3 - i, "!", "yellow")
+                                                    else:
+                                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
                                         else:
                                             if flags.displayOnScreen:
                                                 try:

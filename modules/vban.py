@@ -171,7 +171,9 @@ class speaker:
                                 "isRunning": self.receiverThread.isRunning,
                                 "hasStopped": self.receiverThread.hasStopped,
                                 "lastActivityTimestamp": int(self.receiverThread.vbanObj.lastActivityTimestamp / 10) * 10,
-                                "currentBufferSize": len(self.receiverThread.vbanObj.packetBuffer)
+                                "lastActivityTimestamp": int(self.receiverThread.vbanObj.lastActivityTimestamp / 10) * 10,
+                                "currentBufferSize": len(self.receiverThread.vbanObj.packetBuffer),
+                                "currentFrame": self.receiverThread.vbanObj.frame_index
                             }
                         },
                         "lastUpdated": pytools.clock.getDateTime()[0:5] 
@@ -186,7 +188,8 @@ class speaker:
                                 "isRunning": False,
                                 "hasStopped": False,
                                 "lastActivityTimestamp": 0,
-                                "currentBufferSize": 0
+                                "currentBufferSize": 0,
+                                "currentFrame": -1
                             }
                         },
                         "lastUpdated": pytools.clock.getDateTime()[0:5] 

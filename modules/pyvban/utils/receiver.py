@@ -19,6 +19,7 @@ log.settings.debug = True
 class allf:
     packetBuffers = {}
     receiverUUIDs = {}
+    maxFrame = 0
 
 class logging:
 
@@ -93,6 +94,8 @@ class VBAN_Receiver:
             self._uuidTimestampNetworkOld = allf.receiverUUIDs[self._uuid][0]
             self._uuidTimestampStreamOld = allf.receiverUUIDs[self._uuid][1]
             
+            
+            self.lastReceive = time.time()
 
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -135,10 +138,13 @@ class VBAN_Receiver:
     
     lastActivityTimestamp = time.time()
     lastStreamActivityTimestamp = time.time()
+    lastUnexpectedSender = time.time()
     
     samplesPerFrame = 128
     
     packetBuffer = []
+    
+    frame_index = 0
 
     def _check_pyaudio(self, header):
         if VBANSampleRatesEnum2SR[header.sample_rate] != self._current_pyaudio_config["rate"] or header.channels != self._current_pyaudio_config["channels"]:
@@ -176,12 +182,18 @@ class VBAN_Receiver:
                     return
                 if addr[0] != self._sender_ip:
                     self._logger.debug(f"Unexpected sender \"{addr[0]}\" != \"{self._sender_ip}\"")
+                    if self.lastUnexpectedSender < time.time():
+                        if not os.path.exists("unexpected_sender"):
+                            log.pytools.IO.saveFile("unexpected_sender", str(addr[0]))
+                            self.lastUnexpectedSender = time.time() + 1
                     return
+                self.frame_index = packet.header.frame_counter
+                self.lastReceive = time.time()
 
                 self._check_pyaudio(packet.header)
 
                 outArray = numpy.array(list(zip(numpy.frombuffer(packet.data, dtype=numpy.int16)[0::2], numpy.frombuffer(packet.data, dtype=numpy.int16)[1::2])))
-                allf.packetBuffers[self._stream_name].append(outArray)
+                allf.packetBuffers[self._stream_name].append([outArray, packet.header.frame_counter])
                 
         except Exception as e:
             print(traceback.format_exc())
@@ -217,7 +229,9 @@ class VBAN_Receiver:
         except:
             print(traceback.format_exc())
         self.stop("network")
-        
+    
+    lastBufferUnderrun = time.time()
+    
     def runStream(self):
         try:
             while self._running:
@@ -231,13 +245,19 @@ class VBAN_Receiver:
 
                 try:
                     if len(allf.packetBuffers[self._stream_name]) > 1:
-                        self._stream.write(allf.packetBuffers[self._stream_name][0])
+                        if allf.packetBuffers[self._stream_name][0][1] >= allf.maxFrame:
+                            self._stream.write(allf.packetBuffers[self._stream_name][0][0])
+                            allf.maxFrame = allf.packetBuffers[self._stream_name][0][1]
                         allf.packetBuffers[self._stream_name].pop(0)
+                        # else:
+                        #     print(str(self._stream_name) + " is skipping frames...")
                     else:
                         waitTime = time.time() + 1
                         print("Buffer underrun for " + str(self._stream_name) + " detected. Network thread running status: " + str(not self._networkHasStopped) + ". Collecting samples...")
                         if not os.path.exists("stream_buffer_underrun"):
-                            log.pytools.IO.saveFile("stream_buffer_underrun", "")
+                            if self.lastBufferUnderrun < time.time():
+                                log.pytools.IO.saveFile("stream_buffer_underrun", "")
+                                self.lastBufferUnderrun = time.time() + 1
                         samplesToCollect = ((self._current_pyaudio_config["rate"] / self.samplesPerFrame) * 1)
                         while (len(allf.packetBuffers[self._stream_name]) < samplesToCollect) and (waitTime > time.time()):
                             self.lastStreamActivityTimestamp = time.time()

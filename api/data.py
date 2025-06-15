@@ -105,11 +105,11 @@ class globals:
     urlFast = 'http://gsweathermore.ddns.net:226/access.php?key=56c15c7d00df42d8815c7d00df42d8ab'
     urlOtherFast= 'http://gsweathermore.ddns.net:226/access.php?grabotherfast=true&key=56c15c7d00df42d8815c7d00df42d8ab'
     urlSuperFast = 'http://gsweathermore.ddns.net:226/currentdata.json'
-    urlPrecip = "http://gsweathermore.ddns.net:226/access.php?key=makeitrain&grabrain=true"
+    urlPrecip = "http://gsweathermore.ddns.net:226/precipitationData.json"
     dataBaseOld = [0.0, 0.0, 15000, 0.0, 'clear', 0, 1000.0, 15.0, 50.0, 0, 0]
     dataFastOld = [0, 0, 1000.0, 15, 50, 0]
     dataSuperOld = [15, 50, 1000.0, 0, 0, 0]
-    dataPrecipOld = {"data": {"main": {"particles": {"avgCount": 0.00, "currentCount": 0, "speed": 1053.7, "speedMax": 1084, "particleSpeedMin": 580}, "precipitation": {"type": {"snow": 0.0, "rain": 0.0, "hail": 0.0}, "intensity": 0.01}, "avgSensorReading": 337.81, "loopTic": 204.03, "sensorCalibratedTo": 337.44}}, "grabbed": "yes"}
+    dataPrecipOld = {"particleCount": 0.0, "particleSpeed": 1000, "particleType": {"hail": -0.08, "rain": -0.08, "snow": -0.08}, "dateArray": [2024, 11, 28, 23, 23, 57]}
 
 def doManual(baseData):
     baseData[7] = baseData[7] + 20
@@ -140,11 +140,18 @@ class grabber:
         urlEast = globals.urlBaseEast.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         urlWest = globals.urlBaseWest.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         
+        forecastUrl = "http://gsweathermore.ddns.net:226/access.php?grabopenforecast=true&key="
+        
         try:
             print(str(pytools.clock.getDateTime()) + ' ::: Getting Base Data...')
             # url: http://api.openweathermap.org/data/2.5/weather?lat=44.7659964&lon=-63.6850686&appid=<apiKey>
             # try:
             data = pytools.net.getJsonAPI(url + status.apiKey)["data"]["main"]
+            try:
+                forecastData = pytools.net.getJsonAPI(forecastUrl + status.apiKey)
+                pytools.IO.saveJson("forecastData.json", forecastData)
+            except:
+                forecastData = {}
             
             try:
                 dataNorth = pytools.net.getJsonAPI(urlNorth + status.apiKey)["data"]["main"]
@@ -347,22 +354,22 @@ class grabber:
         except:
             data = globals.dataPrecipOld
         try:
-            snow = data["data"]["main"]["precipitation"]["type"]["snow"]
+            snow = data["particleType"]["snow"]
         except:
             snow = 0.0
         try:
-            rain = data["data"]["main"]["precipitation"]["type"]["rain"]
+            rain = data["particleType"]["rain"]
         except:
             rain = 0.0
         try:
-            hail = data["data"]["main"]["precipitation"]["type"]["hail"]
+            hail = data["particleType"]["hail"]
         except:
             hail = 0.0     
-        try:
-            lightLevel = data["data"]["main"]["sensorReadings"]["laserOffAmbientReading"]
-        except:
-            lightLevel = 0
-        precipDataOld = data
+        # try:
+        #     lightLevel = data["data"]["main"]["sensorReadings"]["laserOffAmbientReading"]
+        # except:
+        lightLevel = 0
+        # precipDataOld = data
         return [snow, rain, hail, lightLevel]
     
     class lightning:
@@ -380,7 +387,7 @@ class grabber:
         def getDistance(x, y):
             coords_1 = (x, y)
             coords_2 = (globals.lat, globals.lon)
-
+            
             return geopy.distance.geodesic(coords_1, coords_2).km
         
         def getDangerLevel(distance):
@@ -430,7 +437,8 @@ class grabber:
                                         "lat": strike["lat"],
                                         "lon": strike["lon"],
                                         "time": strike["time"],
-                                        "distance": grabber.lightning.getDistance(strike["lat"], strike["lon"])
+                                        "distance": grabber.lightning.getDistance(strike["lat"], strike["lon"]),
+                                        "raw_data": strike
                                     }))
                                 if (grabber.lightning.getDistance(strike["lat"], strike["lon"]) < grabber.lightning.getDistance(grabber.lightning.closestStrike["lat"], grabber.lightning.closestStrike["lon"])) or ((time.time() * 1000) > (grabber.lightning.closestStrike["time"] + 600000)):
                                     grabber.lightning.closestStrike = {
@@ -555,30 +563,41 @@ class bulk:
                 pIf = pIf + 1
                 
             if precipData[0] > 0:
-                h = baseData[8]
-                t = baseData[7]
-                w = t * math.atan(0.151977 * (h + 8.313659) ** (((1) / (2)))) + math.atan(t + h) - math.atan(h * 1.676331) + 0.00391838 * (h) ** (((3) / (2))) * math.atan(0.023101 * h) - 4.686035
-                if w < 0:
+                humidity = baseData[8]
+                temp = baseData[7]
+                w = (temp * math.atan(0.151977 * math.sqrt(humidity + 8.313659))) + (0.00391838 * math.sqrt(humidity ** 3) * math.atan(0.023101 * humidity)) - math.atan(humidity - 1.676331) + math.atan(temp + humidity) - 4.686035
+                if (w < 0.5) and (precipData[1] < precipData[0]):
                     baseData[4] = "snow"
-                else:
-                    if (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+                elif False: # else:
+                    if (precipData[1] + precipData[2]) > 0.06:
                         baseData[4] = "rain"
-                    elif (precipData[0] + precipData[1] + precipData[2]) > 0.03:
+                    elif (precipData[1] + precipData[2]) > 0.03:
                         baseData[4] = "lightrain"
-                    elif (precipData[0] + precipData[1] + precipData[2]) > 0:
+                    elif (precipData[1] + precipData[2]) > 0:
                         baseData[4] = "mist"
-            elif (precipData[0] + precipData[1] + precipData[2]) > 0.06:
+            elif False: # (precipData[1] + precipData[2]) > 0.06:
                 baseData[4] = "rain"
-            elif (precipData[0] + precipData[1] + precipData[2]) > 0.03:
+            elif False: # (precipData[1] + precipData[2]) > 0.03:
                 baseData[4] = "lightrain"
-            elif (precipData[0] + precipData[1] + precipData[2]) > 0:
+            elif False: # (precipData[1] + precipData[2]) > 0:
                 baseData[4] = "mist"
-            if precipData[2] > 0.25:
+            if False:
+                if precipData[2] > 0.25:
+                    baseData[4] = "rain"
+                if precipData[3] > 700:
+                    baseData[4] = "clear"
+                elif precipData[3] > 600:
+                    baseData[4] = "clouds"
+            
+            if superData[3] > 0:
+                baseData[4] = "mist"
+            
+            if superData[3] > 0.1:
+                baseData[4] = "lightrain"
+                
+            if superData[3] > 0.2:
                 baseData[4] = "rain"
-            if precipData[3] > 700:
-                baseData[4] = "clear"
-            elif precipData[3] > 600:
-                baseData[4] = "clouds"
+            
         except:
             pass
 

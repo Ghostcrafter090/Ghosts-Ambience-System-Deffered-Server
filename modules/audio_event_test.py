@@ -493,6 +493,7 @@ class stream:
                                 self.startPlayed = round(time.time() * 1000000)
                             timeingInfo = ((info.globalSoundStart + self.i) - time.time())
                             if timeingInfo > 0.005:
+                                print(timeingInfo)
                                 intenseSleep(timeingInfo)
                                 self.audioStream.write(audioSegmentNumPy(chunk))
                             elif timeingInfo < -0.005:

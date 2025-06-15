@@ -14,7 +14,9 @@ class status:
     hasExited = False
     finishedLoop = False
     vars = {
-        "lastLoop": []
+        "lastLoop": [],
+        "speed": 1,
+        "volume": 0
     }
     
 class globals:
@@ -68,15 +70,15 @@ def main():
         
         if w < 0:
             if globals.frozenPercentage < 100:
-                globals.frozenPercentage = globals.frozenPercentage + (0.008333333333333333 * (-w))
+                globals.frozenPercentage = globals.frozenPercentage + ((0.008333333333333333 * (-w)) / status.vars["speed"])
             else:
-                globals.frozenDepth = globals.frozenDepth + (0.000625 * (-w))
+                globals.frozenDepth = globals.frozenDepth + ((0.000625 * (-w)) / status.vars["speed"])
                 
         if w > 0:
             if globals.frozenDepth > 0:
-                globals.frozenDepth = globals.frozenDepth - (0.00125 * (w))
+                globals.frozenDepth = globals.frozenDepth - ((0.00125 * (w)) / status.vars["speed"])
             else:
-                globals.frozenPercentage = globals.frozenPercentage - (0.08333333333333333 * (w))
+                globals.frozenPercentage = globals.frozenPercentage - ((0.08333333333333333 * (w)) / status.vars["speed"])
         
         if globals.frozenDepth > 45:
             globals.frozenDepth = 45
@@ -110,8 +112,12 @@ def main():
             volume = (volume ** 0.6) * 4.781762498950186
         else:
             volume = 0
+            
+        status.vars["volume"] = volume
         
         speed = 0.966807 ** ( - 0.00043857 * (globals.frozenDepth + 93484.5)) - 1.92647 * globals.frozenDepth ** (0.179284)
+        
+        status.vars["speed"] = speed
         
         if globals.frozenPercentage >= 100:
             if globals.frozenDepth > 0:
