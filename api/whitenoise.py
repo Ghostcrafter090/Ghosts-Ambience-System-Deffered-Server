@@ -94,8 +94,15 @@ def playWindowChange(windowIsOpen, waitDelay, windowIndex):
         
     globals.windowOpen[windowIndex] = windowIsOpen
     
-    audio.command.setFlag("nomufflewn", sum(globals.windowOpen) / len(globals.windowOpen))
-    status.vars["percentageOfWindowsOpen"] = sum(globals.windowOpen) / len(globals.windowOpen)
+    def _fixBoolList(listf):
+        out = []
+        for x in listf:
+            out.append(not not x)
+        
+        return out
+    
+    audio.command.setFlag("nomufflewn", sum(_fixBoolList(globals.windowOpen)) / len(globals.windowOpen))
+    status.vars["percentageOfWindowsOpen"] = sum(_fixBoolList(globals.windowOpen)) / len(globals.windowOpen)
     
     pytools.IO.saveJson("windowState.json", {
         "windowBroken": globals.windowBroken,
@@ -162,8 +169,15 @@ class secs:
                 
                 threading.Thread(target=playWindowChange, args=(windowIsOpen, copy.deepcopy(secs.lastOpenTime), windowIndex,)).start()
             else:
-                audio.command.setFlag("nomufflewn", sum(globals.windowOpen) / len(globals.windowOpen))
-                status.vars["percentageOfWindowsOpen"] = sum(globals.windowOpen) / len(globals.windowOpen)
+                def _fixBoolList(listf):
+                    out = []
+                    for x in listf:
+                        out.append(not not x)
+                    
+                    return out
+                
+                audio.command.setFlag("nomufflewn", sum(_fixBoolList(globals.windowOpen)) / len(globals.windowOpen))
+                status.vars["percentageOfWindowsOpen"] = sum(_fixBoolList(globals.windowOpen)) / len(globals.windowOpen)
                 
             
             windowIndex = windowIndex + 1

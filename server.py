@@ -466,6 +466,11 @@ class soundRegister:
             
                 soundRegister.lastCPUThresholdAdd = time.time()
             
+            if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 0.1
+                if soundRegister.maxSoundCount < 8:
+                    soundRegister.maxSoundCount = 8
+            
             time.sleep(0.1)
 
 class puppet:
@@ -525,6 +530,15 @@ class puppet:
                     "timeStamp": pytools.clock.getDateTime(),
                     "receiveFrom": rclient
                 })
+                
+                if streamType:
+                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
+                        "command": "bufferUnderrun",
+                        "data": {
+                            "stream": streamType
+                        }
+                    })), timeout=1)
+                
                 if rclient in client.hostErrors:
                     
                     if (client.hostErrors[rclient][0] + 30) < time.time():
@@ -533,20 +547,13 @@ class puppet:
                             if vm.configure.vban.getDaisyChain()[0] == rclient:
                                 client.previousRClient = rclient
                     else:
-                        if (client.hostErrors[rclient][0] + 15) >= time.time():
+                        if (client.hostErrors[rclient][0] + 30) >= time.time():
                             try:
                                 
-                                if not streamType:
-                                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                        "command": "bufferUnderrun"
-                                    })), timeout=1)
-                                else:
-                                    pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
-                                        "command": "bufferUnderrun",
-                                        "data": {
-                                            "stream": streamType
-                                        }
-                                    })), timeout=1)
+                                pytools.net.getJsonAPI("http://" + rclient + ":4507?json=" + urllib.parse.quote(json.dumps({
+                                    "command": "bufferUnderrun"
+                                })), timeout=1)
+                                
                             except:
                                 print("Buffer Underrun message sent to client " + rclient + " failed. Assuming it's dead...")
                                 client.hostErrors[rclient][1] = client.hostErrors[rclient][1] - 10
@@ -638,7 +645,7 @@ class puppet:
     
     def fireEvent(eventBytes, fileData, fromBuffer=False):
         if (puppet.getSoundCount() < (soundRegister.maxSoundCount * 0.6)) and (soundRegister.cpuUsage < soundRegister.CPUUsageThreshold):
-            soundRegister.maxSoundCount = soundRegister.maxSoundCount + 1
+            soundRegister.maxSoundCount = soundRegister.maxSoundCount + 0.1
             if soundRegister.maxSoundCount > pytools.IO.getJson("manualMax.json")["max"]:
                 soundRegister.maxSoundCount = pytools.IO.getJson("manualMax.json")["max"]
             print("Audio events received.")

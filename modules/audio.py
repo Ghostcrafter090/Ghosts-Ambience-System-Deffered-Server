@@ -1447,7 +1447,7 @@ class command:
                                 if boolf:
                                     pytools.IO.saveFile(".\\" + flagName + ".derp", boolf)
                                 else:
-                                    pytools.IO.saveFile("del \".\\" + flagName + ".derp\" /f /q")
+                                    os.system("del \".\\" + flagName + ".derp\" /f /q")
                             print("Flag Set.")
                         except:
                             print("Error. Flag could not be set.")
