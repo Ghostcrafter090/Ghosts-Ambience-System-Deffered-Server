@@ -109,7 +109,7 @@ class VBAN_Receiver:
             }
 
             self._stream = sd.OutputStream(
-            dtype='int16',
+                dtype='int16',
                 channels=self._current_pyaudio_config["channels"],
                 device=self._device_index,
                 samplerate=self._current_pyaudio_config["rate"]
