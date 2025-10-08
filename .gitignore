@@ -154,3 +154,9 @@ working\daily_pictou_forecastData.json
 working\hallowForecastHourly.json
 working\hourly_pictou_forecastData.json
 working\forecastData.json
+lunar_data.csv
+autoRestart.bat
+dataList.pyl
+halloween_desmos.js
+plugOutputs.json
+profiler.py
