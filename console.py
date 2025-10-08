@@ -766,8 +766,25 @@ def getSection():
         else:
             return phases[12]
 
+class displayObject:
+    def __init__(self, height, width):
+        self.height = height
+        self.width = width
+        self.data = [" " * width] * height
+    
+    def set(self, x, y, char):
+        if len(char):
+            char = char[0]
+            self.data[y] = self.data[y][:x] + char + self.data[y][x + 1:]
+            
+    def get(self, x, y):
+        return self.data[y][x]
+        
 def main():
     try:
+        
+        horrorForecastDisplay = displayObject(10, 60)
+        
         i = 0
         flash = 0
         restartMod = 0
@@ -1074,7 +1091,10 @@ def main():
                                         if client == "127.0.0.1":
                                             pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + (" " * _clientSpaceAdder) + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(round(clientsData["127.0.0.1"]["MCPU"], 1))) + (" " * (5 - len(str(round(clientsData["127.0.0.1"]["MCPU"], 1))))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
                                         else:
-                                            pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + (" " * _clientSpaceAdder) + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(round(MCPUData, 1))) + (" " * (5 - len(str(round(MCPUData, 1))))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                            try:
+                                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "             " + (" " * _clientSpaceAdder) + str(int(clientsData[client]["max"]) + 1) + spaces[len(str(int(clientsData[client]["max"]))):3] + " " + str(int(clientsData[client]["current"])) + spaces[len(str(int(clientsData[client]["current"]))):3] + " " + str(SSTCData) + (" " * (4 - len(str(SSTCData)))) + " " + (str(round(MCPUData, 1))) + (" " * (5 - len(str(round(MCPUData, 1))))) + str(clientsData[client]["play"]) + spaces[len(str(clientsData[client]["play"])):5])
+                                            except:
+                                                pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
                                         if clientsData[client]["current"] > clientsData[client]["max"] + 1:
                                             if flags.displayOnScreen:
                                                 
@@ -1103,34 +1123,53 @@ def main():
                                                         lastErrorTimestamp = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\lastBufferErrorTime_" + str(client) + ".json", doPrint=False)["timeStamp"]
                                                     except:
                                                         lastErrorTimestamp = [1, 1, 1, 0, 0, 0]
-                                                    if (pytools.clock.dateArrayToUTC(lastErrorTimestamp) + 15) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+                                                    if (pytools.clock.dateArrayToUTC(lastErrorTimestamp) + 8) > pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                                                         if flash == 0:
                                                             printColor(130, globals.maxY - 3 - i, "!", "yellow")
                                                         else:
                                                             printColor(130, globals.maxY - 3 - i, " ", "yellow")
                                                         printColor(145, globals.maxY - 3 - i, "underrun", "magenta")
                                                     elif pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".bl", doPrint=False) != 1:
-                                                        if flash == 0:
-                                                            printColor(130, globals.maxY - 3 - i, "!", "magenta")
+                                                        if pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".se", doPrint=False) != 1:
+                                                            if flash == 0:
+                                                                printColor(130, globals.maxY - 3 - i, "<", "blue")
+                                                            else:
+                                                                printColor(130, globals.maxY - 3 - i, " ", "blue")
                                                         else:
-                                                            printColor(130, globals.maxY - 3 - i, " ", "magenta")
+                                                            if flash == 0:
+                                                                printColor(130, globals.maxY - 3 - i, "!", "magenta")
+                                                            else:
+                                                                printColor(130, globals.maxY - 3 - i, " ", "magenta")
                                                         printColor(145, globals.maxY - 3 - i, "dozingoff", "blue")
                                                     else:
-                                                        printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                        if pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".se", doPrint=False) != 1:
+                                                            if flash == 0:
+                                                                printColor(130, globals.maxY - 3 - i, "<", "yellow")
+                                                            else:
+                                                                printColor(130, globals.maxY - 3 - i, " ", "yellow")
+                                                        else:
+                                                            printColor(130, globals.maxY - 3 - i, " ", "yellow")
                                                         printColor(145, globals.maxY - 3 - i, "connected", "green")
                                                 except:
                                                     printColor(130, globals.maxY - 3 - i, "!", "yellow")
                                                     printColor(145, globals.maxY - 3 - i, "unknown", "white")
                                     except:
+                                        pytools.IO.saveFile("console-error.txt", traceback.format_exc())
                                         if flags.displayOnScreen:
                                             pytools.IO.console.printAt(131, globals.maxY - 3 - i, client + "  no data.      ")
                                             if flash == 0:
                                                 printColor(130, globals.maxY - 3 - i, "!", "red")
                                             else:
                                                 printColor(130, globals.maxY - 3 - i, " ", "red")
+                                
                                 try:
                                     totalSounds = totalSounds + clientsData[client]["current"]
-                                    maxSounds = maxSounds + clientsData[client]["max"]
+                                except:
+                                    pass
+                                
+                                try:
+                                    if (pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".bl", doPrint=False) == 1) and (pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\working\\" + ".\\host-" + str(client) + ".se", doPrint=False) == 1):
+                                        maxSounds = maxSounds + clientsData[client]["max"]
                                 except:
                                     pass
                                 i = i + 1
@@ -1147,9 +1186,17 @@ def main():
                                     pytools.IO.console.printAt(131, globals.maxY - 3 - i - 2, "GIL Information (prevTic / switchInterval): " + str(round(gilTic, 4)) + " / " + str(gilInterval))
                             except:
                                 pass
+                            
+                            try:
+                                storageSpace = pytools.IO.getFile("\\\\" + flags.remote + "\\ambience\\storageSpace.cx")
+                            except:
+                                storageSpace = 0
+                            
                             pytools.IO.console.printAt(131, globals.maxY - 3 - i - 3, "Total Sounds: " + str(totalSounds) + " (" + str(int((totalSounds / maxSounds) * 100)) + "% of total)")
+                            pytools.IO.console.printAt(131, globals.maxY - 3 - i - 4, "Storage Space Left: " + str(storageSpace))
                             pytools.IO.console.printAt(130, globals.maxY - 3 - i, "                                      ")
-
+                            
+                            
                             i = i + 2
                             fn = i
                             while i < (fn + 10):
@@ -1159,10 +1206,10 @@ def main():
 
                     except:
                         pass
-                        
+                    
                     try:
                         if system.status.active == True:
-                            if os.path.exists(".\\working\\halloweenmode.derp") or os.path.exists(".\\working\\deathmode.derp"):
+                            if os.path.exists(".\\working\\halloweenmode.derp") or os.path.exists(".\\working\\deathmode.derp") or os.path.exists(".\\working\\runningUncanny.derp"):
                                 if flash == 0:
                                     if flags.displayOnScreen:
                                         printColor(30, globals.maxY - 11, "        X", "red")
@@ -1194,6 +1241,63 @@ def main():
                                     except:
                                         printColor(50, globals.maxY - 4, "Hallowed Wolf Index : " + "0" + "Hi" + spaces[0:10], "red")
                                     printColor(50, globals.maxY - 3, "Current Section     : " + section + spaces[0:10], "red")
+                                
+                                    horrorForecast = pytools.IO.getJson("\\\\" + flags.remote + "\\ambience\\" + ".\\working\\hallowForecastHourly.json", False)
+                                    
+                                    maxValue = max(horrorForecast)
+                                    minValue = min(horrorForecast)
+                                    
+                                    stepValue = (maxValue - minValue) / 10
+                                    
+                                    ig = 0
+                                    for x in horrorForecast:
+                                        
+                                        aY = int(9 - (math.floor(((x - minValue) / stepValue))))
+                                        anX = ig
+                                        
+                                        horrorForecastDisplay.set(anX, aY, "X")
+                                        nY = 0
+                                        while nY < 10:
+                                            
+                                            if nY != aY:
+                                                horrorForecastDisplay.set(anX, nY, " ")
+                                                
+                                            nY = nY + 1
+                                        
+                                        ig = ig + 1
+                                        
+                                    printColor(50, globals.maxY - 13, str(round(minValue, 2))[0:4] + (" " * (len(str(round(minValue, 2))) < 4)) + " : " + horrorForecastDisplay.data[9], "red")
+                                    printColor(50, globals.maxY - 14, str(round(minValue + (stepValue), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue), 2))) < 4)) + " : " + horrorForecastDisplay.data[8], "red")
+                                    printColor(50, globals.maxY - 15, str(round(minValue + (stepValue * 2), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 2), 2))) < 4)) + " : " + horrorForecastDisplay.data[7], "red")
+                                    printColor(50, globals.maxY - 16, str(round(minValue + (stepValue * 3), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 3), 2))) < 4)) + " : " + horrorForecastDisplay.data[6], "red")
+                                    printColor(50, globals.maxY - 17, str(round(minValue + (stepValue * 4), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 4), 2))) < 4)) + " : " + horrorForecastDisplay.data[5], "red")
+                                    printColor(50, globals.maxY - 18, str(round(minValue + (stepValue * 5), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 5), 2))) < 4)) + " : " + horrorForecastDisplay.data[4], "red")
+                                    printColor(50, globals.maxY - 19, str(round(minValue + (stepValue * 6), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 6), 2))) < 4)) + " : " + horrorForecastDisplay.data[3], "red")
+                                    printColor(50, globals.maxY - 20, str(round(minValue + (stepValue * 7), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 7), 2))) < 4)) + " : " + horrorForecastDisplay.data[2], "red")
+                                    printColor(50, globals.maxY - 21, str(round(minValue + (stepValue * 8), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 8), 2))) < 4)) + " : " + horrorForecastDisplay.data[1], "red")
+                                    printColor(50, globals.maxY - 22, str(round(minValue + (stepValue * 9), 2))[0:4] + (" " * (len(str(round(minValue + (stepValue * 9), 2))) < 4)) + " : " + horrorForecastDisplay.data[0], "red")
+
+                                    ig = 0
+                                    minf = pytools.clock.getDateTime()[4]
+                                    timecardString = ""
+                                    while ig < 20:
+                                        if minf < 10:
+                                            strminf = " 0" + str(minf)
+                                        else:
+                                            strminf = " " + str(minf)
+                                        timecardString = timecardString + strminf
+                                        
+                                        ig = ig + 1
+                                        minf = minf + 3
+                                        if minf >= 60:
+                                            minf = minf - 60
+
+                                    printColor(50, globals.maxY - 11, "time :" + timecardString, "red")
+                                    
+                                    printColor(50, globals.maxY - 25, "Horror Forecast", "red")
+                                    printColor(50, globals.maxY - 24, "---------------", "red")
+                                    
+                                    
                                 if flags.webMode:
                                     
                                     webModeDeathString = ""

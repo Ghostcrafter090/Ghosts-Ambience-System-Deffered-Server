@@ -88,6 +88,24 @@ class utils:
         z_2 = ((1) / (2)) * (n * (((m) / (10))) + m)
         return z_2
 
+class organ:
+    hasPlayedToccataFugue = False
+    hasPlayedNorthWind = False
+    hasPlayedGothicSweet = False
+    hasPlayedIntensity = False
+    hasPlayedSuspense = False
+    hasPlayedFuneralMarch = False
+    
+    def save():
+        pytools.IO.saveJson("organ.json", {
+            "hasPlayedToccataFugue": organ.hasPlayedToccataFugue,
+            "hasPlayedNorthWind": organ.hasPlayedNorthWind,
+            "hasPlayedGothicSweet": organ.hasPlayedGothicSweet,
+            "hasPlayedSuspense": organ.hasPlayedSuspense,
+            "hasPlayedIntensity": organ.hasPlayedIntensity,
+            "hasPlayedFuneralMarch": organ.hasPlayedFuneralMarch
+        })
+
 def main():
     while not status.exit:
         dateArray = pytools.clock.getDateTime()
@@ -135,7 +153,7 @@ def main():
             if dateArray[2] == 31:
                 if dateArray[3] == 23:
                     if dateArray[4] == 45:
-                        audio.playSoundAll("midnightonhalloween.mp3", 100, 1.0, 0.0, 0)
+                        audio.playSoundAll("midnightonhalloween.mp3", 80, 1.0, 0.0, 0)
                         time.sleep(60)
             if dateArray[1] == 10:
                 if dateArray[2] >= 25:
@@ -143,12 +161,85 @@ def main():
                         if dateArray[4] == 11:
                             audio.playSoundWindow("draculasrevenge.mp3;draculasrevenge.mp3", [50, 100], 1.0, 0.0, 0)
                             time.sleep(60)
+            
+            if (dateArray[1] == 10) and (dateArray[2] >= 25) and (pytools.clock.dateArrayToUTC(dateArray) > (pytools.clock.dateArrayToUTC(dayTimes[5]) - 140)):
+                if not organ.hasPlayedToccataFugue:
+                    event = audio.event()
+                    event.register("organ_toccata_fugue.mp3", 1, 60, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedToccataFugue = True
+                    organ.save()
+            else:
+                if organ.hasPlayedToccataFugue:
+                    organ.hasPlayedToccataFugue = False
+                    organ.save()
+            
+            if (dateArray[1] == 10) and (17 > dateArray[2]) and (pytools.clock.dateArrayToUTC(dateArray) > (pytools.clock.dateArrayToUTC(dayTimes[4]))):
+                if not organ.hasPlayedNorthWind:
+                    event = audio.event()
+                    event.register("organ_north_wind.mp3", 1, 60, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedNorthWind = True
+                    organ.save()
+            else:
+                if organ.hasPlayedNorthWind:
+                    organ.hasPlayedNorthWind = False
+                    organ.save()
+            
+            if (dateArray[1] == 10) and (25 > dateArray[2] > 13) and (pytools.clock.dateArrayToUTC(dateArray) > (pytools.clock.dateArrayToUTC(dayTimes[5]) - 137)):
+                if not organ.hasPlayedGothicSweet:
+                    event = audio.event()
+                    event.register("organ_gothic_sweet.mp3", 1, 60, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedGothicSweet = True
+                    organ.save()
+            else:
+                if organ.hasPlayedGothicSweet:
+                    organ.hasPlayedGothicSweet = False
+                    organ.save()
+                    
+            if (dateArray[1] == 10) and (dateArray[2] > 17) and (pytools.clock.dateArrayToUTC(dateArray) > (pytools.clock.dateArrayToUTC([*dateArray[0:2], 23, 0, 0]) - 180)):
+                if not organ.hasPlayedFuneralMarch:
+                    event = audio.event()
+                    event.register("organ_funeral_march.mp3", 1, 65, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedFuneralMarch = True
+                    organ.save()
+            else:
+                if organ.hasPlayedFuneralMarch:
+                    organ.hasPlayedFuneralMarch = False
+                    organ.save()
+            
+            if (dateArray[1] == 10) and (15 > dateArray[2] > 7) and (pytools.clock.dateArrayToUTC(dateArray) > ((pytools.clock.dateArrayToUTC(dayTimes[4])) + (((pytools.clock.dateArrayToUTC(dayTimes[5]) - 137) - (pytools.clock.dateArrayToUTC(dayTimes[4])))) / 3)):
+                if not organ.hasPlayedSuspense:
+                    event = audio.event()
+                    event.register("organ_suspense.mp3", 1, 80, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedSuspense = True
+                    organ.save()
+            else:
+                if organ.hasPlayedSuspense:
+                    organ.hasPlayedSuspense = False
+                    organ.save()
+                    
+            if (dateArray[1] == 10) and (27 > dateArray[2] > 10) and (pytools.clock.dateArrayToUTC(dateArray) > ((pytools.clock.dateArrayToUTC(dayTimes[4])) + (((pytools.clock.dateArrayToUTC(dayTimes[5]) - 137) - (pytools.clock.dateArrayToUTC(dayTimes[4])))) / 3)):
+                if not organ.hasPlayedIntensity:
+                    event = audio.event()
+                    event.register("organ_intensity.mp3", 1, 60, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedIntensity = True
+                    organ.save()
+            else:
+                if organ.hasPlayedIntensity:
+                    organ.hasPlayedIntensity = False
+                    organ.save()
+            
             if (dateArray[1] == 10) or ((dateArray[1] == 11) and (dateArray[2] == 1)):
                 if dateArray[2] >= 20:
                     if dateArray[3] == 3:
                         if dateArray[4] == 11:
-                            audio.playSoundWindow("comelittlechildren.mp3;comelittlechildren.mp3", [50, 100], 1.0, 0.0, 0)               
-        elif halloweenMode and (utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) < 0):
+                            audio.playSoundWindow("comelittlechildren.mp3;comelittlechildren.mp3", [50, 100], 1.0, 0.0, 0)          
+        elif (halloweenMode and (utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray)) < 0)) or os.path.exists("runningUncanny.derp"):
             if os.path.exists(".\\doDarkRumble.derp"):
                 audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
                 os.system("del .\\doDarkRumble.derp /f /q")
@@ -173,6 +264,23 @@ def main():
                 if dateArray[4] == dayTimes[8][4]:
                     audio.playSoundAll("hu_darkrumble.mp3", ((100 / ((((((32 - dateArray[2]) * 24 * 60) + ((24 - dateArray[3]) * 60) + (60 - dateArray[4])) / (24 * 60)) / 6) + (1 - 0.17372685185185185))) + -utils.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray))) / 2, 1.0, 0.0, 0)
                     time.sleep(60)
+                    
+            aNewTime = dayTimes[4]
+            aNewTime[3] = aNewTime[3] - 12
+            if aNewTime[3] < 0:
+                aNewTime[3] = (-aNewTime[3]) + 12
+            if (11 > dateArray[1] > 8) and (pytools.clock.dateArrayToUTC(dateArray) > (pytools.clock.dateArrayToUTC(dayTimes[4]))):
+                if not organ.hasPlayedNorthWind:
+                    event = audio.event()
+                    event.register("organ_north_wind.mp3", 1, 60, 1.0, 0.0, 0)
+                    event.run()
+                    organ.hasPlayedNorthWind = True
+                    organ.save()
+            else:
+                if organ.hasPlayedNorthWind:
+                    organ.hasPlayedNorthWind = False
+                    organ.save()
+                    
         else:
             time.sleep(55)
         if halloweenMode == False:

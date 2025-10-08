@@ -140,4 +140,17 @@ Thumbs.db
 # Binaries
 # --------
 ambience.exe
-
+modules/openweather.py
+*.exe
+copyStuff.bat
+demon_words.txt
+forceRestartClient.bat
+hostData.json
+modules\flame.py
+modules\weather-old.py
+poltergeist_words.txt
+test.flame
+working\daily_pictou_forecastData.json
+working\hallowForecastHourly.json
+working\hourly_pictou_forecastData.json
+working\forecastData.json

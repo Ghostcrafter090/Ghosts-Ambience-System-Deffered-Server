@@ -17,6 +17,8 @@ print = log.printLog
 pytools.IO.saveFile(".\\errorlog.log", "")
 time.sleep(1)
 
+pytools.IO.saveFile("ambience_pid.cx", str(os.getpid()))
+
 class flags:
     deffered = False
 

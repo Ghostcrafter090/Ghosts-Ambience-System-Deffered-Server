@@ -556,20 +556,40 @@ class playSoundWindow:
             try:
                 def getHostToSendTo():
                     
-                    if (hosts.listf == []) or (random.random() < 0.5):
+                    if (type(hosts.listf) == bool) or (hosts.listf == []) or (random.random() < 0.5):
                         return pytools.IO.getJson("..\\serverSettings.json")["ip"]
                     
                     randomInt = -1
-                    while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
-                        randomInt = tools.getRandomInt(hosts.soundsf)
-                        if hosts.listf[randomInt] in hosts.soundsf:
-                            if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
-                                if tools.ping(hosts.listf[randomInt]):
-                                    break
-                        else:
-                            randomInt = -1
-                            grabHostData()
-                        print("No hosts connected. Waiting for connection...")
+                    
+                    doContinue = True
+                    
+                    while doContinue:
+                        try:
+                            randomInt = tools.getRandomInt(hosts.soundsf)
+                            
+                            if randomInt >= len(hosts.listf):
+                                randomInt = -1
+                                grabHostData()
+                            else:
+                                
+                                if hosts.listf[randomInt] == pytools.IO.getJson("..\\serverSettings.json")["ip"]:
+                                    return pytools.IO.getJson("..\\serverSettings.json")["ip"]
+                                
+                                if hosts.listf[randomInt] in hosts.soundsf:
+                                    if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True) and (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) and (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se")):
+                                        if tools.ping(hosts.listf[randomInt]):
+                                            break
+                                else:
+                                    randomInt = -1
+                                    grabHostData()
+                                print("No hosts connected. Waiting for connection...")
+
+                            doContinue = (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se"))
+                        
+                        except:
+                            doContinue = True
+                            print(traceback.format_exc())
+                            
                     return randomInt
                 
                 randomInt = getHostToSendTo()
@@ -599,7 +619,7 @@ class playSoundWindow:
                                         import traceback
                                         print(traceback.format_exc())
                                         errorCount = errorCount + 1
-                                        if errorCount > 100:
+                                        if errorCount > 1000:
                                             log.audio("Failed audio event.")
                                             log.audio(str(self.eventData))
                                             log.audio(traceback.format_exc())
@@ -616,17 +636,22 @@ class playSoundWindow:
                                         print("Trying again on host " + hosts.listf[randomInt] + "...")
                                     time.sleep(0.1)
                             except:
+                                
+                                atraceback = traceback.format_exc()
+                                print(atraceback)
+                                
                                 log.audio("Failed audio event.")
                                 log.audio(str(self.eventData))
-                                log.audio(traceback.format_exc())
+                                log.audio(atraceback)
                                 log.crash("Failed audio event.")
                                 log.crash(str(self.eventData))
-                                log.crash(traceback.format_exc())
+                                log.crash(atraceback)
                             try:
                                 endms = time.time()
+                                log.audio("RandomIndex: " + str(randomInt))
                                 pytools.IO.appendFile("fire_times.cxl", "\n" + str(hosts.listf[randomInt]) + ", " + str(endms - startms) + ", " + str(self.eventData))
                             except:
-                                print(traceback.format_exc())
+                                log.audio(traceback.format_exc())
                         threading.Thread(target=runSound, args=(randomInt,)).start()
                         played = True
                         for sound in self.eventData["events"]:
@@ -657,10 +682,9 @@ class playSoundWindow:
                                         })), timeout=10)
                                         hasFired = True
                                     except:
-                                        import traceback
                                         print(traceback.format_exc())
                                         errorCount = errorCount + 1
-                                        if errorCount > 100:
+                                        if errorCount > 1000:
                                             log.audio("Failed audio event.")
                                             log.audio(str(self.eventData))
                                             log.audio(traceback.format_exc())
@@ -875,14 +899,14 @@ class playSoundAll:
         try:
             def getHostToSendTo():
                 
-                if (hosts.listf == []) or (random.random() < 0.5):
+                if (type(hosts.listf) == bool) or (hosts.listf == []) or (random.random() < 0.5):
                     return pytools.IO.getJson("..\\serverSettings.json")["ip"]
                 
                 randomInt = -1
-                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
+                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se")):
                     randomInt = tools.getRandomInt(hosts.soundsf)
                     if hosts.listf[randomInt] in hosts.soundsf:
-                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
+                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True) and (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) and (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se")):
                             if tools.ping(hosts.listf[randomInt]):
                                 break
                     else:
@@ -918,7 +942,7 @@ class playSoundAll:
                                     import traceback
                                     print(traceback.format_exc())
                                     errorCount = errorCount + 1
-                                    if errorCount > 100:
+                                    if errorCount > 1000:
                                         log.audio("Failed audio event.")
                                         log.audio(str(eventData))
                                         log.audio(traceback.format_exc())
@@ -965,7 +989,7 @@ class playSoundAll:
                             print(eventData["events"][0]["path"])
                             hasFired = False
                             errorCount = 0
-                            while (not hasFired) and (errorCount < 100):
+                            while (not hasFired) and (errorCount < 1000):
                                 try:
                                     pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
@@ -1178,14 +1202,14 @@ class event:
         try:
             def getHostToSendTo():
                 
-                if (hosts.listf == []) or (random.random() < 0.5):
+                if (type(hosts.listf) == bool) or (hosts.listf == []) or (random.random() < 0.5):
                     return pytools.IO.getJson("..\\serverSettings.json")["ip"]
                 
                 randomInt = -1
-                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False):
+                while (randomInt == -1) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) or (hosts.soundsf[hosts.listf[randomInt]]["play"] == False) or (os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) or (os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se")):
                     randomInt = tools.getRandomInt(hosts.soundsf)
                     if hosts.listf[randomInt] in hosts.soundsf:
-                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True):
+                        if (randomInt != -1) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".bl")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".bl")) and (hosts.soundsf[hosts.listf[randomInt]]["play"] == True) and (not os.path.exists(".\\host-" + hosts.listf[randomInt] + ".se")) and (not os.path.exists(".\\working\\host-" + hosts.listf[randomInt] + ".se")):
                             if tools.ping(hosts.listf[randomInt]):
                                 break
                     else:
@@ -1251,7 +1275,7 @@ class event:
                         try:
                             hasFired = False
                             errorCount = 0
-                            while (not hasFired) and (errorCount < 100):
+                            while (not hasFired) and (errorCount < 1000):
                                 try:
                                     pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
@@ -1262,7 +1286,7 @@ class event:
                                     import traceback
                                     print(traceback.format_exc())
                                     errorCount = errorCount + 1
-                                    if errorCount > 100:
+                                    if errorCount > 1000:
                                         log.audio("Failed audio event.")
                                         log.audio(str(self.eventData))
                                         log.audio(traceback.format_exc())
@@ -1308,7 +1332,7 @@ class event:
                             print(self.eventData["events"][0]["path"])
                             hasFired = False
                             errorCount = 0
-                            while (not hasFired) and (errorCount < 100):
+                            while (not hasFired) and (errorCount < 1000):
                                 try:
                                     pytools.net.getJsonAPI("http://" + hosts.listf[randomInt] + ":" + str(getPort(hosts.listf[randomInt])) + "?json=" + urllib.parse.quote(json.dumps({
                                         "command": "fireEvent",
@@ -1322,7 +1346,7 @@ class event:
                                 except:
                                     print(traceback.format_exc())
                                     errorCount = errorCount + 1
-                                    if errorCount > 100:
+                                    if errorCount > 1000:
                                         log.audio("Failed audio event.")
                                         log.audio(str(self.eventData))
                                         log.audio(traceback.format_exc())
@@ -1416,7 +1440,7 @@ class command:
             except:
                 print(traceback.format_exc())
                 
-    def setFlag(flagName, boolf, target=False):
+    def setFlag(flagName, boolf, target=False, timeout=10):
         do = True
         loc = False
         try:
@@ -1442,10 +1466,10 @@ class command:
                                     "flagName": flagName,
                                     "bool": boolf
                                 }
-                            })))
+                            })), timeout=timeout)
                             if not target:
                                 if boolf:
-                                    pytools.IO.saveFile(".\\" + flagName + ".derp", boolf)
+                                    pytools.IO.saveFile(".\\" + flagName + ".derp", str(boolf))
                                 else:
                                     os.system("del \".\\" + flagName + ".derp\" /f /q")
                             print("Flag Set.")
@@ -1455,10 +1479,10 @@ class command:
                             hostsDataFile.pop(host)
                         except:
                             pass
-                if os.path.exists(".\\hostData.json"):
-                    pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
-                else:
-                    pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+                # if os.path.exists(".\\hostData.json"):
+                    # pytools.IO.saveJson(".\\hostData.json", hostsDataFile)
+                # else:
+                    # pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
             except:
                 print(traceback.format_exc())
 

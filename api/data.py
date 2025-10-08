@@ -6,6 +6,16 @@ import math
 import modules.logManager as log
 import geopy.distance
 
+try:
+    import modules.openweather as openweather
+except:
+    class openweather:
+        def stealApiKey(name):
+            return False
+        
+        def pollJavascriptFilename():
+            return ""
+
 import websocket
 import threading
 import json
@@ -32,6 +42,17 @@ class globals:
     urlBaseSouth = 'http://gsweathermore.ddns.net:226/access.php?grabopensouth=true&lat=<lat>&lon=<lon>&key='
     urlBaseEast = 'http://gsweathermore.ddns.net:226/access.php?grabopeneast=true&lat=<lat>&lon=<lon>&key='
     urlBaseWest = 'http://gsweathermore.ddns.net:226/access.php?grabopenwest=true&lat=<lat>&lon=<lon>&key='
+    sysTmf = []
+    
+    
+    forecastOther = {
+        "hourly": {
+            
+        },
+        "daily": {
+            
+        }
+    }
     
     # ["main_code", <clear_percent>, <clouds_percent>, <rain_percent>, <hail_percent>, <thunder_percent>, <snow_percent>]
     
@@ -128,6 +149,196 @@ def getCurrentOpenLatLon():
     globals.openLatLons[oldestI][2] = time.time()
     return globals.openLatLons[oldestI]
 
+
+def combineHourly(original, hourly):
+                        
+    def _maxKey(x):
+        return x["dt"]
+    
+    latestHourly = max(hourly["list"], key=_maxKey)["dt"]
+    
+    for entry in original["data"]["main"]["list"]:
+        if entry["dt"] > latestHourly:
+            hourly["list"].append(entry)
+    
+    def _sortedKey(x):
+        return x["dt"]
+    
+    hourly["list"] = sorted(hourly["list"], key=_sortedKey)
+    
+    original["data"]["main"]["list"] = hourly["list"]
+    
+    return original
+
+def localJsonAPI(url, timeType, location):
+                        
+    dataOut = pytools.IO.getJson(".\\" + timeType + "_" + location + "_forecastData.json")
+    
+    if (not location in globals.forecastOther[timeType]) or (globals.forecastOther[timeType][location] != int(math.floor(pytools.clock.getDateTime()[4] / 10))):
+        try:
+            dataOut = pytools.net.getJsonAPI(url)
+            pytools.IO.saveJson(".\\" + timeType + "_" + location + "_forecastData.json", dataOut)
+            globals.forecastOther[timeType][location] = int(math.floor(pytools.clock.getDateTime()[4] / 10))
+        except:
+            print(traceback.format_exc())
+    
+    return dataOut
+
+def convertDailyToHourly(day):
+                        
+    morningArray = pytools.clock.getDateArrayFromUST(day["dt"] - (86400 / 4))
+    dayArray = pytools.clock.getDateArrayFromUST(day["dt"])
+    eveningArray = pytools.clock.getDateArrayFromUST(day["dt"] + (86400 / 4))
+    nightArray = pytools.clock.getDateArrayFromUST(day["dt"] + (86400 / 2))
+    
+    def arrayToStamp(dateArray):
+        return str(dateArray[0]) + "-" + str(dateArray[1]) + "-" + str(dateArray[2]) + " " + str(dateArray[3]) + ":" + str(dateArray[4]) + ":" + str(dateArray[5]) # "2025-08-17 23:00:00"
+    
+    return [
+        {
+            "dt": day["dt"] - (86400 / 4),
+            "main": {
+                "temp": day["temp"]["morn"],
+                "feels_like": day["feels_like"]["morn"],
+                "temp_min": day["temp"]["morn"] - 2,
+                "temp_max": day["temp"]["morn"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(morningArray)
+        },
+        {
+            "dt": day["dt"],
+            "main": {
+                "temp": day["temp"]["day"],
+                "feels_like": day["feels_like"]["day"],
+                "temp_min": day["temp"]["day"] - 2,
+                "temp_max": day["temp"]["day"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(dayArray)
+        },
+        {
+            "dt": day["dt"] + (86400 / 4),
+            "main": {
+                "temp": day["temp"]["eve"],
+                "feels_like": day["feels_like"]["eve"],
+                "temp_min": day["temp"]["eve"] - 2,
+                "temp_max": day["temp"]["eve"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(eveningArray)
+        },
+        {
+            "dt": day["dt"] + (86400 / 2),
+            "main": {
+                "temp": day["temp"]["night"],
+                "feels_like": day["feels_like"]["night"],
+                "temp_min": day["temp"]["night"] - 2,
+                "temp_max": day["temp"]["night"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(nightArray)
+        }
+    ]
+    
+def combineDaily(original, daily):
+    
+    def _maxKey(x):
+        return x["dt"]
+    
+    latestOriginal = max(original["data"]["main"]["list"], key=_maxKey)["dt"]
+    
+    for entry in daily["list"]:
+        if entry["dt"] > latestOriginal:
+            original["data"]["main"]["list"].extend(convertDailyToHourly(entry))
+    
+    def _sortedKey(x):
+        return x["dt"]
+    
+    original["data"]["main"]["list"] = sorted(original["data"]["main"]["list"], key=_sortedKey)
+    
+    return original
+
 class grabber:
     def getBaseData(url):
         currentLatLon = getCurrentOpenLatLon()
@@ -140,18 +351,37 @@ class grabber:
         urlEast = globals.urlBaseEast.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         urlWest = globals.urlBaseWest.replace("<lat>", str(globals.lat)).replace("<lon>", str(globals.lon))
         
-        forecastUrl = "http://gsweathermore.ddns.net:226/access.php?grabopenforecast=true&key="
+        pictou = "lat=" + str(globals.lat) + "&lon=" + str(globals.lon)
         
+        otherApiKey = openweather.stealApiKey(openweather.pollJavascriptFilename())
+        
+        forecastUrl = "http://gsweathermore.ddns.net:226/access.php?grabopenforecast=true&key=" + status.apiKey
+        
+        if otherApiKey:
+            dailyUrl = "https://api.openweathermap.org/data/2.5/forecast/daily?" + pictou + "&cnt=16&appid=" + otherApiKey
+            hourlyUrl = "https://pro.openweathermap.org/data/2.5/forecast/hourly?" + pictou + "&appid=" + otherApiKey
+            
+            forecastData = pytools.net.getJsonAPI(forecastUrl)
+            
+            hourlyData = localJsonAPI(hourlyUrl, "hourly", "pictou")
+            dailyData = localJsonAPI(dailyUrl, "daily", "pictou")
+            
+            forecastData = combineHourly(forecastData, hourlyData)
+            forecastData = combineDaily(forecastData, dailyData)
+            
+            pytools.IO.saveJson("forecastData.json", forecastData)
+        else:
+            try:
+                forecastData = pytools.net.getJsonAPI(forecastUrl)
+                pytools.IO.saveJson("forecastData.json", forecastData)
+            except:
+                pass
+            
         try:
             print(str(pytools.clock.getDateTime()) + ' ::: Getting Base Data...')
             # url: http://api.openweathermap.org/data/2.5/weather?lat=44.7659964&lon=-63.6850686&appid=<apiKey>
             # try:
             data = pytools.net.getJsonAPI(url + status.apiKey)["data"]["main"]
-            try:
-                forecastData = pytools.net.getJsonAPI(forecastUrl + status.apiKey)
-                pytools.IO.saveJson("forecastData.json", forecastData)
-            except:
-                forecastData = {}
             
             try:
                 dataNorth = pytools.net.getJsonAPI(urlNorth + status.apiKey)["data"]["main"]
@@ -423,7 +653,7 @@ class grabber:
                                         "distance": grabber.lightning.getDistance(strike["lat"], strike["lon"]),
                                         "raw_data": strike
                                     }))
-                                if (grabber.lightning.getDistance(strike["lat"], strike["lon"]) < grabber.lightning.getDistance(grabber.lightning.closestStrike["lat"], grabber.lightning.closestStrike["lon"])) or ((time.time() * 1000) > (grabber.lightning.closestStrike["time"] + 600000)):
+                                if (grabber.lightning.getDistance(strike["lat"], strike["lon"]) < grabber.lightning.getDistance(grabber.lightning.closestStrike["lat"], grabber.lightning.closestStrike["lon"])) or ((time.time() * 1000) > (grabber.lightning.closestStrike["time"] + 300000)):
                                     grabber.lightning.closestStrike = {
                                         "lat": strike["lat"],
                                         "lon": strike["lon"],

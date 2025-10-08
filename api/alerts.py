@@ -107,11 +107,6 @@ def main():
                     f = 2
             if f > 1:
                 audioEvent = audio.event()
-                if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
-                    audioEvent.register("alert_incoming.mp3", 2, 25, 1.0, 0.0, 1)
-                else:
-                    audioEvent.register("alert_incoming_night.mp3", 2, 10, 1.0, 0.0, 1)
-                audioEvent.run(sendFile=True)
                 nf = 0
                 for n in texts:
                     try:
@@ -122,7 +117,7 @@ def main():
                     except:
                         print(traceback.format_exc())
                 
-                soundData = AudioSegment.silent(duration=100, frame_rate=24000)
+                soundData = AudioSegment.silent(duration=10000, frame_rate=24000)
                 ng = 0
                 while ng <= nf:
                     try:
@@ -132,12 +127,17 @@ def main():
                     ng = ng + 1
                 
                 soundData.export(".\\sound\\assets\\alerts_audio.mp3", format="mp3")
-                
-                audioEvent = audio.event()
+
                 if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
                     audioEvent.register("alerts_audio.mp3", 2, 25, 1.0, 0.0, 1)
                 else:
                     audioEvent.register("alerts_audio.mp3", 2, 15, 1.0, 0.0, 1,)
+                    
+                if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
+                    audioEvent.register("alert_incoming.mp3", 2, 25, 1.0, 0.0, 1)
+                else:
+                    audioEvent.register("alert_incoming_night.mp3", 2, 10, 1.0, 0.0, 1)
+                    
                 audioEvent.run(sendFile=True, largeFile=True)
                 audioEvent = audio.event()
                 if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
@@ -149,11 +149,6 @@ def main():
             if (dateArray[3] % 6) == 0:
                 if (dateArray[4] % 60) == 0:
                     audioEvent = audio.event()
-                    if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
-                        audioEvent.register("alert_reproduce.mp3", 2, 25, 1.0, 0.0, 1)
-                    else:
-                        audioEvent.register("alert_reproduce_night.mp3", 2, 10, 1.0, 0.0, 1)
-                    audioEvent.run(sendFile=True)
                     nf = 0
                     for n in texts:
                         try:
@@ -164,7 +159,7 @@ def main():
                         except:
                             pass
                         
-                    soundData = AudioSegment.silent(duration=100, frame_rate=24000)
+                    soundData = AudioSegment.silent(duration=10000, frame_rate=24000)
                     ng = 0
                     while ng <= nf:
                         try:
@@ -175,11 +170,16 @@ def main():
                     
                     soundData.export(".\\sound\\assets\\alerts_audio.mp3", format="mp3")
                     
-                    audioEvent = audio.event()
                     if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
                         audioEvent.register("alerts_audio.mp3", 2, 25, 1.0, 0.0, 1)
                     else:
                         audioEvent.register("alerts_audio.mp3", 2, 15, 1.0, 0.0, 1)
+                        
+                    if (pytools.clock.dateArrayToUTC(dayTimes[3]) < pytools.clock.dateArrayToUTC(dateArray) < pytools.clock.dateArrayToUTC(dayTimes[5])):
+                        audioEvent.register("alert_reproduce.mp3", 2, 25, 1.0, 0.0, 1)
+                    else:
+                        audioEvent.register("alert_reproduce_night.mp3", 2, 10, 1.0, 0.0, 1)
+                        
                     audioEvent.run(sendFile=True, largeFile=True)
                     
                     audioEvent = audio.event()

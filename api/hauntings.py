@@ -79,6 +79,8 @@ class threads:
 class haunts:
     ghosts = {}
     
+    horrorForecast = []
+    
     def save(prop):
         ghostsf = pytools.IO.getJson("ghosts.json")
         ghostsf["list"].append(prop)
@@ -202,8 +204,17 @@ class haunts:
             hallowFactor = (a * e ** (-(((current - b) ** 2) / c))) + (h * e ** (-(((current - f) ** 2) / g))) + j + k + l
             pytools.IO.saveFile("hallowFactor.cx", str(hallowFactor))
             
-            horrorForecast = hallow.data.forecastHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
-            horrorFactorForecast = horrorForecast[0] * (1 - (math.fabs(horrorForecast[1] - pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - 432000.0) / 432000))
+            try:
+                horrorForecast = hallow.data.forecastHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
+                haunts.horrorForecast = horrorForecast
+            except:
+                horrorForecast = haunts.horrorForecast
+                
+            if len(horrorForecast):
+                horrorFactorForecast = horrorForecast[0] * (1 - (math.fabs(horrorForecast[1] - pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) - 432000.0) / 432000))
+            else:
+                horrorFactorForecast = 0
+            
             horrorIndex = hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()))
             if horrorIndex < horrorFactorForecast:
                 hallowFactor = 6 + horrorFactorForecast
@@ -247,7 +258,8 @@ class ghost:
             "memmories": [
                 # [[0, 0, 0, 0, 0, 0], [0, 0]]
             ],
-            "completedMemmories": {}
+            "completedMemmories": {},
+            "deathDay": [0, 1, 1, 0, 0, 0]
         }
     }
     
@@ -871,6 +883,7 @@ class ghost:
                     self.rotation = ((self.rotation * 10) + ((random.random() * 2) - 1)) / 11
                     self.move(self.x, self.y, self.rotation, 2 * ((self.activity / 10) * (-1 * (self.mood / 100))))
     
+    isTalkative = False
     
     def tic(self):
         try:
@@ -900,6 +913,16 @@ class ghost:
         status.vars["ghostInfo"][self.prop["name"]]["y"] = self.y
         status.vars["ghostInfo"][self.prop["name"]]["rotation"] = self.rotation
         status.vars["ghostInfo"][self.prop["name"]]["speechModifier"] = self.speechModifier
+        
+        if self.activity > 4.54495:
+            if not self.isTalkative:
+                if random.random() < (1.00003055 ** (self.activity + 1) - 1.00016941):
+                    self.isTalkative = True
+                    
+        else:
+            if self.isTalkative:
+                if random.random() < (1.00003055 ** (-(self.activity - 4.54495) + 1) - 1.00016941):
+                    self.isTalkative = False
         
     def run(self):
         exists = True

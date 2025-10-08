@@ -34,6 +34,8 @@ class hosts:
     soundsfCache = {}
     benchCache = {}
     
+    MCPUErrorCount = {}
+    
     updateMaxCount = pytools.clock.getDateTime()[2]
     
     hasUpdated = False
@@ -62,7 +64,8 @@ class hostObject:
                     hosts.soundsf[self.host] = {
                         "max": 0,
                         "current": 0,
-                        "play": False
+                        "play": False,
+                        "mcpu": 0.0
                     }
                     hasUpdated = True
                 else:
@@ -112,6 +115,7 @@ class hostObject:
                         hosts.hasUpdated = True
                     hosts.soundsf[self.host]["max"] = maxf
                 except:
+                    maxf = 1
                     print(traceback.format_exc())
                 self.updateMaxCount = pytools.clock.getDateTime()[3]
             
@@ -129,6 +133,18 @@ class hostObject:
             if hosts.soundsf[self.host]["current"] != currentf:
                 hasUpdated = True
             hosts.soundsf[self.host]["current"] = currentf
+            
+            try:
+                print("Grabbing current Max CPU...")
+                MCPUf = pytools.net.getJsonAPI("http://" + str(self.host) + ":4507?json=" + urllib.parse.quote(json.dumps({"command":"getCPUUsageThreshold"})), timeout=5)["cpuUsageThreshold"]
+                print("Current Max CPU for host " + self.host + " is " + str(MCPUf) + ".")
+            except:
+                print("Error grabbing sound count. Setting to maximum...")
+                MCPUf = 0.0
+            if hosts.soundsf[self.host]["mcpu"] != MCPUf:
+                hasUpdated = True
+            hosts.soundsf[self.host]["mcpu"] = MCPUf
+            
             print("Saved.")
             
             if hosts.soundsf[self.host]["current"] >= hosts.soundsf[self.host]["max"]:
@@ -188,6 +204,33 @@ def main():
             print("Saving hostData.json file...")
             pytools.IO.saveJson(".\\hostData.json", hosts.soundsf)
             hosts.soundsfOld = hosts.soundsf
+        
+        try:
+            for host in hosts.soundsf:
+                
+                if host not in hosts.MCPUErrorCount:
+                    hosts.MCPUErrorCount[host] = 0
+                
+                if hosts.soundsf[host]["mcpu"] < 35:
+                    
+                    hosts.MCPUErrorCount[host] = hosts.MCPUErrorCount[host] + 1
+                    
+                    if hosts.MCPUErrorCount[host] > 15:
+                        pytools.IO.saveFile(".\\host-" + host + ".se", "")
+                        pytools.IO.saveFile("..\\host-" + host + ".se", "")
+                        audio.command.setFlag("puntHost-" + host, True, timeout=5)
+                        
+                else:
+                    
+                    hosts.MCPUErrorCount[host] = 0
+                    
+                if (hosts.soundsf[host]["mcpu"] > 70):
+                    if (os.path.exists(".\\host-" + host + ".se")):
+                        os.system("del \".\\host-" + host + ".se\" /f /q")
+                        os.system("del \"..\\host-" + host + ".se\" /f /q")
+                    audio.command.setFlag("puntHost-" + host, False, timeout=5)
+        except:
+            print(traceback.format_exc())
             
         time.sleep(1)
         status.finishedLoop = True

@@ -1162,6 +1162,10 @@ class clock:
         #     i = i + 1
         diaArray[3] = 24 - (staArray[3] - utcArray[3])
         return diaArray
+    
+    def getDateArrayFromUST(stamp):
+        timef = datetime.fromtimestamp(stamp)
+        return [timef.year, timef.month, timef.day, timef.hour, timef.minute, timef.second]
 
     def fixDateArray(dateArray):
         while dateArray[4] > 60:

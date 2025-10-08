@@ -14,7 +14,9 @@ class status:
     finishedLoop = False
     vars = {
         "lastLoop": [],
-        "alertLevel": 2
+        "alertLevel": 2,
+        "dangerLevel": 0,
+        "isPrepared": False,
     }
 
 class utils:
@@ -27,6 +29,8 @@ class utils:
 def main():
     count = 0
     alertLevel = 2
+    dangerLevel = 0
+    isPrepared = False
     while not status.exit:
         dataList = utils.dataGrabber()
         dateArray = pytools.clock.getDateTime()
@@ -34,10 +38,26 @@ def main():
             lightningDanger = pytools.IO.getJson("lightningData.json")["dangerLevel"]
         except:
             lightningDanger = 0
-            
-        status.vars["alertLevel"] = alertLevel
         
-        if (dataList[1][5] > 4) or (lightningDanger > alertLevel):
+        dangerLevel = ((dangerLevel * 10) + lightningDanger) / 11
+        
+        status.vars["alertLevel"] = alertLevel
+        status.vars["dangerLevel"] = dangerLevel
+        status.vars["isPrepared"] = isPrepared
+        
+        if (dangerLevel > 0) and (not isPrepared):
+            audioEvent = audio.event()
+            audioEvent.registerWindow("tornado_sirens_prep.mp3;tornado_sirens_prep.mp3", [100 / 2, 100], 1.0, 0.0, 0)
+            audioEvent.register("tornado_sirens_prep.mp3", 0, 100 / 3, 1.0, 0.0, 0)
+            audioEvent.register("tornado_sirens_prep.mp3", 1, 100 / 3 * 0.8, 1.0, 0.0, 0)
+            audioEvent.run()
+            time.sleep(25)
+            isPrepared = True
+        
+        if (dangerLevel < 0) and (isPrepared):
+            isPrepared = False
+        
+        if ((dataList[1][5] > 4) or (dangerLevel > alertLevel)) and isPrepared:
             count = count + 1
             if dateArray[3] >= 22:
                 volume = 20
@@ -75,11 +95,11 @@ def main():
                     audioEvent.run()
             time.sleep(55)
             
-        if (lightningDanger > 2) and (lightningDanger > alertLevel):
+        if (dangerLevel > 2) and (dangerLevel > alertLevel):
             alertLevel = alertLevel + 1
         else:
             alertLevel = alertLevel - 1
-            if lightningDanger > alertLevel:
+            if dangerLevel > alertLevel:
                 alertLevel = alertLevel + 1
             
         if alertLevel > 6:

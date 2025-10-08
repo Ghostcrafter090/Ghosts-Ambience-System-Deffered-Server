@@ -3,6 +3,7 @@ import modules.pytools as pytools
 import time
 import api.wind
 import modules.logManager as log
+import threading
 
 print = log.printLog
 
@@ -21,6 +22,11 @@ class status:
         "peepersIndex": 0,
         "peeperCount": 0
     }
+    
+def fireWindowEvent(*args):
+    aThread = threading.Thread(target=audio.playSoundWindow, args=(*args,))
+    aThread.start()
+    time.sleep(1)
     
 class globals:
     peeperInfo = pytools.IO.getJson("peepers.json")
@@ -154,13 +160,13 @@ def main():
                 pf0 = 1
                 if pn0 == 0:
                     pn0 = 1
-                    audio.playSoundWindow("m_peepers_0_fi.mp3;peepers_0_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_0_fi.mp3;peepers_0_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
                 elif pn0 == 1:
-                    audio.playSoundWindow("m_peepers_0.mp3;peepers_0.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_0.mp3;peepers_0.mp3", [25, 100, 65], 1.0, 0.0, 0)
         if pf0 == 0:
             if pn0 == 1:
                 pn0 = 0
-                audio.playSoundWindow("m_peepers_0_fo.mp3;peepers_0_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                fireWindowEvent("m_peepers_0_fo.mp3;peepers_0_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
 
         pf1 = 0
         if (psp1 > utc) or (utc > pep1):
@@ -168,13 +174,13 @@ def main():
                 pf1 = 1
                 if pn1 == 0:
                     pn1 = 1
-                    audio.playSoundWindow("m_peepers_1_fi.mp3;peepers_1_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_1_fi.mp3;peepers_1_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
                 elif pn1 == 1:
-                    audio.playSoundWindow("m_peepers_1.mp3;peepers_1.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_1.mp3;peepers_1.mp3", [25, 100, 65], 1.0, 0.0, 0)
         if pf1 == 0:
             if pn1 == 1:
                 pn1 = 0
-                audio.playSoundWindow("m_peepers_1_fo.mp3;peepers_0_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                fireWindowEvent("m_peepers_1_fo.mp3;peepers_0_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
 
         pf2 = 0
         if (psp2 > utc) or (utc > pep2):
@@ -182,13 +188,13 @@ def main():
                 pf2 = 1
                 if pn2 == 0:
                     pn2 = 1
-                    audio.playSoundWindow("m_peepers_2_fi.mp3;peepers_2_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_2_fi.mp3;peepers_2_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
                 elif pn2 == 1:
-                    audio.playSoundWindow("m_peepers_2.mp3;peepers_2.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_2.mp3;peepers_2.mp3", [25, 100, 65], 1.0, 0.0, 0)
         if pf2 == 0:
             if pn2 == 1:
                 pn2 = 0
-                audio.playSoundWindow("m_peepers_2_fo.mp3;peepers_2_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                fireWindowEvent("m_peepers_2_fo.mp3;peepers_2_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
 
         pf3 = 0
         if (psp3 > utc) or (utc > pep3):
@@ -196,13 +202,13 @@ def main():
                 pf3 = 1
                 if pn3 == 0:
                     pn3 = 1
-                    audio.playSoundWindow("m_peepers_3_fi.mp3;peepers_3_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_3_fi.mp3;peepers_3_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
                 elif pn3 == 1:
-                    audio.playSoundWindow("m_peepers_3.mp3;peepers_3.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_3.mp3;peepers_3.mp3", [25, 100, 65], 1.0, 0.0, 0)
         if pf3 == 0:
             if pn3 == 1:
                 pn3 = 0
-                audio.playSoundWindow("m_peepers_3_fo.mp3;peepers_3_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                fireWindowEvent("m_peepers_3_fo.mp3;peepers_3_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
 
         pf4 = 0
         if (psp4 > utc) or (utc > pep4):
@@ -210,13 +216,13 @@ def main():
                 pf4 = 1
                 if pn4 == 0:
                     pn4 = 1
-                    audio.playSoundWindow("m_peepers_4_fi.mp3;peepers_4_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_4_fi.mp3;peepers_4_fi.mp3", [25, 100, 65], 1.0, 0.0, 0)
                 elif pn4 == 1:
-                    audio.playSoundWindow("m_peepers_4.mp3;peepers_4.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                    fireWindowEvent("m_peepers_4.mp3;peepers_4.mp3", [25, 100, 65], 1.0, 0.0, 0)
         if pf4 == 0:
             if pn4 == 1:
                 pn4 = 0
-                audio.playSoundWindow("m_peepers_4_fo.mp3;peepers_4_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
+                fireWindowEvent("m_peepers_4_fo.mp3;peepers_4_fo.mp3", [25, 100, 65], 1.0, 0.0, 0)
 
         pytools.IO.saveJson("peepers.json", globals.peeperInfo)
         status.vars["peeperCount"] = globals.peeperInfo["count"]

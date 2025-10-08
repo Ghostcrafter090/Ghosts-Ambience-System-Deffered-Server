@@ -13,6 +13,8 @@ import traceback
 import threading
 import subprocess
 
+import api.halloween_extension as hallow
+
 import wmi
 import psutil
 
@@ -202,10 +204,12 @@ class client:
             time.sleep(1)
     
     fatalFaultCount = {}
+    soundCountFuckedCount = {}
     
     def run():
         
         errorCounts = {}
+        removeHostCount = 0
         
         while True:
             try:
@@ -215,6 +219,40 @@ class client:
                         errorCounts[host]
                     except:
                         errorCounts[host] = 0
+                    
+                    if host in pytools.IO.getJson(".\\working\\hostData.json"):
+                        itsHostData = pytools.IO.getJson(".\\working\\hostData.json")[host]
+                        if itsHostData["current"] > (itsHostData["max"] * 3):
+                            
+                            if not host in client.soundCountFuckedCount:
+                                client.soundCountFuckedCount[host] = 0
+                                
+                            client.soundCountFuckedCount[host] = client.soundCountFuckedCount[host] + 1
+                            
+                            print("Host " + str(host) + " sound count is fucked. Increasing count to " + str(client.soundCountFuckedCount[host]) + ".")
+                            
+                            if client.soundCountFuckedCount[host] > 10:
+                                client.forceRestart(host)
+                                client.soundCountFuckedCount[host] = 0
+                        
+                        elif itsHostData["max"] == 0:
+                            if not host in client.soundCountFuckedCount:
+                                client.soundCountFuckedCount[host] = 0
+                                
+                            client.soundCountFuckedCount[host] = client.soundCountFuckedCount[host] + 0.1
+                            
+                            print("Host " + str(host) + " sound count is cucked. Increasing count to " + str(client.soundCountFuckedCount[host]) + ".")
+                            
+                            if client.soundCountFuckedCount[host] > 10:
+                                client.forceRestart(host)
+                                client.soundCountFuckedCount[host] = 0
+                        
+                        else:
+                            if host in client.soundCountFuckedCount:
+                                client.soundCountFuckedCount[host] = client.soundCountFuckedCount[host] - 1
+                                if client.soundCountFuckedCount[host] < 0:
+                                    client.soundCountFuckedCount[host] = 0
+                    
                     try:
                         if not flags.manualHosts:
                             if not os.path.exists(".\\working\\host-" + host + ".bm"):
@@ -222,26 +260,40 @@ class client:
                                     "command": "ping"
                                 })), timeout=16)["status"] == "success":
                                     print("Host " + host + " still active.")
+                                    removeHostCount = 0
                                 else:
-                                    try:
-                                        print("Host went offline. Removing host " + host + "...")
-                                        hostsFile = pytools.IO.getJson(".\\hosts.json")
-                                        while host in hostsFile["hosts"]:
-                                            if not os.path.exists(".\\working\\host-" + host + ".bm"):
-                                                hostsFile["hosts"].remove(host)
-                                        hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
-                                        while host in hostsDataFile:
-                                            hostsDataFile.pop(host)
-                                        pytools.IO.saveJson(".\\hosts.json", hostsFile)
-                                        pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
-                                        pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
-                                    except:
-                                        print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                                    generalPing = subprocess.getoutput("ping " + host + " -w 1 -n 1").find("Sent = 1, Received = 1")
+                                    if (generalPing == -1):
+                                        generalPing = subprocess.getoutput("ping " + host + " -w 1 -n 4").find("Sent = 1, Received = 1")
+                                    removeHostCount = removeHostCount + 1
+                                    if (removeHostCount > 3) or (generalPing == -1):
+                                        try:
+                                            print("Host went offline. Removing host " + host + "...")
+                                            hostsFile = pytools.IO.getJson(".\\hosts.json")
+                                            while host in hostsFile["hosts"]:
+                                                if not os.path.exists(".\\working\\host-" + host + ".bm"):
+                                                    hostsFile["hosts"].remove(host)
+                                            hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
+                                            while host in hostsDataFile:
+                                                hostsDataFile.pop(host)
+                                            
+                                            hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+                                            for aHost in hostsFile["hosts"]:
+                                                if not aHost in hostsFileSaved["hosts"]:
+                                                    hostsFile["hosts"].remove(aHost)
+                                            
+                                            pytools.IO.saveJson(".\\hosts.json", hostsFile)
+                                            pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
+                                            pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
+                                        except:
+                                            print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                                            
+                                        removeHostCount = 0
                             errorCounts[host] = 0
                     except:
                         if not flags.manualHosts:
                             errorCounts[host] = errorCounts[host] + 1
-                            if errorCounts[host] > 5:
+                            if errorCounts[host] > 10:
                                 if not os.path.exists(".\\working\\host-" + host + ".bm"):
                                     try:
                                         print("Host went offline. Removing host " + host + "...")
@@ -252,11 +304,18 @@ class client:
                                         hostsDataFile = pytools.IO.getJson(".\\working\\hostData.json")
                                         while host in hostsDataFile:
                                             hostsDataFile.pop(host)
+                                            
+                                        hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+                                        for aHost in hostsFile["hosts"]:
+                                            if not aHost in hostsFileSaved["hosts"]:
+                                                hostsFile["hosts"].remove(aHost)
+                                        
                                         pytools.IO.saveJson(".\\hosts.json", hostsFile)
                                         pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
                                         pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
                                     except:
                                         print("Hosts file not found or corrupted. Stack Trace: \n" + traceback.format_exc())
+                                errorCounts[host] = 0
                     if os.path.exists(".\\working\\host-" + host + ".bg"):
                         try:
                             print("Host went offline. Removing host " + host + "...")
@@ -273,6 +332,12 @@ class client:
                                     hostsDataFile.pop(host)
                                 except:
                                     print("Host already disconnected from hostData file.")
+                                    
+                            hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+                            for aHost in hostsFile["hosts"]:
+                                if not aHost in hostsFileSaved["hosts"]:
+                                    hostsFile["hosts"].remove(aHost)
+                                    
                             pytools.IO.saveJson(".\\hosts.json", hostsFile)
                             pytools.IO.saveJson(".\\working\\hosts.json", hostsFile)
                             pytools.IO.saveJson(".\\working\\hostData.json", hostsDataFile)
@@ -340,6 +405,12 @@ class client:
             hostsFile["hosts"].pop(rclient)
         except:
             pass
+        
+        hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+        for aHost in hostsFile["hosts"]:
+            if not aHost in hostsFileSaved["hosts"]:
+                hostsFile["hosts"].remove(aHost)
+        
         pytools.IO.saveJson("hosts.json", hostsFile)
         
         try:
@@ -430,14 +501,14 @@ class soundRegister:
                     except:
                         print(traceback.format_exc())
                     soundRegister.soundCount = puppet.getSoundCount()
-                    if (soundRegister.soundCount < (soundRegister.maxSoundCount * 0.6)) and (soundRegister.cpuUsage < 55): # and (soundRegister.lastAddCount < 3):
+                    if (soundRegister.soundCount < (soundRegister.maxSoundCount * 0.6)) and (soundRegister.cpuUsage < 75) and (soundRegister.lastAddCount < 2):
                         soundRegister.lastAddCount = soundRegister.lastAddCount + 1
                         puppet.fireEvent(*soundRegister.buffer[i], fromBuffer=True)
                         soundRegister.buffer.pop(i)
                         i = i - 1
                     else:
                         try:
-                            if (soundRegister.lastAddCount >= 3):
+                            if (soundRegister.lastAddCount >= 2):
                                 print("WARNING: Large sound influx detected. Buffering...")
                             print("Attempting to transfer audio event...")
                             response = pytools.net.getJsonAPI("http://" + pytools.IO.getJson(".\\serverSettings.json")["ip"] + ":" + str(random.randint(6000, 6029)) + "?json=" + urllib.parse.quote(json.dumps({
@@ -451,11 +522,20 @@ class soundRegister:
                                 i = i - 1
                         except:
                             print(traceback.format_exc())
+                            
+                    while (soundRegister.lastAddRemove + 2) < time.time():
+                        soundRegister.lastAddCount = soundRegister.lastAddCount - 1
+                        soundRegister.lastAddRemove = soundRegister.lastAddRemove + 1
+                    
+                    if soundRegister.lastAddCount < 0:
+                        soundRegister.lastAddCount = 0
+                            
                     i = i + 1
+                    
             except:
                 print(traceback.format_exc())
             
-            if (soundRegister.lastAddRemove + 1) < time.time():
+            if (soundRegister.lastAddRemove + 2) < time.time():
                 soundRegister.lastAddCount = soundRegister.lastAddCount - 1
                 soundRegister.lastAddRemove = time.time()
             
@@ -467,11 +547,11 @@ class soundRegister:
                 soundRegister.lastCPUThresholdAdd = time.time()
             
             if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
-                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 0.1
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 1
                 if soundRegister.maxSoundCount < 8:
                     soundRegister.maxSoundCount = 8
             
-            time.sleep(0.1)
+            time.sleep(1)
 
 class puppet:
     def ping(data):
@@ -486,6 +566,13 @@ class puppet:
                 hosts["hosts"].reverse()
                 hosts["hosts"].append(data["ipAddress"])
                 hosts["hosts"].reverse()
+                
+                hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+                for aHost in hosts["hosts"]:
+                    if aHost != data["ipAddress"]:
+                        if not aHost in hostsFileSaved["hosts"]:
+                            hosts["hosts"].remove(aHost)
+                
                 pytools.IO.saveJson(".\\hosts.json", hosts)
                 pytools.IO.saveJson(".\\working\\hosts.json", hosts)
                 # client(data["ipAddress"]).thread.start()
@@ -517,6 +604,11 @@ class puppet:
                         
                     if not dontResetFaultCount:
                         client.fatalFaultCount[rclient] = 0
+
+                    hostsFileSaved = pytools.IO.getJson(".\\hosts.json")
+                    for aHost in newHostFile:
+                        if not aHost in hostsFileSaved["hosts"]:
+                            newHostFile.remove(aHost)
 
                     if newHostFile != savedHostFile:
                         pytools.IO.saveJson("hosts.json", {
@@ -642,10 +734,13 @@ class puppet:
             if process.name == "ambience.exe":
                 p = psutil.Process(process.ProcessId)
                 p.resume()
+                
+    def getHallowIndex(dateArray, noDay=False, noModif=pytools.IO.getList(".\\working\\dataList.pyl")[1]):
+        return hallow.data.getHallowIndex(pytools.clock.dateArrayToUTC(dateArray), noDay=noDay, noModif=noModif)
     
     def fireEvent(eventBytes, fileData, fromBuffer=False):
         if (puppet.getSoundCount() < (soundRegister.maxSoundCount * 0.6)) and (soundRegister.cpuUsage < soundRegister.CPUUsageThreshold):
-            soundRegister.maxSoundCount = soundRegister.maxSoundCount + 0.1
+            soundRegister.maxSoundCount = soundRegister.maxSoundCount + 1
             if soundRegister.maxSoundCount > pytools.IO.getJson("manualMax.json")["max"]:
                 soundRegister.maxSoundCount = pytools.IO.getJson("manualMax.json")["max"]
             print("Audio events received.")
@@ -679,14 +774,14 @@ class puppet:
         
         elif not fromBuffer:
             if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
-                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 1
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 10
                 if soundRegister.maxSoundCount < 8:
                     soundRegister.maxSoundCount = 8
                 
             puppet.registerEvent(eventBytes, fileData)
         else:
             if (soundRegister.cpuUsage >= soundRegister.CPUUsageThreshold):
-                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 1
+                soundRegister.maxSoundCount = soundRegister.maxSoundCount - 10
                 if soundRegister.maxSoundCount < 8:
                     soundRegister.maxSoundCount = 8
             
@@ -727,7 +822,7 @@ class puppet:
                 current = hostData[host]["current"]
                 maxf = hostData[host]["max"]
                 if current < maxf:
-                    if not os.path.exists(".\\working\\host-" + str(host) + ".bl"):
+                    if (not os.path.exists(".\\working\\host-" + str(host) + ".bl")) and (not os.path.exists(".\\working\\host-" + str(host) + ".se")):
                         if not fileData:
                             try:
                                 pytools.net.getJsonAPI("http://" + host + ":4507?json=" + urllib.parse.quote(json.dumps({
@@ -758,7 +853,7 @@ class puppet:
         max = 0
         current = 0
         for host in hostList:
-            if not os.path.exists(".\\working\\host-" + str(host) + ".bl"):
+            if (not os.path.exists(".\\working\\host-" + str(host) + ".bl")) and (not os.path.exists(".\\working\\host-" + str(host) + ".se")):
                 try:
                     max = max + hostData[host]["max"]
                     current = current + hostData[host]["current"]
@@ -884,6 +979,26 @@ class com:
                         "status": "success",
                         "data": pytools.IO.getFile(request["data"]["path"])
                     }), "utf-8"))
+                if request["command"] == "getHallowIndex":
+                    
+                    noDay = False
+                    noModif = -1
+                    if "noDay" in request["data"]:
+                        noDay = request["data"]["noDay"]
+                    if "noModif" in request["data"]:
+                        noModif = request["data"]["noModif"]
+                    
+                    if noModif != -1:
+                        self.wfile.write(bytes(json.dumps({
+                            "status": "success",
+                            "data": puppet.getHallowIndex(request["data"]["dateArray"], noDay=noDay, noModif=noModif)
+                        }), "utf-8"))
+                    else:
+                        self.wfile.write(bytes(json.dumps({
+                            "status": "success",
+                            "data": puppet.getHallowIndex(request["data"]["dateArray"], noDay=noDay)
+                        }), "utf-8"))
+                
                 if request["command"] == "restart":
                     puppet.restart()
                     self.wfile.write(bytes(json.dumps({
@@ -951,8 +1066,7 @@ class com:
                         "status": puppet.transferEvent(request["data"], request["fileData"])
                     }), "utf-8"))
                 if request["command"] == "getData":
-                    dataToSend = {
-                    }
+                    dataToSend = {}
                     for n in os.listdir(".\\working"):
                         if (n[-5:] == ".json"):
                             try:

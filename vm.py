@@ -314,6 +314,18 @@ class configure:
         def getDaisyChain():
             clients = server.grabOtherComputers()["hosts"]
             permaClients = pytools.IO.getJson(".\\permaclients.json")
+            
+            originalClients = copy.deepcopy(clients)
+            newClients = []
+            
+            for aClient in clients:
+                if os.path.exists(".\\host-" + aClient + ".se"):
+                    newClients.append(aClient)
+                    originalClients.remove(aClient)
+            
+            newClients.extend(originalClients)
+            clients = newClients
+            
             if permaClients["primary"] in clients:
                 try:
                     clients.remove(permaClients["primary"])
@@ -337,6 +349,7 @@ class configure:
                 except:
                     pass
                 sortedClients = clients
+            
             selfIndex = 0
             while selfIndex < len(sortedClients):
                 if sortedClients[selfIndex] == server.interface:

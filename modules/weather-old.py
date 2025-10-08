@@ -3,6 +3,8 @@ import math
 import time
 import random
 
+
+
 class globals:
     conditionCodes = {
         200: ["thunder", 0, 100, 10, 1, 50, 0],
@@ -168,33 +170,24 @@ class forecast:
                     modifier = modifier + (float(dataPoint['weather'][i]['id']) % 100)
                     i = i + 1
             except:
-                modifier = 0
+                modifier = 0 
             
             return [[windSpeed * 1.4711018711018712, windGusts * 1.4711018711018712, visibility, snow, weather, modifier, pressure, temp, humidity, direction, 0, actualConditions], [rain * 2, rain * 10, pressure, temp, humidity, 0], [temp, humidity, pressure, rain, windSpeed, windGusts, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.utcFormatToArray(dataPoint["dt_txt"], seperators="- :+")]
         
-        def parse(location=""):
-            try:
-                if location == "":
-                    forecastData = pytools.IO.getJson("forecastData.json")["data"]["main"]
-                else:
-                    forecastData = pytools.IO.getJson(location + "ForecastData.json")["data"]["main"]
-                forecastList = [pytools.IO.getList("dataList.pyl")[1]]
-                try:
-                    forecastList[0].append(pytools.clock.getDateTime())
-                except:
-                    forecastList = [[[0, 0, 10000, 0, "clear", 0, 1000, 15, 50, 0, 0, [0, 0, 0, 0, 0, 0]], [0, 0, 1000, 15, 50, 0], [15, 50, 1000, 0, 0, 0, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.getDateTime()]]
-                for dataPoint in forecastData["list"]:
-                    
-                    ambDataPoint = forecast.tools.openPointToDataSet(dataPoint)
-                    forecastList.append(ambDataPoint)
-            except:
-                forecastList = [[[0, 0, 10000, 0, "clear", 0, 1000, 15, 50, 0, 0, [0, 0, 0, 0, 0, 0]], [0, 0, 1000, 15, 50, 0], [15, 50, 1000, 0, 0, 0, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.getDateTime()]]
+        def parse():
+            forecastData = pytools.IO.getJson("forecastData.json")["data"]["main"]
+            forecastList = [pytools.IO.getList("dataList.pyl")[1]]
+            forecastList[0].append(pytools.clock.getDateTime())
+            for dataPoint in forecastData["list"]:
+                ambDataPoint = forecast.tools.openPointToDataSet(dataPoint)
+                forecastList.append(ambDataPoint)
+            
             return forecastList
         
-    def getForecastAtTime(dateArray, location=""):
+    def getForecastAtTime(dateArray):
         timeStamp = pytools.clock.dateArrayToUTC(dateArray)
         
-        forecastSet = forecast.tools.parse(location=location)
+        forecastSet = forecast.tools.parse()
         
         afterData = False
         beforeData = False
@@ -229,9 +222,16 @@ class forecast:
             oldTimeStamp = pytools.clock.dateArrayToUTC(beforeData[-1])
             newTimeStamp = pytools.clock.dateArrayToUTC(afterData[-1])
             
+            print(oldTimeStamp)
+            print(timeStamp)
+            print(newTimeStamp)
+            
             timeDistance = newTimeStamp - oldTimeStamp
             percentAfter = (timeStamp - oldTimeStamp) / timeDistance
             percentBefore = 1 - percentAfter
+            
+            print(percentBefore)
+            print(percentAfter)
             
             def _parseList(beforeList, afterList):
                 i = 0

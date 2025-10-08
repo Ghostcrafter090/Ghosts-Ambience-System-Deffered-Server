@@ -536,7 +536,7 @@ class speakers:
             for channel in speakers:
                 for n in devices:
                     import time
-                    if speakers[channel][0] == n["name"]:
+                    if speakers[channel][0].lower() == n["name"].lower():
                         if speakers[channel][1] == "MME":
                             if n["hostapi"] == 0:
                                 deviceIndex = n["index"]
@@ -545,14 +545,17 @@ class speakers:
                             if n["hostapi"] == 4:
                                 deviceIndex = n["index"]
                                 break
-                speakers[channel].append(deviceIndex)
+                try:
+                    speakers[channel].append(deviceIndex)
+                except:
+                    printDebug("Append error: " + str(channel))
             pytools.IO.saveJson("inputSets.json", {
                 "speakers": speakers
             })
             return speakers
         except:
             import traceback
-            print(traceback.format_exc())
+            printDebug(traceback.format_exc())
 
 class soundEvent:
     def __init__(self, path, volume, speed, channel, effects, balence, muteOptions=False):
@@ -871,8 +874,10 @@ class multiEvent:
         def streamWaitMapFunction(sound):
             import time
             time.sleep(0.05)
-            while sound.itsStream == False:
+            xf = 0
+            while (sound.itsStream == False) and (xf < 1200):
                 time.sleep(0.1)
+                xf = xf + 1
         list(map(streamWaitMapFunction, self.syncEvents))
             
         info.globalSoundStart = time.time() + 3
