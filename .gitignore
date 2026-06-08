@@ -27,6 +27,7 @@ api/__pycache__/client_handler.py
 copysounds.py
 excludeHosts.json
 working/apiNew/
+apiNew
 working/cond.cmd
 working/daytimes.cmd
 working/sound/assets/assets.zip
@@ -54,10 +55,14 @@ null
 requirements.txt
 server.json
 
+blitzData
+
 working/cond.cmd
 working/fire_times.cxl
 noUpdate.json
 gil.json
+
+no_run
 
 hosts.json
 outsideProperties.json
@@ -160,3 +165,8 @@ dataList.pyl
 halloween_desmos.js
 plugOutputs.json
 profiler.py
+averageWeatherCache.json
+stream_buffer_underrun
+pitchmod.sal
+lunar_data.csv
+recording1.wav
