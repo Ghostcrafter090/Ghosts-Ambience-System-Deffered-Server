@@ -310,7 +310,12 @@ class speaker:
 
         while (not self.exitf) and (not status.exitf):
             try:
-                if self.receiverThread and self.transmitterThread:
+                if self.receiverThread:
+                    
+                    combinedCount = {}
+                    for aSender in self.receiverThread.vbanObj.combinedCount:
+                        combinedCount[aSender] = sum(self.receiverThread.vbanObj.combinedCount[aSender]) / len(self.receiverThread.vbanObj.combinedCount[aSender])
+                    
                     jsonData = {
                         "receiveFrom": self.receiveFrom,
                         "sendTo": self.sendTo,
@@ -320,8 +325,8 @@ class speaker:
                                 "isRunning": self.receiverThread.isRunning,
                                 "hasStopped": self.receiverThread.hasStopped,
                                 "lastActivityTimestamp": int(self.receiverThread.vbanObj.lastActivityTimestamp / 10) * 10,
-                                "currentBufferSize": len(pyvban.utils.receiver.allf.packetBuffers[self.receiverThread.vbanObj._stream_name]),
-                                "lastReceived": int(self.receiverThread.vbanObj.lastReceived)
+                                "currentBufferSize": len(pyvban.utils.receiver.allf.packetBuffers[self.receiverThread.vbanObj._stream_name]["combined"]),
+                                "senderReliability": combinedCount
                             },
                             "transmitter": {
                                 "deviceIndex": -1,
@@ -347,7 +352,7 @@ class speaker:
                                 "hasStopped": False,
                                 "lastActivityTimestamp": 0,
                                 "currentBufferSize": 0,
-                                "lastReceived": 0
+                                "senderReliability": {}
                             },
                             "transmitter": {
                                 "deviceIndex": None,

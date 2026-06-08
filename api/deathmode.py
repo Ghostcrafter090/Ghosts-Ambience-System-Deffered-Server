@@ -24,9 +24,13 @@ class status:
         "monsters": {},
         "death_wind": {}
     }
+
+class _audio:
+    audioBuffer = False
+    audioBuffer2 = False
     
 def fireWindowEvent(*args):
-    aThread = threading.Thread(target=audio.playSoundWindow, args=(*args,))
+    aThread = threading.Thread(target=_audio.audioBuffer.playSoundWindow, args=(*args,))
     aThread.start()
     time.sleep(1)
 
@@ -199,7 +203,7 @@ class background:
                 globals.whispers = 0
                 if globals.whispers < 10:
                     globals.whispers = globals.whispers + 1
-                    audioEvent = audio.event()
+                    # audioEvent = audio.event()
                     i = 0
                     while i < (int((random.random() * whisperChance / 20)) + 1):
                         ghSpeaker = 5
@@ -208,13 +212,13 @@ class background:
                         whisperTypeChance = 10509.1045 ** (0.00220433 * (whisperChance + 53.30454)) - 2.85787
                         aRandomNumber = random.random() * 100
                         if aRandomNumber < whisperTypeChance:
-                            audioEvent.register("whisper_2.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0, keepLoaded=True)
+                            _audio.audioBuffer.register("whisper_2.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0)
                         elif aRandomNumber < (whisperTypeChance ** 1.31):
-                            audioEvent.register("whisper_1.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0, keepLoaded=True)
+                            _audio.audioBuffer.register("whisper_1.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0)
                         else:
-                            audioEvent.register("whispering.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0, keepLoaded=True)
+                            _audio.audioBuffer.register("whispering.mp3", ghSpeaker, random.randint(min, max), (random.random() / 3) + 0.6 + 0.15, 0, 0)
                         i = i + 1
-                    threading.Thread(target=audioEvent.run).start()
+                    # threading.Thread(target=audioEvent.run).start()
                 
     def death_wind(dateArray, dayTimes):
         startf = dayTimes[5]
@@ -252,11 +256,11 @@ class background:
             if globals.deathWind.state != 1:
                 globals.deathWind.state = 1
                 globals.deathWind.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                fireWindowEvent("death_wind_fi.mp3;death_wind_fi.mp3", [10, 40, 20], 1.0, 0.0, 0)
+                _audio.audioBuffer2.registerWindow("death_wind_fi.mp3;death_wind_fi.mp3", [10, 40, 20], 1.0, 0.0, 0)
             if globals.deathWind.state == 1:
                 if globals.deathWind.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.deathWind.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    fireWindowEvent("death_wind.mp3;death_wind.mp3", [10, 40, 20], 1.0, 0.0, 0)
+                    _audio.audioBuffer2.registerWindow("death_wind.mp3;death_wind.mp3", [10, 40, 20], 1.0, 0.0, 0)
         status.vars["death_wind"]["nextPlay"] = globals.deathWind.nextPlay
         status.vars["death_wind"]["state"] = globals.deathWind.state
 
@@ -307,11 +311,11 @@ class background:
             if globals.monsters.state == 0:
                 globals.monsters.state = 1
                 globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                fireWindowEvent("monsters_fi.mp3;monsters_fi.mp3", [20, 30, 25], 1.0, 0.0, 0)
+                _audio.audioBuffer2.registerWindow("monsters_fi.mp3;monsters_fi.mp3", [20, 30, 25], 1.0, 0.0, 0)
             if globals.monsters.state == 1:
                 if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.monsters.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    fireWindowEvent("monsters.mp3;monsters.mp3", [20, 30, 25], 1.0, 0.0, 0)
+                    _audio.audioBuffer2.registerWindow("monsters.mp3;monsters.mp3", [20, 30, 25], 1.0, 0.0, 0)
         status.vars["monsters"]["nextPlay"] = globals.monsters.nextPlay
         status.vars["monsters"]["state"] = globals.monsters.state
     
@@ -340,11 +344,11 @@ class background:
             if globals.ghosts.state == 0:
                 globals.ghosts.state = 1
                 globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 500
-                fireWindowEvent("ghosts_fi.mp3;ghosts_fi.mp3", [20, 40, 35], 1.0, 0.0, 0)
+                _audio.audioBuffer2.registerWindow("ghosts_fi.mp3;ghosts_fi.mp3", [20, 40, 35], 1.0, 0.0, 0)
             if globals.ghosts.state == 1:
                 if globals.ghosts.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                     globals.ghosts.nextPlay = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 194
-                    fireWindowEvent("ghosts.mp3;ghosts.mp3", [20, 40, 35], 1.0, 0.0, 0)
+                    _audio.audioBuffer2.registerWindow("ghosts.mp3;ghosts.mp3", [20, 40, 35], 1.0, 0.0, 0)
         status.vars["ghosts"]["nextPlay"] = globals.ghosts.nextPlay
         status.vars["ghosts"]["state"] = globals.ghosts.state
     
@@ -353,19 +357,21 @@ class background:
             if globals.ghosts.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.ghosts.state == 1:
                     globals.ghosts.state = 0
-                    fireWindowEvent("ghosts_fo.mp3;ghosts_fo.mp3", [10, 50, 35], 1.0, 0.0, 0)
+                    _audio.audioBuffer2.registerWindow("ghosts_fo.mp3;ghosts_fo.mp3", [10, 50, 35], 1.0, 0.0, 0)
         if globals.monsters.run == 0:
             if globals.monsters.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.monsters.state == 1:
                     globals.monsters.state = 0
-                    fireWindowEvent("monsters_fo.mp3;monsters_fo.mp3", [10, 30, 25], 1.0, 0.0, 0)
+                    _audio.audioBuffer2.registerWindow("monsters_fo.mp3;monsters_fo.mp3", [10, 30, 25], 1.0, 0.0, 0)
         if globals.deathWind.run == 0:
             if globals.deathWind.nextPlay < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 if globals.deathWind.state == 1:
                         globals.deathWind.state = 0
-                        fireWindowEvent("death_wind_fo.mp3;death_wind_fo.mp3", [10, 40, 20], 1.0, 0.0, 0)
+                        _audio.audioBuffer2.registerWindow("death_wind_fo.mp3;death_wind_fo.mp3", [10, 40, 20], 1.0, 0.0, 0)
 def main():
+    print("Launching Deathmode...")
     while not status.exit:
+        loopTime = time.monotonic()
         dateArray = pytools.clock.getDateTime()
         dayTimes = utils.dayTimesGrabber()
         dayOfWeek = pytools.clock.getDayOfWeek()
@@ -401,7 +407,7 @@ def main():
                             background.monsters(dateArray, dayTimes)
                             dateArray = pytools.clock.getDateTime()
         
-        if ((dateArray[1] == 10) and (((dateArray[2] == 1) and (dateArray[3] > 12)) or (dateArray[2] > 1))) or ((dateArray[1] == 11) and (dateArray[2] == 1) and (dateArray[3] < 12)):
+        if ((dateArray[1] == 10) and (((dateArray[2] == 31) and (dateArray[3] > 12)) or (dateArray[2] > 1))) or ((dateArray[1] == 11) and (dateArray[2] == 1) and (dateArray[3] < 12)):
             background.whispers.run(dateArray, dayTimes)
             wait = 1
             dateArray = pytools.clock.getDateTime()
@@ -437,13 +443,25 @@ def main():
             dateArray = pytools.clock.getDateTime()
             
         background.end()
-        time.sleep(wait)
+        status.vars["waitTime"] = wait - (time.monotonic() - loopTime)
+        try:
+            print("Deathmode waiting for " + str(wait) + " seconds.")
+            time.sleep(wait - (time.monotonic() - loopTime))
+        except:
+            pass
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         status.finishedLoop = True
 
 def run():
+    print("starting deathmode...")
     status.hasExited = False
+    _audio.audioBuffer = audio.rapidFire(10)
+    _audio.audioBuffer2 = audio.rapidFire(60)
+    _audio.audioBuffer._start()
+    _audio.audioBuffer2._start()
     main()
+    _audio.audioBuffer._stop()
+    _audio.audioBuffer2._stop()
     status.hasExited = True
             
 

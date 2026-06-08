@@ -18,6 +18,9 @@ class status:
     vars = {
         "lastLoop": []
     }
+    
+class _audio:
+    audioBuffer = False
 
 class utils:
     def dayTimesGrabber():
@@ -128,15 +131,15 @@ class sections:
                 try:
                     bellsChance = 0
                     bellsChance = calc.bellCurve(2, 1900, 10800, 54000, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < bellsChance:
+                    if random.randrange(0, 70000) < bellsChance:
                         ghSpeaker = 5
                         while ghSpeaker == 5:
                             ghSpeaker = random.randrange(0, 10)
                         if globals.playBells:
                             if not utils.checkShutTheFuckUp():
-                                audioEvent = audio.event()
-                                audioEvent.register('sleighbells_' + str(random.randrange(0, 5)) + ".mp3", ghSpeaker, 40, 1, 0, 0)
-                                audioEvent.run()
+                                # audioEvent = audio.event()
+                                _audio.audioBuffer.register('sleighbells_' + str(random.randrange(0, 5)) + ".mp3", ghSpeaker, 40, 1, 0, 0)
+                                # audioEvent.run()
                     sections.bellsChance = bellsChance
                     time.sleep(0.1)
                 except:
@@ -211,22 +214,22 @@ class sections:
                     musicBoxChance = calc.bellCurve(2, 1900, 8800, 72000, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
                     if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
                         if not os.path.exists(".\\ch_music_playing.derp"):
-                            if random.randrange(0, 35000) < musicBoxChance:
+                            if random.randrange(0, 70000) < musicBoxChance:
                                 ghSpeaker = 5
                                 while ghSpeaker == 5:
                                     ghSpeaker = random.randrange(0, 10)
                                 if random.randrange(0, 2) == 1:
                                     if globals.playBells:
                                         if not utils.checkShutTheFuckUp():
-                                            audioEvent = audio.event()
-                                            audioEvent.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                            audioEvent.run()
+                                            # audioEvent = audio.event()
+                                            _audio.audioBuffer.register("jinglebells_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                            # audioEvent.run()
                                 else:
                                     if globals.playBells:
                                         if not utils.checkShutTheFuckUp():
-                                            audioEvent = audio.event()
-                                            audioEvent.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
-                                            audioEvent.run()
+                                            # audioEvent = audio.event()
+                                            _audio.audioBuffer.register("merrychristmas_mb.mp3", ghSpeaker, 5, 1, 0, 1)
+                                            # audioEvent.run()
                     sections.musicBoxChance = musicBoxChance
                     time.sleep(0.1)
                 except:
@@ -286,10 +289,10 @@ class sections:
                     lateDayBellsChance = 0
                     lateDayBellsChance = (calc.bellCurve(2, 1900, 7200, 82800, globals.tic) + calc.bellCurve(2, 1900, 7200, 25200, globals.tic)) / (calc.getDayTic(globals.dateArray) * 1.5)
                     if not ((globals.dateArray[2] > 12) and (globals.dateArray[3] == globals.dayTimes[5][3]) and (pytools.clock.dateArrayToUTC(globals.dateArray) < (pytools.clock.dateArrayToUTC(globals.dayTimes[5]) + 240))):
-                        if random.randrange(0, 35000) < lateDayBellsChance:
+                        if random.randrange(0, 70000) < lateDayBellsChance:
                             if globals.playBells:
                                 if not utils.checkShutTheFuckUp():
-                                    audio.playSoundAll("lateday_bells.mp3", 10, 1, 0, 1)
+                                    _audio.audioBuffer.playSoundAll("lateday_bells.mp3", 10, 1, 0, 1)
                     sections.lateDayBellsChance = lateDayBellsChance
                     time.sleep(0.1)
                 except:
@@ -307,9 +310,9 @@ class sections:
                 try:
                     lateNightChoirChance = 0
                     lateNightChoirChance = calc.bellCurve(2, 1900, 7200, 10800, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
-                    if random.randrange(0, 35000) < lateNightChoirChance:
+                    if random.randrange(0, 70000) < lateNightChoirChance:
                         if not utils.checkShutTheFuckUp():
-                            audio.playSoundAll("latenight_choir.mp3", 10, 1, 0, 1)
+                            _audio.audioBuffer.playSoundAll("latenight_choir.mp3", 10, 1, 0, 1)
                     sections.lateNightChoirChance = lateNightChoirChance
                     time.sleep(0.1)
                 except:
@@ -329,7 +332,7 @@ class sections:
                     mmcIdleChance = calc.bellCurve(2, 1900, 12600, 43200, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
                     if random.randrange(0, 350000) < mmcIdleChance:
                         if not utils.checkShutTheFuckUp():
-                            audio.playSoundWindow("mmcidle.mp3;mmcidle.mp3", [20, 30], 1, 0, 1)
+                            _audio.audioBuffer.playSoundWindow("mmcidle.mp3;mmcidle.mp3", [20, 30], 1, 0, 1)
                     sections.mmcIdleChance = mmcIdleChance
                     time.sleep(0.1)
                 except:
@@ -353,7 +356,7 @@ class sections:
                     try:
                         sections.santa.utils.calcLandingChance()
                         if sections.events.santaLanding != globals.dateArray[2]:
-                            if random.randrange(0, 35000) < sections.santa.landingChance:
+                            if random.randrange(0, 70000) < sections.santa.landingChance:
                                 if globals.playBells:
                                     if not utils.checkShutTheFuckUp():
                                         audioEvent = audio.event()
@@ -378,7 +381,7 @@ class sections:
                     try:
                         sections.santa.sleighPassingChance = calc.bellCurve(2, 1900, 3600, 10800, globals.tic) / (calc.getDayTic(globals.dateArray) * 1.5)
                         if sections.events.santaLanding != globals.dateArray[2]:
-                            if random.randrange(0, 35000) < sections.santa.sleighPassingChance:
+                            if random.randrange(0, 70000) < sections.santa.sleighPassingChance:
                                 if globals.playBells:
                                     if not utils.checkShutTheFuckUp():
                                         audioEvent = audio.event()
@@ -401,31 +404,12 @@ def main():
     globals.dayTimes = utils.dayTimesGrabber()
     globals.dataArray = utils.dataGrabber()
     
-    bellsRunner = threading.Thread(target=sections.runBells)
-    outsideBandRunner = threading.Thread(target=sections.runOutsideBand)
-    outsideBellsRunner = threading.Thread(target=sections.runOutsideBells)
-    musicBoxsRunner = threading.Thread(target=sections.runMusicBoxs)
-    eventsRunner = threading.Thread(target=sections.runEvents)
-    lateDayBellsRunner = threading.Thread(target=sections.runLateDayBells)
-    lateNightChoirRunner = threading.Thread(target=sections.runLateNightChoir)
-    mccIdleRunner = threading.Thread(target=sections.runMmcIdle)
-    santaLandingRunner = threading.Thread(target=sections.santa.runLanding)
-    santaPassingRunner = threading.Thread(target=sections.santa.runPassing)
-    
-    bellsRunner.start()
-    outsideBandRunner.start()
-    outsideBellsRunner.start()
-    musicBoxsRunner.start()
-    eventsRunner.start()
-    lateDayBellsRunner.start()
-    lateNightChoirRunner.start()
-    mccIdleRunner.start()
-    santaLandingRunner.start()
-    santaPassingRunner.start()
+    threadsStarted = False
     
     ticOld = -1
     
     while not status.exit:
+        
         globals.dateArray = pytools.clock.getDateTime()
         globals.dayTimes = utils.dayTimesGrabber()
         globals.tic = calc.dayTic(globals.dateArray)
@@ -434,6 +418,32 @@ def main():
         else:
             globals.run = False
         globals.dataArray = utils.dataGrabber()
+        
+        if (not threadsStarted) and globals.run:
+            bellsRunner = threading.Thread(target=sections.runBells)
+            outsideBandRunner = threading.Thread(target=sections.runOutsideBand)
+            outsideBellsRunner = threading.Thread(target=sections.runOutsideBells)
+            musicBoxsRunner = threading.Thread(target=sections.runMusicBoxs)
+            eventsRunner = threading.Thread(target=sections.runEvents)
+            lateDayBellsRunner = threading.Thread(target=sections.runLateDayBells)
+            lateNightChoirRunner = threading.Thread(target=sections.runLateNightChoir)
+            mccIdleRunner = threading.Thread(target=sections.runMmcIdle)
+            santaLandingRunner = threading.Thread(target=sections.santa.runLanding)
+            santaPassingRunner = threading.Thread(target=sections.santa.runPassing)
+            
+            bellsRunner.start()
+            outsideBandRunner.start()
+            outsideBellsRunner.start()
+            musicBoxsRunner.start()
+            eventsRunner.start()
+            lateDayBellsRunner.start()
+            lateNightChoirRunner.start()
+            mccIdleRunner.start()
+            santaLandingRunner.start()
+            santaPassingRunner.start()
+            
+            threadsStarted = True
+        
         if globals.tic != ticOld:
             ticOld = globals.tic
             heavenIndex = sections.bellsChance + sections.outsideBandChance + sections.outsideBellsChance + sections.musicBoxChance + sections.lateNightChoirChance + sections.lateDayBellsChance + sections.mmcIdleChance + sections.santa.landingChance + sections.santa.sleighPassingChance
@@ -467,8 +477,11 @@ def main():
         status.finishedLoop = True
             
 def run():
+    _audio.audioBuffer = audio.rapidFire(10)
     status.hasExited = False
+    _audio.audioBuffer._start()
     main()
+    _audio.audioBuffer._stop()
     status.hasExited = True
             
                 

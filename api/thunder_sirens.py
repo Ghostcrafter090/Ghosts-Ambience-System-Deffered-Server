@@ -115,5 +115,3 @@ def run():
     status.hasExited = False
     main()
     status.hasExited = True
-        
-

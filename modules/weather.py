@@ -2,6 +2,10 @@ import modules.pytools as pytools
 import math
 import time
 import random
+import traceback
+import os
+import modules.openweather as openweather
+import modules.openmeteo as openmeteo
 
 class globals:
     conditionCodes = {
@@ -70,20 +74,38 @@ class globals:
     lastHurricaneDataGrab = 0
     hurricaneData = {}
     forecastData = {}
+    lat = 0
+    lon = 0
+    
+    forecastOther = {
+        "hourly": {
+            
+        },
+        "daily": {
+            
+        },
+        "climate": {
+            
+        }
+    }
+    
+def setCoords():
+    globals.lat = pytools.IO.getJson("location.json")["coords"][0]
+    globals.lon = pytools.IO.getJson("location.json")["coords"][1]
 
 class forecast:
     class tools:
-        def openPointToDataSet(dataPoint):
+        def openPointToDataSet(dataPoint, timezone):
             if "wind" in dataPoint:
                 if "speed" in dataPoint["wind"]:
-                    windSpeed = dataPoint["wind"]["speed"]
+                    windSpeed = dataPoint["wind"]["speed"] / 0.7
                 else:
                     windSpeed = 0
                 
                 if "gust" in dataPoint["wind"]:
                     windGusts = dataPoint["wind"]["gust"]
                 else:
-                    windGusts = 0
+                    windGusts = (windSpeed / 0.7)
                     
                 if "deg" in dataPoint["wind"]:
                     windDirection = dataPoint["wind"]["deg"]
@@ -119,6 +141,10 @@ class forecast:
                 gusts = float(dataPoint['wind']['gust'])
             except:
                 gusts = 0
+            try:
+                clouds = float(dataPoint['clouds']['all'])
+            except:
+                clouds = 0
             try:
                 snow = float(dataPoint['snow']['1h'])
             except:
@@ -170,7 +196,7 @@ class forecast:
             except:
                 modifier = 0
             
-            return [[windSpeed * 1.4711018711018712, windGusts * 1.4711018711018712, visibility, snow, weather, modifier, pressure, temp, humidity, direction, 0, actualConditions], [rain * 2, rain * 10, pressure, temp, humidity, 0], [temp, humidity, pressure, rain, windSpeed, windGusts, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.utcFormatToArray(dataPoint["dt_txt"], seperators="- :+")]
+            return [[windSpeed * 1.4711018711018712 * 0.5214522892736768, windGusts * 1.4711018711018712 * 1.0439580531614572, visibility, snow, weather, modifier, pressure, temp, humidity, direction, 0, actualConditions, clouds], [rain * 2, rain * 10, pressure, temp, humidity, 0], [temp, humidity, pressure, rain, windSpeed, windGusts, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.UTCToDateArray(pytools.clock.dateArrayToUTC(pytools.clock.utcFormatToArray(dataPoint["dt_txt"], seperators="- :+")) + timezone)]
         
         def parse(location=""):
             try:
@@ -185,7 +211,7 @@ class forecast:
                     forecastList = [[[0, 0, 10000, 0, "clear", 0, 1000, 15, 50, 0, 0, [0, 0, 0, 0, 0, 0]], [0, 0, 1000, 15, 50, 0], [15, 50, 1000, 0, 0, 0, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.getDateTime()]]
                 for dataPoint in forecastData["list"]:
                     
-                    ambDataPoint = forecast.tools.openPointToDataSet(dataPoint)
+                    ambDataPoint = forecast.tools.openPointToDataSet(dataPoint, forecastData["city"]["timezone"])
                     forecastList.append(ambDataPoint)
             except:
                 forecastList = [[[0, 0, 10000, 0, "clear", 0, 1000, 15, 50, 0, 0, [0, 0, 0, 0, 0, 0]], [0, 0, 1000, 15, 50, 0], [15, 50, 1000, 0, 0, 0, True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.getDateTime()]]
@@ -219,13 +245,23 @@ class forecast:
         
             i = i + 1
         
+        # testing
+        if False:
+            if (pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + 8035200) > pytools.clock.dateArrayToUTC(dateArray):
+                if afterData == False:
+                    averagePointData = openmeteo.util.getAverageData(pytools.clock.UTCToDateArray(pytools.clock.dateArrayToUTC([dateArray[0] - 1, *dateArray[1:3], dateArray[3] + 1, 0, 0])))
+                    afterData = [[averagePointData["wspd"] / 2, averagePointData["wspd"] / 0.7, 10000, 0, "clear", 0, averagePointData["pres"], averagePointData["temp"], averagePointData["rhum"], averagePointData["wdir"], 0, [0, 0, 0, 0, 0, 0], (averagePointData["cldc"] / 8) * 100], [0, 0, averagePointData["pres"], averagePointData["temp"], averagePointData["rhum"], 0], [averagePointData["temp"], averagePointData["rhum"], averagePointData["pres"], averagePointData["prcp"], averagePointData["wspd"] / 2, averagePointData["wspd"], True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.UTCToDateArray(pytools.clock.dateArrayToUTC([dateArray[0], *dateArray[1:3], dateArray[3] + 1, 0, 0]))]
+                    
+                    averagePointData = openmeteo.util.getAverageData(pytools.clock.UTCToDateArray(pytools.clock.dateArrayToUTC([dateArray[0] - 1, *dateArray[1:3], dateArray[3], 0, 0])))
+                    beforeData = [[averagePointData["wspd"] / 2, averagePointData["wspd"] / 0.7, 10000, 0, "clear", 0, averagePointData["pres"], averagePointData["temp"], averagePointData["rhum"], averagePointData["wdir"], 0, [0, 0, 0, 0, 0, 0], (averagePointData["cldc"] / 8) * 100], [0, 0, averagePointData["pres"], averagePointData["temp"], averagePointData["rhum"], 0], [averagePointData["temp"], averagePointData["rhum"], averagePointData["pres"], averagePointData["prcp"], averagePointData["wspd"] / 2, averagePointData["wspd"], True], "", [], [], [], [], [], [0, 0, 0, 0], pytools.clock.UTCToDateArray(pytools.clock.dateArrayToUTC([dateArray[0], *dateArray[1:3], dateArray[3], 0, 0]))]
+          
         def _len(_item):
             try:
                 return len(_item)
             except:
                 return False
         
-        if (afterData and beforeData) and (list(map(_len, beforeData))[0:3] == list(map(_len, afterData))[0:3]) and (list(map(_len, beforeData))[-2:] == list(map(_len, afterData))[-2:]):
+        if ((type(afterData) == list) and (type(beforeData) == list)) and (list(map(_len, beforeData))[0:2] == list(map(_len, afterData))[0:2]) and (list(map(_len, beforeData))[-2:] == list(map(_len, afterData))[-2:]):
             oldTimeStamp = pytools.clock.dateArrayToUTC(beforeData[-1])
             newTimeStamp = pytools.clock.dateArrayToUTC(afterData[-1])
             
@@ -249,6 +285,7 @@ class forecast:
             return _parseList(beforeData, afterData)
                 
         else:
+            
             return False
             
     def getHurricaneData(getClosest=False, isInForecast=True):
@@ -350,5 +387,249 @@ class forecast:
                 pass
         
         return hurricaneName            
-                
-                
+
+def combineHourly(original, hourly):
+                        
+    def _maxKey(x):
+        return x["dt"]
+    
+    latestHourly = max(hourly["list"], key=_maxKey)["dt"]
+    
+    for entry in original["data"]["main"]["list"]:
+        if entry["dt"] > latestHourly:
+            hourly["list"].append(entry)
+    
+    def _sortedKey(x):
+        return x["dt"]
+    
+    hourly["list"] = sorted(hourly["list"], key=_sortedKey)
+    
+    original["data"]["main"]["list"] = hourly["list"]
+    
+    return original
+
+def localJsonAPI(url, timeType, location):
+                        
+    dataOut = pytools.IO.getJson(".\\" + timeType + "_" + location + "_forecastData.json")
+    
+    if (not location in globals.forecastOther[timeType]) or (globals.forecastOther[timeType][location] != int(math.floor(pytools.clock.getDateTime()[4] / 10))):
+        try:
+            dataOut = pytools.net.getJsonAPI(url)
+            pytools.IO.saveJson(".\\" + timeType + "_" + location + "_forecastData.json", dataOut)
+            globals.forecastOther[timeType][location] = int(math.floor(pytools.clock.getDateTime()[4] / 10))
+        except:
+            print(traceback.format_exc())
+    
+    return dataOut
+
+def convertDailyToHourly(day):
+                        
+    morningArray = pytools.clock.getDateArrayFromUST(day["dt"] - (86400 / 4))
+    dayArray = pytools.clock.getDateArrayFromUST(day["dt"])
+    eveningArray = pytools.clock.getDateArrayFromUST(day["dt"] + (86400 / 4))
+    nightArray = pytools.clock.getDateArrayFromUST(day["dt"] + (86400 / 2))
+    
+    def arrayToStamp(dateArray):
+        return str(dateArray[0]) + "-" + str(dateArray[1]) + "-" + str(dateArray[2]) + " " + str(dateArray[3]) + ":" + str(dateArray[4]) + ":" + str(dateArray[5]) # "2025-08-17 23:00:00"
+    
+    if "gust" not in day:
+        day["gust"] = day["speed"] * 1.791753611895567
+    
+    if "pop" not in day:
+        day["pop"] = 0
+    
+    return [
+        {
+            "dt": day["dt"] - (86400 / 4),
+            "main": {
+                "temp": day["temp"]["morn"],
+                "feels_like": day["feels_like"]["morn"],
+                "temp_min": day["temp"]["morn"] - 2,
+                "temp_max": day["temp"]["morn"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(morningArray)
+        },
+        {
+            "dt": day["dt"],
+            "main": {
+                "temp": day["temp"]["day"],
+                "feels_like": day["feels_like"]["day"],
+                "temp_min": day["temp"]["day"] - 2,
+                "temp_max": day["temp"]["day"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(dayArray)
+        },
+        {
+            "dt": day["dt"] + (86400 / 4),
+            "main": {
+                "temp": day["temp"]["eve"],
+                "feels_like": day["feels_like"]["eve"],
+                "temp_min": day["temp"]["eve"] - 2,
+                "temp_max": day["temp"]["eve"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(eveningArray)
+        },
+        {
+            "dt": day["dt"] + (86400 / 2),
+            "main": {
+                "temp": day["temp"]["night"],
+                "feels_like": day["feels_like"]["night"],
+                "temp_min": day["temp"]["night"] - 2,
+                "temp_max": day["temp"]["night"] + 2,
+                "pressure": day["pressure"],
+                "sea_level": day["pressure"],
+                "grnd_level": day["pressure"] - 6,
+                "humidity": day["humidity"],
+                "temp_kf": 4
+            },
+            "weather": [
+                *day["weather"]
+            ],
+            "clouds": {
+                "all": day["clouds"]
+            },
+            "wind": {
+                "speed": day["speed"],
+                "deg": day["deg"],
+                "gust": day["gust"]
+            },
+            "visibility": 10000,
+            "pop": day["pop"],
+            "sys": {
+                "pod": "d"
+            },
+            "dt_txt": arrayToStamp(nightArray)
+        }
+    ]
+    
+def combineDaily(original, daily):
+    
+    def _maxKey(x):
+        return x["dt"]
+    
+    latestOriginal = max(original["data"]["main"]["list"], key=_maxKey)["dt"]
+    
+    for entry in daily["list"]:
+        if entry["dt"] > latestOriginal:
+            original["data"]["main"]["list"].extend(convertDailyToHourly(entry))
+    
+    def _sortedKey(x):
+        return x["dt"]
+    
+    original["data"]["main"]["list"] = sorted(original["data"]["main"]["list"], key=_sortedKey)
+    
+    return original
+
+def combineClimate(original, climate):
+    
+    def _maxKey(x):
+        return x["dt"]
+    
+    latestOriginal = max(original["data"]["main"]["list"], key=_maxKey)["dt"]
+    
+    for entry in climate["list"]:
+        if entry["dt"] > latestOriginal:
+            original["data"]["main"]["list"].extend(convertDailyToHourly(entry))
+    
+    def _sortedKey(x):
+        return x["dt"]
+    
+    original["data"]["main"]["list"] = sorted(original["data"]["main"]["list"], key=_sortedKey)
+    
+    return original
+
+def getForecast():
+    
+    setCoords()
+    
+    pictou = "lat=" + str(globals.lat) + "&lon=" + str(globals.lon)
+        
+    otherApiKey = openweather.stealApiKey(openweather.pollJavascriptFilename())
+    
+    forecastUrl = "http://gsweathermore.ddns.net:226/access.php?grabopenforecast=true&key=" + pytools.IO.getJson("access.key")["openweathermap"]
+    
+    if otherApiKey:
+        dailyUrl = "https://api.openweathermap.org/data/2.5/forecast/daily?" + pictou + "&cnt=16&appid=" + otherApiKey
+        hourlyUrl = "https://pro.openweathermap.org/data/2.5/forecast/hourly?" + pictou + "&appid=" + otherApiKey
+        climateUrl = "https://pro.openweathermap.org/data/2.5/forecast/climate?" + pictou + "&appid=" + otherApiKey
+        
+        forecastData = pytools.net.getJsonAPI(forecastUrl)
+        
+        hourlyData = localJsonAPI(hourlyUrl, "hourly", "pictou")
+        dailyData = localJsonAPI(dailyUrl, "daily", "pictou")
+        climateData = localJsonAPI(climateUrl, "climate", "pictou")
+        
+        forecastData = combineHourly(forecastData, hourlyData)
+        forecastData = combineDaily(forecastData, dailyData)
+        forecastData = combineClimate(forecastData, climateData)
+        
+        pytools.IO.saveJson("forecastData.json", forecastData)
+    else:
+        try:
+            forecastData = pytools.net.getJsonAPI(forecastUrl)
+            pytools.IO.saveJson("forecastData.json", forecastData)
+        except:
+            pass

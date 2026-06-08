@@ -54,13 +54,14 @@ def write(strf, pluginf="system"):
     except:
         pass
 
-def printLog(strf):
+def printLog(*strf):
     
-    try:
-        write(strf, inspect.stack()[1][1].replace("<", "").replace(">", "").split("\\")[-1].split(".py")[0])
-    except:
-        write(strf)
-        
+    for _strf in strf:
+        try:
+            write(_strf, inspect.stack()[1][1].replace("<", "").replace(">", "").split("\\")[-1].split(".py")[0])
+        except:
+            write(_strf)
+            
     if settings.hasStarted:
         return
     

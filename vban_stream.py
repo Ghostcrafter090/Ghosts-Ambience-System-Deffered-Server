@@ -60,4 +60,4 @@ if __name__ == "__main__":
         except:
             print(traceback.format_exc())
 
-# py vban_stream.py --run --clients=False,127.0.0.1 --speakerType=fireplace --hostname=192.168.2.40 
+# py vban_stream.py --run --clients=192.168.2.25,False --speakerType=fireplace --hostname=192.168.2.30 

@@ -1,10 +1,41 @@
-import time
-import math
+import psutil
 import os
 import random
 import sys
+
+p = psutil.Process(os.getpid())
+
+oldAffinity = p.cpu_affinity()
+oldPriority = p.nice()
+p.cpu_affinity([random.randint(0, psutil.cpu_count() - 1)])
+p.nice(psutil.IDLE_PRIORITY_CLASS)
+import sounddevice as sd
+import pickle
+import shutil
+import time
+import math
+import sys
 import atexit
 import signal
+import base64
+import json
+import sys
+import pydub
+import zipfile
+import xmltodict
+import numpy
+from mutagen.mp3 import MP3
+from mutagen.wave import WAVE
+import gtts
+import threading
+import pydub.utils
+
+from datetime import datetime
+
+from pydub.scipy_effects import high_pass_filter
+from pydub.scipy_effects import low_pass_filter
+p.cpu_affinity(oldAffinity)
+p.nice(oldPriority)
 
 if not os.path.exists(".\\logs"):
     os.system("mkdir \".\\logs\"")
@@ -122,7 +153,6 @@ def getFlag(flagName):
 class pytools:
     class clock:
         def getDateTime(utc = False):
-            from datetime import datetime
             if utc:
                 daten = datetime.utcnow()
             else:
@@ -138,19 +168,15 @@ class pytools:
     
     class cipher:  
         def base64_encode(s):
-            import base64
             encode = base64.standard_b64encode(bytes(s, encoding="utf-8")).decode("utf-8").replace("=", "?")
             return encode
             
         def base64_decode(s: str):
-            import base64
             decode = base64.standard_b64decode(s.replace("?", "=")).decode("utf-8")
             return decode
     
     class IO:
         def getJson(path, doPrint=True):
-            import json
-            import sys
             error = 0
             try:
                 file = open(path, "r")
@@ -165,15 +191,12 @@ class pytools:
             return jsonData
         
         def getXml(path, doPrint=True):
-            import xmltodict
             return xmltodict.parse(pytools.IO.getFile(path, doPrint=doPrint))
         
         def saveXml(path, doPrint=True):
             pass
 
         def saveJson(path, jsonData):
-            import json
-            import sys
             error = 0
             try:
                 file = open(path, "w")
@@ -185,7 +208,6 @@ class pytools:
             return error
 
         def getFile(path, doPrint=True):
-            import sys
             error = 0
             try:
                 file = open(path, "r")
@@ -200,7 +222,6 @@ class pytools:
             return jsonData
         
         def getBytes(path, doPrint=True):
-            import sys
             error = 0
             try:
                 file = open(path, "rb")
@@ -215,7 +236,6 @@ class pytools:
             return jsonData
 
         def saveFile(path, jsonData):
-            import sys
             error = 0
             try:
                 file = open(path, "w")
@@ -227,7 +247,6 @@ class pytools:
             return error
         
         def saveBytes(path, jsonData):
-            import sys
             error = 0
             try:
                 file = open(path, "wb")
@@ -239,8 +258,6 @@ class pytools:
             return error
 
         def saveList(path, list):
-            import pickle
-            import sys
             error = 0
             try:
                 file = open(path, "wb")
@@ -252,8 +269,6 @@ class pytools:
             return error
 
         def getList(path, doPrint=True):
-            import pickle
-            import sys
             list = []
             error = 0
             try:
@@ -269,7 +284,6 @@ class pytools:
             return [list, jsonData]
 
         def appendFile(path, jsonData):
-            import sys
             error = 0
             try:
                 file = open(path, "a")
@@ -281,7 +295,6 @@ class pytools:
             return error
         
         def unpack(path, outDir):
-            import zipfile
             try:
                 with zipfile.ZipFile(path, 'r') as zip_ref:
                     log.crash(zip_ref.printdir())
@@ -293,7 +306,6 @@ class pytools:
                     log.crash(erro)
 
         def pack(path, dir):
-            import shutil
             shutil.make_archive(path, 'zip', dir)
 
 if __name__ == '__main__':
@@ -302,13 +314,17 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, kill_handler)
 
 class info:
+    def __init__(self):
+        self.uuid = random.random()
+    
     globalSoundStart = False
     loopSync = {}
     skipParodyCheck = False
+    timeingInfo = 0
     
 def intenseSleep(i):
-    x = time.time() + i
-    while time.time() < x:
+    x = time.perf_counter() + i
+    while time.perf_counter() < x:
         pass
 
 class thread_handler:
@@ -396,8 +412,8 @@ class globals:
     speakers = {}
     maxCount = 100
     close = False
+    maxStreamDelay = 0
 
-import os
 if os.path.exists(".\\soundOutputs.json"):
     globals.speakers = pytools.IO.getJson(".\\soundOutputs.json")
 if os.path.exists("..\\soundOutputs.json"):
@@ -410,11 +426,9 @@ class tools:
         if os.path.exists("..\\soundOutputs.json"):
             globals.speakers = pytools.IO.getJson("..\\soundOutputs.json")
         try:
-            import sounddevice as sd
             devices = sd.query_devices()
             for channel in globals.speakers:
                 for n in devices:
-                    import time
                     time.sleep(0.1)
                     if globals.speakers[channel][0] == n["name"]:
                         if globals.speakers[channel][1] == "MME":
@@ -430,27 +444,23 @@ class tools:
                 "speakers": globals.speakers
             })
         except:
-            import traceback
             log.crash(traceback.format_exc())
     
 class audioEffects:
     def lowPass(data, frequency, db=24):
-        from pydub.scipy_effects import low_pass_filter
         if (data != False) and (type(data) != float):
             return data.low_pass_filter(frequency, order=db)
         else:
             return False
     
     def highPass(data, frequency, db=24):
-        from pydub.scipy_effects import high_pass_filter
         if (data != False) and (type(data) != float):
             return data.high_pass_filter(frequency, order=db)
         else:
             return False
         
 class stream:
-    def __init__(self, seg, speed, device, duration, soundIndex, lastPlayed, startPlayed, bufferSize, balence):
-        import pydub.utils
+    def __init__(self, seg, speed, device, duration, soundIndex, lastPlayed, startPlayed, bufferSize, balence, startDelay=0):
         self.channels = seg.channels
         self.frame_rate = seg.frame_rate
         self.sample_width = seg.sample_width
@@ -458,44 +468,52 @@ class stream:
         self.chunks = False
         self.speed = speed
         self.device = device
+        self.startDelay = startDelay
         self.duration = duration
         self.soundIndex = soundIndex
         self.lastPlayed = lastPlayed
+        self.isDone = False
         self.startPlayed = startPlayed
         self.bufferSize = bufferSize
         
     audioStream = False
     p = False
+    _info = info()
     
     def run(self):
         
-        import random
-        idf = random.random()
-        
         try:
-            import math
-            loopTic = 0
-            import numpy
-            import sounddevice as sd
             self.audioStream.start()
             def audioSegmentNumPy(audio):
                 return numpy.array(audio.get_array_of_samples(), dtype=numpy.float32).reshape((-1, audio.channels)) / (1 << (8 * audio.sample_width - 1))
             self.i = 0
             
-            while (self.startPlayed + (self.duration * 1000000) + (5 * 1000000)) > round(time.time() * 1000000):
+            self.delayStart = time.perf_counter()
+            self.startPlayed = time.time() * 1000000
+            
+            if (self.startDelay + self.duration) >= globals.maxStreamDelay:
+                globals.maxStreamDelay = (self.startDelay + self.duration)
+            
+            while (((self.startPlayed + (self.duration * 1000000) + (5 * 1000000))) > round(time.time() * 1000000)) or (type(self.chunksActive) != bool):
+                
+                # if (self.delayStart + self.startDelay) <= time.perf_counter():
                 self.chunks = self.chunksActive
                 self.chunksActive = True
+                
+                
                 if (self.chunks != True) and (self.chunks != False):
                     def forChunkMapFunction(chunk):
                         if chunk:
                             if self.i == 0:
-                                info.globalSoundStart = time.time()
+                                if self._info.globalSoundStart != False:
+                                    self._info.globalSoundStart = time.perf_counter()
+                                
                                 self.startPlayed = round(time.time() * 1000000)
-                            timeingInfo = ((info.globalSoundStart + self.i) - time.time())
-                            if timeingInfo > 0.005:
+                            timeingInfo = ((self._info.globalSoundStart + self.i) - time.perf_counter())
+                            if timeingInfo > 0.01:
                                 intenseSleep(timeingInfo)
                                 self.audioStream.write(audioSegmentNumPy(chunk))
-                            elif timeingInfo < -0.005:
+                            elif timeingInfo < -0.01:
                                 if timeingInfo > -(globals.chunkSize / 1000):
                                     sampleDuration = chunk[0:100].duration_seconds / 100
                                     self.audioStream.write(audioSegmentNumPy(chunk[int(math.fabs(timeingInfo) / sampleDuration):]))
@@ -507,22 +525,33 @@ class stream:
                         self.i = self.i + (chunk.duration_seconds / self.speed)
                     list(map(forChunkMapFunction, self.chunks))
                 else:
+                    # if ((self.delayStart + self.startDelay) <= time.perf_counter()):
                     if log.debug:
                         log.crash("Buffer Overflow!")
                     time.sleep(0.1)
+                    # else:
+                    #     print("Sleeping stream for " + str(((self.delayStart + self.startDelay) - time.perf_counter())) + " seconds.")
+                    #     intenseSleep(((self.delayStart + self.startDelay) - time.perf_counter()))
             
+            time.sleep(globals.bufferSize)
             self.audioStream.stop()
             self.audioStream.close()
 
-            globals.close = True
+            self.isDone = True
+            
+            if (self.startDelay + self.duration) >= globals.maxStreamDelay:
+                globals.close = True
             
         except:
-            import traceback
             printDebug(traceback.format_exc())
+            time.sleep(globals.bufferSize)
             self.audioStream.stop()        
             self.audioStream.close()
+            
+            self.isDone = True
 
-            globals.close = True
+            if (self.startDelay + self.duration) >= globals.maxStreamDelay:
+                globals.close = True
 
 class speakers:
     def getOutputs():
@@ -531,11 +560,9 @@ class speakers:
         if os.path.exists("..\\soundInputs.json"):
             speakers = pytools.IO.getJson("..\\soundInputs.json")
         try:
-            import sounddevice as sd
             devices = sd.query_devices()
             for channel in speakers:
                 for n in devices:
-                    import time
                     if speakers[channel][0].lower() == n["name"].lower():
                         if speakers[channel][1] == "MME":
                             if n["hostapi"] == 0:
@@ -554,13 +581,11 @@ class speakers:
             })
             return speakers
         except:
-            import traceback
             printDebug(traceback.format_exc())
 
 class soundEvent:
-    def __init__(self, path, volume, speed, channel, effects, balence, muteOptions=False):
+    def __init__(self, path, volume, speed, channel, effects, balence, muteOptions=False, startDelay=0):
         self.path = path
-        import random
         self.uuid = random.random()
         while self.uuid in obj.activeSounds:
             self.uuid = random.random()
@@ -569,11 +594,10 @@ class soundEvent:
         self.balence = balence
         self.channel = channel
         self.effects = effects
+        self.startDelay = startDelay
         if path.find(".mp3") != -1:
-            from mutagen.mp3 import MP3
             self.duration = float(MP3(path).info.length) / speed
         else:
-            from mutagen.wave import WAVE
             self.duration = float(WAVE(path).info.length) / speed
 
         if muteOptions:
@@ -601,24 +625,25 @@ class soundEvent:
             
         self.previousMuteState = self.muteState
      
+    doneLoading = False
+    
     def initStream(self):
         try:
                     
             deviceIndex = speakers.getOutputs()[self.channel][2]
-                    
-            from pyaudio import PyAudio
-            import sounddevice as sd
-            import time
-            self.itsStream = stream(self.data, self.speed, deviceIndex, self.duration, self.index, self.lastPlayed, round(time.time() * 1000000), globals.bufferSize, self.balence)
+
+            self.itsStream = stream(self.data, self.speed, deviceIndex, self.duration, self.index, self.lastPlayed, round(time.time() * 1000000), globals.bufferSize, self.balence, startDelay=self.startDelay)
             time.sleep(1)
             self.itsStream.audioStream = sd.OutputStream(
+                blocksize=2048,
                 channels=self.itsStream.channels,
                 device=self.itsStream.device,
                 samplerate=int(self.itsStream.frame_rate * self.speed),
             )
         except:
-            import traceback
             printDebug(traceback.format_exc())
+            
+        self.doneLoading = True
         
     data = False
     itsStream = False
@@ -627,9 +652,7 @@ class soundEvent:
     
     def load(self, index):
         self.index = index
-        import math
         if math.floor((self.duration / globals.bufferSize) + 1) >= index:
-            import os
             lastModif = os.path.getmtime(self.path)
             if os.path.exists(".\\.audiocache\\" + self.path.split("\\")[-1] + "-cache." + str(index * globals.bufferSize) + ".pyl"):
                 printDebug("".join(["loading cached index " + str(index), "..."]))
@@ -637,20 +660,16 @@ class soundEvent:
                 self.data = cachedData[0]
                 if cachedData[1] != lastModif:
                     printDebug("".join(["not cached! loading index " + str(index), "..."]))
-                    import pydub
                     self.data = pydub.AudioSegment.from_file(file=self.path.replace("\t", "\\t"), format="mp3", start_second=index * globals.bufferSize, duration=globals.bufferSize)
                     pytools.IO.saveList(".\\.audiocache\\" + self.path.split("\\")[-1] + "-cache." + str(index * globals.bufferSize) + ".pyl", [self.data, lastModif])
             else:
                 printDebug("".join(["not cached! loading index " + str(index), "..."]))
-                import pydub
                 self.data = pydub.AudioSegment.from_file(file=self.path.replace("\t", "\\t"), format="mp3", start_second=index * globals.bufferSize, duration=globals.bufferSize)
                 pytools.IO.saveList(".\\.audiocache\\" + self.path.split("\\")[-1] + "-cache." + str(index * globals.bufferSize) + ".pyl", [self.data, lastModif])
         else:
             self.data = False
             
         bal = False
-        
-        import os
         
         if self.muteFlag != "no_flag":
             if getFlag(self.muteFlag) and self.booleanValueToMuteOn:
@@ -682,7 +701,6 @@ class soundEvent:
         if self.balence != 0:
             monoSets = self.data.split_to_mono()
             if len(monoSets) == 1:
-                import pydub
                 monoSets = [monoSets[0], monoSets[0]]
                 self.data = pydub.AudioSegment.from_mono_audiosegments(*monoSets)
             if self.balence < 0:
@@ -693,9 +711,9 @@ class soundEvent:
                 bal = True
         
         if bal:
-            import pydub
             self.data = pydub.AudioSegment.from_mono_audiosegments(*monoSets)
-    
+
+        
     def iter(self):
         self.load(self.index + 1)
         
@@ -721,17 +739,23 @@ class soundEvent:
     
     def handleRun(self):
         try:
-            import time
-            import math
             startPlayed = round(time.time() * 1000000)
             obj.activeSounds[self.uuid] = self.path.split("\\")[-1]
             log.crash("".join(["Playing sound of path ", self.path, " on the ", self.channel, " channel at volume ", str((20 * math.log(self.volume / 100, 10))), " at ", str(self.speed), "x speed..."]))
-            while self.data != False:
+            justStarted = True
+            while ((self.data != False) or justStarted) and (not self.itsStream.isDone):
                 time.sleep(0.05)
-                if globals.close:
+                if globals.close or self.itsStream.isDone:
+                    print("exit detected.")
                     return
+                
+                # while (self.itsStream.chunksActive != True) and ((self.itsStream.delayStart + self.itsStream.startDelay) > time.perf_counter()):
+                #     if globals.close:
+                #         return
+                #     intenseSleep(((self.itsStream.delayStart + self.itsStream.startDelay) - time.perf_counter()))
+                
                 self.iter()
-                import math
+                justStarted = False
                 shift = (20 * math.log(self.volume / 100, 10))
                 self.data = self.data + shift
                 if (type(self.data) == float) or (self.data == False): # < possible problem (returning on datatype False)
@@ -742,7 +766,6 @@ class soundEvent:
                         return
                     self.handleEffects(effect)
                 list(map(handleEffectsMapFunction, self.effects))
-                import pydub
                 self.itsStream.chunksActive = pydub.utils.make_chunks(self.data, globals.chunkSize)
                 self.lastPlayed = (startPlayed + (self.index * 1000000)) / 1000000
                 self.itsStream.lastPlayed = self.lastPlayed
@@ -757,12 +780,11 @@ class soundEvent:
                     pass
                 
                 while self.itsStream.chunksActive != True:
-                    if globals.close:
+                    if globals.close or self.itsStream.isDone:
                         return
                     time.sleep(0.5)
             obj.activeSounds.pop(self.uuid)
         except:
-            import traceback
             printDebug(traceback.format_exc())
         
 class multiEvent:
@@ -772,12 +794,10 @@ class multiEvent:
         self.eventData = eventData
         def loadEventsMapFunction(event):
             log.crash("multiEvent_init_1")
-            import time
             time.sleep(0.1)
             if event["volume"] > 0.0:
                 if os.path.exists(".\\randomSounds.derp"):
                     audioList = os.listdir(".\\sound\\assets")
-                    import random
                     event["path"] = "".join([".\\sound\\assets\\", audioList[random.randint(0, len(audioList))]]).replace("\\", "\\")
                     while (event["path"].find(".mp3") == -1) and (event["path"].find(".wav") == -1):
                         time.sleep(0.1)
@@ -787,29 +807,31 @@ class multiEvent:
                         ln = 1
                         try:
                             if event["path"].find(".mp3") == -1:
-                                from mutagen.wave import WAVE
                                 audiowave = WAVE("".join([".\\sound\\assets\\", event["path"].split("\\")[-1]]).replace("\\", "\\"))
                                 ln = int(audiowave.info.length) + 1
                             else:
-                                from mutagen.mp3 import MP3
                                 audiomp3 = MP3("".join([".\\sound\\assets\\", event["path"].split("\\")[-1]]).replace("\\", "\\"))
                                 ln = int(audiomp3.info.length) + 1
                         except:
                             pass
                         textf = "".join([event["path"].split("\\")[-1].replace("_", " ").replace(".mp3", "").replace(".wav", ""), " "]).replace("\\", "\\")
                         textf = textf * (int(ln / (len(textf.split(" ")))) + 1)
-                        import gtts
                         gtts.gTTS(text=textf, lang="en", slow=False).save("".join([".\\sound\\assets\\speak_troll-" + event["path"].split("\\")[-1], ".wav"]).replace("\\", "\\"))
                     event["path"] = "".join([".\\sound\\assets\\", "speak_troll-", event["path"].split("\\")[-1], ".wav"]).replace("\\", "\\")
+                
+                if "start_delay" not in event:
+                    event["start_delay"] = 0
+                
+                print("start_delay: " + str(event["start_delay"]))
+                
                 if "mute_options" not in event:
-                    self.syncEvents.append(soundEvent(event["path"].replace("\\working\\", "\\"), event["volume"], event["speed"], event["channel"], event["effects"], event["balence"]))
+                    self.syncEvents.append(soundEvent(event["path"].replace("\\working\\", "\\"), event["volume"], event["speed"], event["channel"], event["effects"], event["balence"], startDelay=event["start_delay"]))
                 else:
-                    self.syncEvents.append(soundEvent(event["path"].replace("\\working\\", "\\"), event["volume"], event["speed"], event["channel"], event["effects"], event["balence"], muteOptions=event["mute_options"]))
+                    self.syncEvents.append(soundEvent(event["path"].replace("\\working\\", "\\"), event["volume"], event["speed"], event["channel"], event["effects"], event["balence"], muteOptions=event["mute_options"], startDelay=event["start_delay"]))
         list(map(loadEventsMapFunction, eventData["events"]))
     
     def load(self):
         def loadSoundsMapFunction(sound):
-            import time
             time.sleep(0.05)
             sound.load(0)
         list(map(loadSoundsMapFunction, self.syncEvents))
@@ -823,38 +845,33 @@ class multiEvent:
         else:
             if index:
                 def soundLoadMapFunction(sound):
-                    import time
                     time.sleep(0.05)
                     sound.load(index)
                 list(map(soundLoadMapFunction, self.syncEvents))
             else:
                 def soundIterMapFunction(sound):
-                    import time
                     time.sleep(0.05)
                     sound.iter()
                 list(map(soundIterMapFunction, self.syncEvents))
                 
     def process(self, event=False):
         if event:
-            import math
             shift = (20 * math.log(self.syncEvents[event].volume / 100, 10))
             self.syncEvents[event].data = self.syncEvents[event].data + shift
             def processEffectMapFunction(effect):
-                import time
                 time.sleep(0.05)
                 self.syncEvents[event].handleEffects(effect)
             list(map(processEffectMapFunction, self.syncEvents[event].effects))
         else:
             def processSoundMapFunction(sound):
-                import math
                 shift = (20 * math.log(sound.volume / 100, 10))
                 sound.data = sound.data + shift
-                import time
                 time.sleep(0.05)
                 list(map(sound.handleEffects, sound.effects))
             list(map(processSoundMapFunction, self.syncEvents))
                     
     def run(self):
+        
         log.crash("running...")
         printDebug(0)
         self.load()
@@ -862,47 +879,98 @@ class multiEvent:
         self.process()
         printDebug(2)
         
-        printDebug(3)
+        def begin(currentSyncEvents):
+            
+            class _inside:
+                streamThreads = []
+                handlerThreads = []
+            
+            _info = info()
+            
+            _info.globalSoundStart = time.perf_counter() + 3
+            
+            printDebug(5)
+            def streamThreadAppendMapFunction(sound):
+                time.sleep(0.05)
+                printDebug(sound)
+                
+                sound._info = _info
+                sound.itsStream._info = _info
+                
+                _inside.streamThreads.append(threading.Thread(target=thread_handler(sound.itsStream.run).run))
+                _inside.handlerThreads.append(threading.Thread(target=thread_handler(sound.handleRun).run))
+            list(map(streamThreadAppendMapFunction, currentSyncEvents))
+            
+            printDebug(6)
+            def threadStartMapFunction(thread):
+                thread.start()
+                
+            list(map(threadStartMapFunction, _inside.streamThreads))
+            
+            time.sleep((globals.chunkSize / 2.5) / 1000)
+            
+            printDebug(7)
+            def handlerThreadStartMapFunction(thread):
+                thread.start()
+            list(map(handlerThreadStartMapFunction, _inside.handlerThreads))
+        
+        printDebug(30)
         def initStreamMapFunction(sound):
-            import time
-            time.sleep(0.05)
             printDebug(sound)
-            sound.initStream()
+            threading.Thread(target=sound.initStream).start()
         list(map(initStreamMapFunction, self.syncEvents))
         
         printDebug(4)
         def streamWaitMapFunction(sound):
-            import time
             time.sleep(0.05)
-            xf = 0
-            while (sound.itsStream == False) and (xf < 1200):
+            while sound.doneLoading == False:
                 time.sleep(0.1)
-                xf = xf + 1
+                print("Waiting...")
         list(map(streamWaitMapFunction, self.syncEvents))
+        
+        startTime = time.perf_counter()
+        
+        self.hasRan = []
+        
+        def _sortedKey(x):
+            return x.startDelay
+        
+        self.syncEvents = sorted(self.syncEvents, key=_sortedKey, reverse=True) 
+        
+        printDebug(31)
+        self._isWaiting = True
+        self.nextDelay = 0
+        self.currentDelay = 0
+        while self._isWaiting and (not globals.close):
+            self._isWaiting = False
+            self.currentSyncEvents = []
+            self.streamThreads = []
+            self.handlerThreads = []
             
-        info.globalSoundStart = time.time() + 3
+            if (self.nextDelay - self.currentDelay) < 0.1:
+                intenseSleep(self.nextDelay - self.currentDelay)
+            else:
+                st = time.perf_counter()
+                time.sleep((self.nextDelay - self.currentDelay) - 0.1)
+                intenseSleep(0.1 - (time.perf_counter() - (st + ((self.nextDelay - self.currentDelay) - 0.1))))
             
-        printDebug(5)
-        def streamThreadAppendMapFunction(sound):
-            import time
-            time.sleep(0.05)
-            printDebug(sound)
-            import threading
-            self.streamThreads.append(threading.Thread(target=thread_handler(sound.itsStream.run).run))
-            self.handlerThreads.append(threading.Thread(target=thread_handler(sound.handleRun).run))
-        list(map(streamThreadAppendMapFunction, self.syncEvents))
-        
-        printDebug(6)
-        def threadStartMapFunction(thread):
-            thread.start()
-        list(map(threadStartMapFunction, self.streamThreads))
-        
-        time.sleep((globals.chunkSize / 2.5) / 1000)
-        
-        printDebug(7)
-        def handlerThreadStartMapFunction(thread):
-            thread.start()
-        list(map(handlerThreadStartMapFunction, self.handlerThreads))
+            def initStreamMapFunction(sound):
+                # printDebug(sound)
+                if (sound.startDelay + startTime) < time.perf_counter():
+                    if sound.uuid not in self.hasRan:
+                        # sound.initStream()
+                        self.hasRan.append(sound.uuid)
+                        self.currentSyncEvents.append(sound)
+                        self.currentDelay = sound.startDelay
+                else:
+                    self.nextDelay = sound.startDelay
+                    self._isWaiting = True
+            list(map(initStreamMapFunction, self.syncEvents))
+            
+            currentSyncEvents = self.currentSyncEvents
+            
+            if len(currentSyncEvents):
+                threading.Thread(target=begin, args=(currentSyncEvents,)).start()
             
     syncEvents = []
     
@@ -910,12 +978,9 @@ class multiEvent:
     handlerThreads = []
 
 
-import sys
 for arg in sys.argv:
-    import os
     log.crash(os.getpid())
     if arg.split("=")[0] == "--event":
-        import json
         print(arg.split("=")[1])
         eventData = json.loads(pytools.cipher.base64_decode(arg.split("=")[1]))
         multiEvent(eventData).run()

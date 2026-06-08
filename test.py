@@ -7,7 +7,7 @@ import time
 import threading
 
 import modules.speed as speed
-speed.run()
+speed.run(doThreadCounter=False)
 
 pl = False
 
@@ -38,10 +38,13 @@ plugin.test = api.""" + name + """
         pl = plugin.test
 
 runf = False
+noPrint = False
 if __name__ == "__main__":
     for n in sys.argv:
         if n.split("=") == "--apiKey":
             globals.apiKey = n.split("=")[1]
+        if n == "--noPrint":
+            noPrint = True
     try:
         if sys.argv[1] == "--run":
             if sys.argv[2]:
@@ -52,7 +55,8 @@ if __name__ == "__main__":
 
 def printTic():
     while True:
-        print("GIL Timing Info: " + str((speed.vars.prevTic, sys.getswitchinterval())))
+        if not noPrint:
+            print("GIL Timing Info: " + str((speed.vars.prevTic, sys.getswitchinterval())))
         time.sleep(1)
         
 if runf:

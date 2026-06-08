@@ -35,12 +35,14 @@ class status:
     }
     
 class globals:
-    windModif = 4.5
+    windModif = 0
     windChime = False
     blowAwayChance = 0
     startHanging = True
     hangThread = False
     fixCounter = 0
+    
+audioBuffer = audio.rapidFire(60)
 
 class utils:
     def dataGrabber():
@@ -74,9 +76,9 @@ class sounds:
         if volume > 0:
             if status.vars["nextPlays"]["lightChimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 status.vars["nextPlays"]["lightChimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
-                audioEvent = audio.event()
-                audioEvent.register("light_chimney_wind.mp3", 1, volume, speed, 0.0, 0)    
-                audioEvent.run()
+                # audioEvent = audio.event()
+                audioBuffer.register("light_chimney_wind.mp3", 1, volume, speed, 0.0, 0)    
+                # audioEvent.run()
         
     def lightWind(xGust, xSpeed):
         volumeGust = (utils.handleComplex(((xGust - 9 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
@@ -102,7 +104,7 @@ class sounds:
                 audioEvent.register("light_wind.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.registerWindow("light_wind.mp3;light_wind_nm.mp3", [volume, volume, volume], speed, 0.0, 0)
                 audioEvent.register("light_wind.mp3", 9, volume ** 0.8, speed, 0.0, 0)
-                audioEvent.run()
+                audioBuffer.registerCombine(audioEvent)
                 
     def lightWindChimeMood(xGust, xSpeed, getChance=False):
         volumeGust = (utils.handleComplex(((xGust - 8 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
@@ -133,7 +135,7 @@ class sounds:
                     audioEvent.register("light_wind_chime.mp3", 3, volume / 5, 1.0, 0.0, 0)
                     audioEvent.register("light_wind_chime.mp3", 2, volume / 5, 1.0, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnFalse, muteFade=True)
                     audioEvent.register("light_wind_chime.mp3", 2, volume / 8, 1.0, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnFalse, muteFade=True, lowPass=300)
-                    audioEvent.run()
+                    audioBuffer.registerCombine(audioEvent)
         else:
             return lightChimeChance
         
@@ -163,7 +165,7 @@ class sounds:
                     audioEvent.register("fabric_flapping.mp3", 3, volume / 3, speed * 0.8, 0.0, 0)
                     audioEvent.register("fabric_flapping.mp3", 2, volume / 3, speed * 0.8, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnFalse, muteFade=True)
                     audioEvent.register("fabric_flapping.mp3", 2, volume / 5, speed * 0.8, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnTrue, muteFade=True, lowPass=300)
-                    audioEvent.run()
+                    audioBuffer.registerCombine(audioEvent)
         else:
             return fabricChance
         
@@ -195,7 +197,7 @@ class sounds:
                     audioEvent.register("wind_chime.mp3", 3, volume / 5, 1.0, 0.0, 0)
                     audioEvent.register("wind_chime.mp3", 2, volume / 5, 1.0, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnFalse, muteFade=True)
                     audioEvent.register("wind_chime.mp3", 2, volume / 8, 1.0, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnTrue, muteFade=True, lowPass=300)
-                    audioEvent.run()
+                    audioBuffer.registerCombine(audioEvent)
         else:
             return chimeChance
         
@@ -299,7 +301,7 @@ class sounds:
                     audioEvent.register("wind_mood.mp3", 2, volume / 1.2, speed, 0.0, 0, muteFlag="nomufflewn", defaultMuteState=audio.doMuteOnTrue, muteFade=True)
                     audioEvent.register("wind_mood.mp3", 1, volume / 2, speed, 0.0, 0)
                     audioEvent.register("wind_mood.mp3", 0, volume / 4, speed, 0.0, 0)
-                    audioEvent.run()
+                    audioBuffer.registerCombine(audioEvent)
         else:
             return moodChance
     
@@ -325,7 +327,7 @@ class sounds:
                 audioEvent = audio.event()
                 audioEvent.registerWindow("wind.mp3;wind_nm.mp3;porch_wind.mp3", [volume * 1.3, volume * 1.3, volume * 1.3], speed, 0.0, 0)
                 audioEvent.register("wind_nm.mp3", 9, volume ** 0.9, speed, 0.0, 0)
-                audioEvent.run()
+                audioBuffer.registerCombine(audioEvent)
     
     def chimneyWind(xGust, xSpeed):
         volumeGust = (utils.handleComplex(((xGust - 24 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
@@ -346,13 +348,13 @@ class sounds:
         if volume > 0:
             if status.vars["nextPlays"]["chimneyWind"] < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
                 status.vars["nextPlays"]["chimneyWind"] = pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()) + (250 / (speed ** 0.5))
-                audioEvent = audio.event()
-                audioEvent.register("chimney_wind.mp3", 1, volume, speed, 0.0, 0)
-                audioEvent.run()
+                # audioEvent = audio.event()
+                audioBuffer.register("chimney_wind.mp3", 1, volume, speed, 0.0, 0)
+                # audioEvent.run()
 
     def hurricaneWind(xGust, xSpeed):
         volumeGust = (utils.handleComplex(((xGust - 30 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
-        volumeSpeed = (utils.handleComplex(((xSpeed - 28 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
+        volumeSpeed = (utils.handleComplex(((xSpeed - 25 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
         if volumeGust > volumeSpeed:
             volume = volumeGust
         else:
@@ -373,14 +375,14 @@ class sounds:
                 audioEvent.register("hurricane_wail.mp3", 0, volume, speed, 0.0, 0)
                 audioEvent.register("hurricane_wail.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.registerWindow("hurricane_wail.mp3;hurricane_wail_nm.mp3", [volume, volume], speed, 0.0, 0)
-                audioEvent.run()
+                audioBuffer.registerCombine(audioEvent)
                 
     def trainFromHell(xGust, xSpeed):
         
         # https://www.desmos.com/calculator/xwofuoux5g
         
         volumeGust = (utils.handleComplex(((xGust - 37.3 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
-        volumeSpeed = (utils.handleComplex(((xSpeed - 34 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
+        volumeSpeed = (utils.handleComplex(((xSpeed - 30 + globals.windModif) / 0.03) ** (1 / 3)) + 5.5) * 1.5
         if volumeGust > volumeSpeed:
             volume = volumeGust
         else:
@@ -401,7 +403,7 @@ class sounds:
                 audioEvent.register("train_from_hell.mp3", 0, volume, speed, 0.0, 0)
                 audioEvent.register("train_from_hell.mp3", 1, volume, speed, 0.0, 0)
                 audioEvent.registerWindow("train_from_hell.mp3;train_from_hell_nm.mp3", [volume, volume], speed, 0.0, 0)
-                audioEvent.run()
+                audioBuffer.registerCombine(audioEvent)
 
 def main():
     
@@ -413,6 +415,9 @@ def main():
             "is_hung": False,
             "wind_metric": 0
         })
+        
+    lastGust = 0
+    lastSpeed = 0
     
     while not status.exit:
         
@@ -436,13 +441,24 @@ def main():
         
         sounds.windMood(dataList[0][1], dataList[0][0])
         
+        if int(lastGust * 10) != int(dataList[0][1] * 10):
+            audioBuffer.manualFire()
+        
+        elif int(lastSpeed * 10) != int(dataList[0][0] * 10):
+            audioBuffer.manualFire()
+        
         time.sleep(10)
         status.finishedLoop = True
         status.vars['lastLoop'] = pytools.clock.getDateTime()
-
+        
+        lastGust = dataList[0][1]
+        lastSpeed = dataList[0][0]
+    
 def run():
     status.hasExited = False
+    audioBuffer._start()
     main()
+    audioBuffer._stop()
     status.hasExited = True
     
     

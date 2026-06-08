@@ -3,13 +3,27 @@ import math
 import random
 import time
 import threading
+import modules.flame as flame
+import traceback
+import os
 
 class vars:
     prevTic = False
     thread = False
+    counterThread = False
     waitTic = 0.001
     intf = 0.005
-
+    threadCount = 0
+    
+def threadCounter():
+    time.sleep(10)
+    while True:
+        try:
+            vars.threadCount = flame.getNumberOfThreads(flame.getSnapshot())
+            time.sleep(10)
+        except:
+            print(traceback.format_exc())
+    
 def sysHandler():
     
     prevDo = False
@@ -46,6 +60,9 @@ def sysHandler():
             
         sys.setswitchinterval(vars.intf)
         
-def run():
+def run(doThreadCounter=True):
     vars.thread = threading.Thread(target=sysHandler)
     vars.thread.start()
+    if doThreadCounter:
+        vars.counterThread = threading.Thread(target=threadCounter)
+        vars.counterThread.start()

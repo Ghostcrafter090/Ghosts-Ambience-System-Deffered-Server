@@ -8,6 +8,7 @@ import modules.logManager as log
 import modules.weather as weather
 import threading
 import copy
+import traceback
 
 def fireWindowEvent(*args):
     aThread = threading.Thread(target=audio.playSoundWindow, args=(*args,))
@@ -281,6 +282,94 @@ class secs:
         globals.windowBoarded[windowIndex] = True
         secs.window(dataList)
 
+class window:
+    
+    threadIsRunning = False
+    
+    def manageWindows(dateArray, dayTimes, dataList):
+        window.threadIsRunning = True
+        try:
+            secs.window(dataList)
+            secs.windowBreakState(dataList)
+            if any(globals.windowBroken) == 1:
+                print(globals.windowFixUtc)
+                print(pytools.clock.dateArrayToUTC(dateArray))
+                if globals.windowFixUtc < pytools.clock.dateArrayToUTC(dateArray):
+                    secs.fixWindow(dataList)
+                elif os.path.exists(".\\fixwindow.derp"):
+                    secs.fixWindow(dataList)
+                    os.system("del .\\fixwindow.derp /f /q")
+                elif os.path.exists(".\\boardwindow.derp"):
+                    windowIndex = random.randint(0, 8)
+                    n = 0
+                    while (not status.exit) and (((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))) and (n < 300)):
+                        windowIndex = random.randint(0, 8)
+                        n = n + 1
+                        
+                    if not ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))):
+                        secs.boardWindow(dataList, windowIndex)
+                        os.system("del .\\boardwindow.derp /f /q")
+                elif 5 < dateArray[3] <= 23:
+                    if dataList[0][1] >= (36 - api.wind.globals.windModif):
+                        installBoardChance = (1 + (0.085 - ((((dataList[0][1] - (35 - api.wind.globals.windModif)))) ** 0.04))) ** 1.1
+                        if type(installBoardChance) == complex:
+                            installBoardChance = 0
+                    else:
+                        installBoardChance = ((0.34 - (((((dataList[0][1] - 1) - (35 - api.wind.globals.windModif)))) * 0.04)) / 4) ** 1.1
+                    
+                    n = 0
+                    if random.random() < installBoardChance:
+                        windowIndex = random.randint(0, 8)
+                        while (not status.exit) and (((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))) and (n < 300)):
+                            windowIndex = random.randint(0, 8)
+                            n = n + 1
+                        if not ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))):
+                            secs.boardWindow(dataList, windowIndex)
+                        
+            if (any(globals.windowBoarded)) and (not (weather.forecast.getHurricaneData(getClosest=True, isInForecast=True) or utils.isHighWindEventForecasted())):
+                
+                windowIndex = random.randint(0, 8)
+                while (not status.exit) and ((not globals.windowBoarded[windowIndex]) and any(globals.windowBoarded)):
+                    windowIndex = random.randint(0, 8)
+                
+                secs.windowUnboardState(dataList, windowIndex) 
+        
+            if weather.forecast.getHurricaneData(getClosest=True, isInForecast=True) or utils.isHighWindEventForecasted():
+                if dateArray[3] > 6:
+                    if ((not globals.preparedForHurricane) or (not any(globals.windowBoarded))) and (dataList[0][1] < (20 - api.wind.globals.windModif)):
+                        windowIndex = 0
+                        while (not status.exit) and (windowIndex < len(globals.windowBoarded)):
+                            if not globals.windowBoarded[windowIndex]:
+                                secs.boardWindow(dataList, 0)
+                                if windowIndex < (len(globals.windowBoarded) - 1):
+                                    time.sleep(60)
+                            
+                            windowIndex = windowIndex + 1
+                        
+                        globals.preparedForHurricane = True
+                        
+            else:
+                if globals.preparedForHurricane and (dataList[0][1] < (20 - api.wind.globals.windModif)):
+                    if dateArray[3] > 6:
+                        windowIndex = 0
+                        while (not status.exit) and (windowIndex < len(globals.windowBoarded)):
+                            if globals.windowBoarded[windowIndex] and (not globals.windowBroken[windowIndex]):
+                                audioEvent = audio.event()
+                                audioEvent.registerWindow("plywood_falling.mp3;plywood_falling.mp3;plywood_falling.mp3", [100, 10, 1], 0.97 + (random.random() * 0.06), 0.0, 0)
+                                audioEvent.run()
+                                globals.windowBoarded[windowIndex] = False
+                                secs.window(dataList)
+                                if windowIndex < (len(globals.windowBoarded) - 1):
+                                    time.sleep(30)
+                                    
+                            windowIndex = windowIndex + 1
+                        
+                        globals.preparedForHurricane = False
+        except:
+            print(traceback.format_exc())
+        
+        window.threadIsRunning = False
+
 def main():
     typeState = [0, 0, 0, 0, 0, 0]
     
@@ -314,83 +403,9 @@ def main():
         dateArray = pytools.clock.getDateTime()
         dayTimes = utils.dayTimesGrabber()
         dataList = utils.dataGrabber()
-
-        secs.window(dataList)
-        secs.windowBreakState(dataList)
-        if any(globals.windowBroken) == 1:
-            print(globals.windowFixUtc)
-            print(pytools.clock.dateArrayToUTC(dateArray))
-            if globals.windowFixUtc < pytools.clock.dateArrayToUTC(dateArray):
-                secs.fixWindow(dataList)
-            elif os.path.exists(".\\fixwindow.derp"):
-                secs.fixWindow(dataList)
-                os.system("del .\\fixwindow.derp /f /q")
-            elif os.path.exists(".\\boardwindow.derp"):
-                windowIndex = random.randint(0, 8)
-                n = 0
-                while ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))) and (n < 300):
-                    windowIndex = random.randint(0, 8)
-                    n = n + 1
                     
-                if not ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))):
-                    secs.boardWindow(dataList, windowIndex)
-                    os.system("del .\\boardwindow.derp /f /q")
-            elif 5 < dateArray[3] <= 23:
-                if dataList[0][1] >= (36 - api.wind.globals.windModif):
-                    installBoardChance = (1 + (0.085 - ((((dataList[0][1] - (35 - api.wind.globals.windModif)))) ** 0.04))) ** 1.1
-                    if type(installBoardChance) == complex:
-                        installBoardChance = 0
-                else:
-                    installBoardChance = ((0.34 - (((((dataList[0][1] - 1) - (35 - api.wind.globals.windModif)))) * 0.04)) / 4) ** 1.1
-                
-                n = 0
-                if random.random() < installBoardChance:
-                    windowIndex = random.randint(0, 8)
-                    while ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))) and (n < 300):
-                        windowIndex = random.randint(0, 8)
-                        n = n + 1
-                    if not ((globals.windowBoarded[windowIndex] or (not globals.windowBroken[windowIndex])) and (not all(globals.windowBoarded))):
-                        secs.boardWindow(dataList, windowIndex)
-                    
-        if (any(globals.windowBoarded)) and (not (weather.forecast.getHurricaneData(getClosest=True, isInForecast=True) or utils.isHighWindEventForecasted())):
-            
-            windowIndex = random.randint(0, 8)
-            while (not globals.windowBoarded[windowIndex]) and any(globals.windowBoarded):
-                windowIndex = random.randint(0, 8)
-            
-            secs.windowUnboardState(dataList, windowIndex) 
-                    
-        if weather.forecast.getHurricaneData(getClosest=True, isInForecast=True) or utils.isHighWindEventForecasted():
-            if dateArray[3] > 6:
-                if ((not globals.preparedForHurricane) or (not any(globals.windowBoarded))) and (dataList[0][1] < (20 - api.wind.globals.windModif)):
-                    windowIndex = 0
-                    while windowIndex < len(globals.windowBoarded):
-                        if not globals.windowBoarded[windowIndex]:
-                            secs.boardWindow(dataList, 0)
-                            if windowIndex < (len(globals.windowBoarded) - 1):
-                                time.sleep(60)
-                        
-                        windowIndex = windowIndex + 1
-                    
-                    globals.preparedForHurricane = True
-        else:
-            if globals.preparedForHurricane and (dataList[0][1] < (20 - api.wind.globals.windModif)):
-                if dateArray[3] > 6:
-                    windowIndex = 0
-                    while windowIndex < len(globals.windowBoarded):
-                        if globals.windowBoarded[windowIndex] and (not globals.windowBroken[windowIndex]):
-                            audioEvent = audio.event()
-                            audioEvent.registerWindow("plywood_falling.mp3;plywood_falling.mp3;plywood_falling.mp3", [100, 10, 1], 0.97 + (random.random() * 0.06), 0.0, 0)
-                            audioEvent.run()
-                            globals.windowBoarded[windowIndex] = False
-                            secs.window(dataList)
-                            if windowIndex < (len(globals.windowBoarded) - 1):
-                                time.sleep(30)
-                                
-                        windowIndex = windowIndex + 1
-                    
-                    globals.preparedForHurricane = False
-                
+        if not window.threadIsRunning:
+            threading.Thread(target=window.manageWindows, args=(dateArray, dayTimes, dataList,)).start()
                 
         pytools.IO.saveJson("windowState.json", {
             "windowBroken": globals.windowBroken,

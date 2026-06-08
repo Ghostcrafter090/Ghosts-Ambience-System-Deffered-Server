@@ -140,10 +140,15 @@ class vm:
             globals.instance.get("option.buffer.mme")
         except:
             print("regrabbing...")
-            vm.launch()
-            globals.instance = voicemeeter.remote("potato")
-            globals.instance.login()
-            vm.changed = True
+            try:
+                vm.launch()
+                globals.instance = voicemeeter.remote("potato")
+                globals.instance.login()
+                vm.changed = True
+                
+                print("Success!")
+            except:
+                print(traceback.format_exc())
         
     def launch():
         if os.path.exists("C:\Program Files (x86)\VB\Voicemeeter\\voicemeeter8.exe"):
@@ -592,21 +597,74 @@ class configure:
         except:
             return False
     
+    normalConditions = 1
+    
     def getOutsideVolumeWeatherModifier(prevVal):
         
         dataf = configure.grabWeatherData()
         
         if dataf:
+            
+            # https://www.desmos.com/calculator/ocjym5nmwb
+            # https://www.desmos.com/calculator/befubm4323 // latest
+            a = 1.004203
+            b = 4.998973
+            c = 229.17641
+            d = 128.28287
+            
+            u = 1.01532
+            v = 6.44847
+            w = -4.21625
+            z = 38.48795
+            
             lightningModif = (1.14898 ** (0.997531 * (dataf[1] + 0.00708756)) - 0.000982331) * 2
-            windGustModif = ((1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5) ** 1.4
+            # windGustModif = ((1.0382 ** (0.9993 * (dataf[0][0][1] - 1.00002)) - 0.963234) * 1.5) ** 1.4
+            windGustModifHigh = (( - 1.0006116 ** ( - 2.6050288 * (dataf[0][0][1] - 3730.21639)) + 379.81205) / (2)) - 7
+            windGustModifExtreme = ((( - 1.0006116 ** ( - 2.6050288 * (dataf[0][0][1] - 3730.21639)) + 379.81205) / (0.5)) - 40) * 3
+            
+            if dataf[0][0][1] < 23.119:
+                windGustModif = (u ** (v * (dataf[0][0][1] - w)) + z - 40) / 3
+            else:
+                windGustModif = (- a ** ( - b * (dataf[0][0][1] - c)) + d - 40) / 3
+                
+            if windGustModifHigh > 0:
+                windGustModif = windGustModif + windGustModifHigh
+            
+            if windGustModifExtreme > -3:
+                if pytools.clock.getDateTime()[3] == 23:
+                    configure.normalConditions = pytools.clock.getDateTime()[4] / 120
+                elif pytools.clock.getDateTime()[3] == 0:
+                    configure.normalConditions = 0.5 + (pytools.clock.getDateTime()[4] / 120)
+                elif pytools.clock.getDateTime()[3] < 7:
+                    configure.normalConditions = 1
+                elif pytools.clock.getDateTime()[3] == 7:
+                    configure.normalConditions = 1 - (0.5 + (pytools.clock.getDateTime()[4] / 120))
+                elif pytools.clock.getDateTime()[3] == 8:
+                    configure.normalConditions = 1 - ((pytools.clock.getDateTime()[4] / 120))
+                else:
+                    configure.normalConditions = 0
+                
+            else:
+                configure.normalConditions = 1
+
+            if windGustModifExtreme > 0:
+                windGustModif = windGustModif + windGustModifExtreme 
+            
             windSpeedModif = (1.0382 ** (0.9993 * (dataf[0][0][0] - 1.00002)) - 0.963234) ** 1.4
+            
+            if dataf[0][0][1] < 0.01:
+                windGustModif = 0
+            if dataf[0][0][0] < 0.01:
+                windSpeedModif = 0
+            
+            
             if windGustModif > windSpeedModif:
                 windModif = windGustModif
             else:
                 windModif = windSpeedModif
                 
-            if windModif > 8:
-                windModif = 8
+            if windModif > 13:
+                windModif = 13
                 
             weatherModif = 0
             if dataf[0][0][4] == "mist":
@@ -620,11 +678,21 @@ class configure:
             elif dataf[0][0][4] == "thunder":
                 if dataf[0][2][3] > 0:
                     weatherModif = 3
-                
-            if dataf[0][2][3] < 7.5:
-                weatherModif = weatherModif + (dataf[0][2][3] / 1.5)
+            
+            if dataf[0][0][1] < 25:
+                rainModif = 1
+            elif dataf[0][0][1] < 30:
+                rainModif = (30 - dataf[0][0][1]) / 5
             else:
-                weatherModif = weatherModif + 7.5
+                rainModif = 0
+            
+            if dataf[0][2][3] < 5:
+                weatherModif = weatherModif + ((dataf[0][2][3] / 1.5) * rainModif)
+            else:
+                print(weatherModif)
+                weatherModif = weatherModif + (3.3333333333333335 * rainModif)
+                print(weatherModif)
+                print(windModif)
             
         else:
             lightningModif = 0
@@ -664,16 +732,18 @@ class configure:
         
         if not noTime:
             if configure.getIsHoliday():
-                if 7 < pytools.clock.getDateTime()[3] < 22:
+                if 7 < pytools.clock.getDateTime()[3] < 21:
                     percent = 0
                 elif pytools.clock.getDateTime()[3] == 7:
                     percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
+                elif pytools.clock.getDateTime()[3] == 21:
+                    percent = 0.0 + (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) / 5)
                 elif pytools.clock.getDateTime()[3] == 22:
-                    percent = ((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) / 5
-                elif pytools.clock.getDateTime()[3] > 22:
-                    percent = 0.2
+                    percent = 0.2 + (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) / 8)
+                elif pytools.clock.getDateTime()[3] == 23:
+                    percent = 0.325 + (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2) / 7.1)
                 elif pytools.clock.getDateTime()[3] == 0:
-                     percent = (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2)) + 0.2
+                     percent = (((((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2)) + 0.42
                      if percent > 1:
                         percent = 1
                 else:
@@ -682,8 +752,8 @@ class configure:
                 
                 dayEndTime = dayTimes[7][3] + 1 + (dayTimes[7][4] / 60)
                 
-                if dayEndTime < 21:
-                    dayEndTime = 21
+                if dayEndTime < 21.5:
+                    dayEndTime = 21.5
                     
                 if dayEndTime > 22.5:
                     dayEndTime = 22.5
@@ -705,22 +775,26 @@ class configure:
                     percent = percent + (0.08333333333333333 / 2) + 0.08333333333333333
                 
             else:
-                
+                print("derp")
                 dayEndTime = dayTimes[7][3] + 1
                 
-                if dayEndTime < 19:
-                    dayEndTime = 19
+                if dayEndTime < 21:
+                    dayEndTime = 21
                     
                 if dayEndTime > 22:
                     dayEndTime = 22
                 
                 if 10 < pytools.clock.getDateTime()[3] < dayEndTime:
+                    print("nut")
                     percent = 0
                 elif pytools.clock.getDateTime()[3] == 10:
+                    print("duck")
                     percent = (1 - (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600)) ** 2
                 elif pytools.clock.getDateTime()[3] == dayEndTime:
+                    print("fuck")
                     percent = (((pytools.clock.getDateTime()[4] * 60) + pytools.clock.getDateTime()[5]) / 3600) ** 2
                 else:
+                    print("cuck")
                     percent = 1
                 
                 if percent < 0.1:
@@ -783,16 +857,17 @@ class configure:
         
         customModif = 0
         if not isPorch:
-            customModif = configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 17, 23, 59, 59], peakModif=0.04, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 18, 23, 59, 59], peakModif=0.1, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 19, 23, 59, 59], peakModif=0.1, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 20, 23, 59, 59], peakModif=0.093, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 26, 23, 59, 59], peakModif=0.083, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 27, 23, 59, 59], peakModif=0.08, timeScaleModif=0.25)
-            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 30, 12, 0, 0], peakModif=0.06)
+            customModif = configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 17, 23, 59, 59], peakModif=0.4, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 18, 23, 59, 59], peakModif=0.4, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 19, 23, 59, 59], peakModif=0.3, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 20, 23, 59, 59], peakModif=0.4, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 26, 23, 59, 59], peakModif=0.2, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 27, 23, 59, 59], peakModif=0.15, timeScaleModif=0.25)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 30, 12, 0, 0], peakModif=0.12)
             customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 24, 23, 59, 59], peakModif=0.14, timeScaleModif=0.25)
             customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 12, 25, 23, 59, 59], peakModif=0.2, timeScaleModif=0.25)
-            
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 55, 0], peakModif=0.2, timeScaleModif=0.00005)
+            customModif = customModif + configure.getOutsideVolumeOnHoliday([pytools.clock.getDateTime()[0], 10, 31, 23, 59, 59], peakModif=0.2, timeScaleModif=0.000005)
         
         if dayOfYear > 304:
             if dayOfYear > 304.0208333333333:
@@ -867,15 +942,23 @@ class configure:
     
     def setOutsideVolume():
         configure.outsideVolume = configure.getOutsideVolume()
+        
+        if configure.outsideVolume < -59.99:
+            configure.outsideVolume = -59.99
+        
         configure.porchVolume = configure.getOutsideVolume(isPorch=True)
+        
+        if configure.outsideVolume == -59.99:
+            configure.porchVolume = configure.porchVolume + 22
+        
         configure.outsideLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True))
         configure.porchLimiter = configure.getOutsideLimiter(configure.getOutsideVolume(noTime=True), isPorch=True)
-        globals.instance.set("Strip[0].Limit", configure.outsideLimiter)
-        globals.instance.set("Strip[1].Limit", configure.porchLimiter)
-        globals.instance.set("Strip[1].Gain", -13 + (configure.porchVolume - configure.outsideVolume))
+        globals.instance.set("Strip[0].Limit", configure.outsideLimiter * (configure.normalConditions))
+        globals.instance.set("Strip[1].Limit", configure.porchLimiter + ((22 - (configure.outsideVolume + 60)) * 0.4772727272727273 * (configure.outsideVolume < -38)))
+        globals.instance.set("Strip[1].Gain", -13 + (configure.porchVolume - configure.outsideVolume) + ((22 - (configure.outsideVolume + 60)) * 2.1 * (configure.outsideVolume < -38)) - (21 * (configure.outsideVolume >= -38)))
         globals.instance.set("Bus[0].Gain", configure.outsideVolume)
         pytools.IO.saveJson("outsideProperties.json", {
-            "volume": configure.outsideVolume,
+            "volume": configure.getOutsideVolume(),
             "limiter": configure.outsideLimiter
         })
         
@@ -919,6 +1002,7 @@ class vbanStream:
         self.killProcess()
         
     def killProcess(self):
+        print("Killing process...")
         os.system("taskkill /f /im vbanStream_" + self.speakerType + ".exe")
     
     def startProcess(self, clients=[-1, -1]):
@@ -1009,10 +1093,13 @@ class streams:
         check = getStreamProcesses(streamObj.speakerType)
         
         if check > 1:
-            print("multiple " + streamObj.speakerType + " stream copies detected. Killing all and restarting...")
-            streamObj.killProcess()
-            time.sleep(random.random() * 3)
-            streamObj.startProcess()
+            time.sleep(3)
+            check = getStreamProcesses(streamObj.speakerType)
+            if check > 1:
+                print("multiple (" + str(check) + ")" + streamObj.speakerType + " stream copies detected. Killing all and restarting...")
+                streamObj.killProcess()
+                time.sleep(random.random() * 3)
+                streamObj.startProcess()
         
         elif check < 1:
             print("multiple " + streamObj.speakerType + " stream has crashed. Restarting...")

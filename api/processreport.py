@@ -122,48 +122,51 @@ def main():
             addedSoundsOutside = []
             soundList = os.listdir("..\\vars\\pluginSounds")
             for sound in soundList:
-                soundData = pytools.IO.getFile("..\\vars\\pluginSounds\\" + sound)
-                if (soundData.split(";")[1] == "clock"):
-                    if soundData.split(";")[0] not in addedSoundsClock:
+                try:
+                    soundData = pytools.IO.getFile("..\\vars\\pluginSounds\\" + sound)
+                    if (soundData.split(";")[1] == "clock"):
                         try:
-                            clocksounds = clocksounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsClock.append(soundData.split(";")[0])
+                            if soundData.split(";")[0] not in addedSoundsClock:
+                                clocksounds = clocksounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsClock.append(soundData.split(";")[0])
                         except:
                             continue
-                if (soundData.split(";")[1] == "fireplace"):
-                    if soundData.split(";")[0] not in addedSoundsFireplace:
-                        try:
-                            fireplacesounds = fireplacesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsFireplace.append(soundData.split(";")[0])
-                        except:
-                            continue
-                if (soundData.split(";")[1] == "window"):
-                    if soundData.split(";")[0] not in addedSoundsWindow:
-                        try:
-                            windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsWindow.append(soundData.split(";")[0])
-                        except:
-                            continue
-                if (soundData.split(";")[1] == "outside"):
-                    if soundData.split(";")[0] not in addedSoundsOutside:
-                        try:
-                            outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsOutside.append(soundData.split(";")[0])
-                        except:
-                            continue
-                if (soundData.split(";")[1] == "windown"):
-                    if soundData.split(";")[0] not in addedSoundsWindow:
-                        try:
-                            windowsounds = windowsounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsWindow.append(soundData.split(";")[0])
-                        except:
-                            continue
-                    if soundData.split(";")[0] not in addedSoundsOutside:
-                        try:
-                            outsidesounds = outsidesounds + makeStringNew(soundData.split(";")[0])
-                            addedSoundsOutside.append(soundData.split(";")[0])
-                        except:
-                            continue
+                    if (soundData.split(";")[1] == "fireplace"):
+                        if soundData.split(";")[0] not in addedSoundsFireplace:
+                            try:
+                                fireplacesounds = fireplacesounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsFireplace.append(soundData.split(";")[0])
+                            except:
+                                continue
+                    if (soundData.split(";")[1] == "window"):
+                        if soundData.split(";")[0] not in addedSoundsWindow:
+                            try:
+                                windowsounds = windowsounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsWindow.append(soundData.split(";")[0])
+                            except:
+                                continue
+                    if (soundData.split(";")[1] == "outside"):
+                        if soundData.split(";")[0] not in addedSoundsOutside:
+                            try:
+                                outsidesounds = outsidesounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsOutside.append(soundData.split(";")[0])
+                            except:
+                                continue
+                    if (soundData.split(";")[1] == "windown"):
+                        if soundData.split(";")[0] not in addedSoundsWindow:
+                            try:
+                                windowsounds = windowsounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsWindow.append(soundData.split(";")[0])
+                            except:
+                                continue
+                        if soundData.split(";")[0] not in addedSoundsOutside:
+                            try:
+                                outsidesounds = outsidesounds + str(soundData.split(";")[4]).replace("[", "") + ";" + str(soundData.split(";")[5]) + ";" + str(soundData.split(";")[6]) + ";" + makeStringNew(soundData.split(";")[0])
+                                addedSoundsOutside.append(soundData.split(";")[0])
+                            except:
+                                continue
+                except:
+                    print(traceback.format_exc())
         except:
             print(traceback.format_exc())        
                 
@@ -173,6 +176,12 @@ def main():
         saveFile("..\\vars\\sounds\\fireplace.cxl", fireplacesounds)
         saveFile("..\\vars\\sounds\\window.cxl", windowsounds)
         saveFile("..\\vars\\sounds\\outside.cxl", outsidesounds)
+        
+        # for file in os.listdir("..\\vars\\pluginSounds"):
+        #     _data = pytools.IO.getFile("..\\vars\\pluginSounds\\" + file)
+        #     if (float(_data.split(";")[2]) + float(_data.split(";")[3])) < pytools.clock.dateArrayToUTC(pytools.clock.getDateTime()):
+        #         os.system("del \"..\\vars\\pluginSounds\\" + file + "\" /f /q")
+        
         time.sleep(1)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
         status.finishedLoop = True

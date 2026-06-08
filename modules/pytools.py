@@ -181,7 +181,7 @@ class IO:
                     text = rawText.decode(encoding, errors=errorsFallback)
                 return text
 
-        def printAt(c, r, s):
+        def printAtRun(c, r, s):
             
             if IO.console.readAt(len(s), c, r) != s:
             
@@ -190,6 +190,50 @@ class IO:
             
                 c = s.encode("windows-1252")
                 windll.kernel32.WriteConsoleA(h, c_char_p(c), len(c), None, None)
+
+            else:
+                c = s.encode("windows-1252")
+            
+            return len(c)
+                
+        def printAt(c, r, s):
+            
+            x = c
+            printStrf = ""
+            for char in s:
+                didLast = False
+                if char != "\r":
+                    printStrf = printStrf + char
+                else:
+                    x = x + IO.console.printAtRun(x, r, printStrf) + 1
+                    printStrf = ""
+                    
+            IO.console.printAtRun(x, r, printStrf)
+                
+            return
+    
+            x = c
+            for text in s.split("\r"):
+                
+                if text != "":
+                    # print(bytes(text, encoding="ascii"))
+                    IO.console.printAtRun(x, r, text)
+                
+                k = 10
+                for n in text:
+                    if bytes(n, encoding='ascii') == b'\x1b':
+                        k = 0
+                    if k > 3:
+                        if not ((k == 4) and lastChar == '0'):
+                            x = x + 1
+                    else:
+                        if k == 2:
+                            lastChar = n
+                
+                    k = k + 1
+                
+                if text == "":
+                    x = x + 1
         
         # wincon tools https://github.com/nvaccess/nvda/blob/master/source/wincon.py
          
@@ -227,7 +271,7 @@ class IO:
             error = 1
         return error
 
-    def saveList(path, list: Array):
+    def saveList(path, list):
         error = 0
         try:
             file = open(path, "wb")
@@ -1128,11 +1172,12 @@ class imageWorker:
         return colorrgb
 
 class clock:
-    def getDateTime(utc = False):
-        if utc:
-            daten = datetime.utcnow()
-        else:
-            daten = datetime.now()
+    def getDateTime(utc = False, daten=False):
+        if not daten:
+            if utc:
+                daten = datetime.utcnow()
+            else:
+                daten = datetime.now()
         dateArray = [1970, 1, 1, 0, 0, 0]
         dateArray[0] = int(str(daten).split(" ")[0].split("-")[0])
         dateArray[1] = int(str(daten).split(" ")[0].split("-")[1])

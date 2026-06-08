@@ -31,6 +31,9 @@ class status:
         },
         "dryness": 0
     }
+
+class _audio:
+    audioBuffer = False
     
 class tools:
     def getDayMin(dateArray):
@@ -93,7 +96,7 @@ def main():
                         volume = 75
                         
                     status.vars["volume"]["early"] = volume
-                    audio.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
                 elif (dateArray[1] == 9) and (dateArray[2] < 15):
                     volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray[0], 9, 15, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                     
@@ -102,14 +105,14 @@ def main():
                             volume = 75
                             
                         status.vars["volume"]["early"] = volume
-                        audio.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                        _audio.audioBuffer.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
                 else:
                     volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray) - pytools.clock.dateArrayToUTC([dateArray[0], 10, 15, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                     if volume > 0:
                         if volume > 75:
                             volume = 75
                         status.vars["volume"]["early"] = volume
-                        audio.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                        _audio.audioBuffer.playSoundWindow("leaves_early_m.mp3;leaves_early.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             volume = -10
             if (dateArray[1] == 10) and (dateArray[2] < 25):
@@ -121,7 +124,7 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume"]["mid"] = volume
-                audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray[1] == 9):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray[0], 10, 1, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
@@ -129,14 +132,14 @@ def main():
                         volume = 75
                     
                     status.vars["volume"]["mid"] = volume
-                    audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray[1] >= 10):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray) - pytools.clock.dateArrayToUTC([dateArray[0], 10, 25, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume"]["mid"] = volume
-                    audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             dateArray15Days = copy.deepcopy(dateArray)
             dateArray15Days[2] = dateArray15Days[2] + 15
@@ -152,25 +155,25 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume_random"]["mid"] = volume
-                # audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                # _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray15Days[1] == 9):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray15Days[0], 10, 1, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray15Days))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["mid"] = volume
-                    # audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray15Days[1] >= 10):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray15Days) - pytools.clock.dateArrayToUTC([dateArray15Days[0], 10, 25, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["mid"] = volume
-                    # audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             if (300 * random.random()) < volume:
                 randomVolumeModif = random.random()
-                audio.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_mid_m.mp3;leaves_mid.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
             
             volume = -10
             if (dateArray[1] == 10) and ((dateArray[2] >= 10) and (dateArray[2] <= 30)):
@@ -186,7 +189,7 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume"]["late"] = volume
-                audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif ((dateArray[1] == 10) and (dateArray[2] < 10)) or (dateArray[1] == 9):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray[0], 10, 10, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 
@@ -199,7 +202,7 @@ def main():
                     if volume > 75:
                         volume = 75
                     status.vars["volume"]["late"] = volume
-                    audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif ((dateArray[1] == 10) and (dateArray[2] > 30)) or (dateArray[1] == 11):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray) - pytools.clock.dateArrayToUTC([dateArray[0], 10, 30, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 
@@ -211,7 +214,7 @@ def main():
                     if volume > 75:
                         volume = 75
                     status.vars["volume"]["late"] = volume
-                    audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             elif dryness > 950400:
                 if (6 < dateArray[1] < 11):
@@ -221,7 +224,7 @@ def main():
                         volume = 75
                         
                     status.vars["volume"]["late"] = volume
-                    audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume * random.random(), volume * 1.2 * random.random(), (volume / 4.5) * random.random()], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume * random.random(), volume * 1.2 * random.random(), (volume / 4.5) * random.random()], 1.0, 0.0, 0)
             
             dateArray15Days = copy.deepcopy(dateArray)
             dateArray15Days[2] = dateArray15Days[2] + 15
@@ -242,7 +245,7 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume_random"]["late"] = volume
-                # audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                # _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif ((dateArray15Days[1] == 10) and (dateArray15Days[2] < 10)) or (dateArray15Days[1] == 9):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray15Days[0], 10, 10, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray15Days))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 
@@ -254,7 +257,7 @@ def main():
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["late"] = volume
-                    # audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif ((dateArray15Days[1] == 10) and (dateArray15Days[2] > 30)) or (dateArray15Days[1] == 11):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray15Days) - pytools.clock.dateArrayToUTC([dateArray15Days[0], 10, 30, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 
@@ -266,11 +269,11 @@ def main():
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["late"] = volume
-                    # audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             if (300 * random.random()) < volume:
                 randomVolumeModif = random.random()
-                audio.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_late_m.mp3;leaves_late.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
             
             volume = -10
             if ((dateArray[1] == 10) and (dateArray[2] >= 20)) or ((dateArray[1] == 11) and (dateArray[2] <= 5)):
@@ -284,21 +287,21 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume"]["end"] = volume
-                audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray[1] == 10) and (dateArray[2] < 20):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray[0], 10, 20, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume"]["end"] = volume
-                    audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray[1] == 11):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray) - pytools.clock.dateArrayToUTC([dateArray[0], 11, 5, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume"]["end"] = volume
-                    audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
                     
             dateArray15Days = copy.deepcopy(dateArray)
             dateArray15Days[2] = dateArray15Days[2] + 15
@@ -317,27 +320,27 @@ def main():
                 if volume > 75:
                     volume = 75
                 status.vars["volume_random"]["end"] = volume
-                # audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                # _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray15Days[1] == 10) and (dateArray15Days[2] < 20):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC([dateArray15Days[0], 10, 20, 0, 0, 0]) - pytools.clock.dateArrayToUTC(dateArray15Days))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["end"] = volume
-                    # audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             elif (dateArray15Days[1] == 11):
                 volume = (((1296000 - (pytools.clock.dateArrayToUTC(dateArray15Days) - pytools.clock.dateArrayToUTC([dateArray15Days[0], 11, 5, 0, 0, 0]))) / 1296000) * 25.819291312853025) * (0.9 + (dataArray[0][1] / ((20 - api.wind.globals.windModif) * 4)))
                 if volume > 0:
                     if volume > 75:
                         volume = 75
                     status.vars["volume_random"]["end"] = volume
-                    # audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
+                    # _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume, volume * 1.2, volume / 4.5], 1.0, 0.0, 0)
             
             if (300 * random.random()) < volume:
                 randomVolumeModif = random.random()
-                audio.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
+                _audio.audioBuffer.playSoundWindow("leaves_end_m.mp3;leaves_end.mp3", [volume * randomVolumeModif, volume * 1.2 * randomVolumeModif, (volume / 4.5) * randomVolumeModif], 1.0, 0.0, 0)
                     
-            time.sleep(194)
+            time.sleep(250)
         else:
             time.sleep(600)
         status.vars['lastLoop'] = pytools.clock.getDateTime()
@@ -345,5 +348,8 @@ def main():
 
 def run():
     status.hasExited = False
+    _audio.audioBuffer = audio.rapidFire(60)
+    _audio.audioBuffer._start()
     main()
+    _audio.audioBuffer._stop()
     status.hasExited = True

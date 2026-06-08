@@ -2,7 +2,10 @@ import modules.pytools as pytools
 import os
 
 def getSnapshot():
-    os.system("austin -p " + str(pytools.IO.getFile(".\\ambience_pid.cx")) + " -o test.flame -x 1")
+    if os.path.exists(".\\ambience_pid.cx"):
+        os.system("austin -p " + str(pytools.IO.getFile(".\\ambience_pid.cx")) + " -o test.flame -x 10")
+    else:
+        os.system("austin -p " + str(pytools.IO.getFile("..\\ambience_pid.cx")) + " -o test.flame -x 10")
     return pytools.IO.getFile("test.flame")
 
 def getNumberOfThreads(flameData):

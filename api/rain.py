@@ -4,6 +4,8 @@ import time
 import modules.logManager as log
 import random
 
+audioBuffer = audio.rapidFire(10)
+
 print = log.printLog
 
 class status:
@@ -48,7 +50,7 @@ class sounds:
             audioEvent.registerWindow("hail.mp3;hail_nm.mp3", [hailVolume, hailVolume], 1.0, 0.0, 0)
         audioEvent.register("lightrain_wall.mp3", 0, volume * 1.7, 1.0, 0.0, 0)
         audioEvent.register("lightrain_wall.mp3", 1, volume * 1.7, 1.0, 0.0, 0)
-        audioEvent.run()
+        audioBuffer.registerCombine(audioEvent)
 
     def lightRain():
         audioEvent = audio.event()
@@ -59,15 +61,15 @@ class sounds:
         audioEvent.registerWindow("lightrain.mp3;lightrain_nm.mp3", [volume * 1.7, volume * 1.7], 1.0, 0.0, 0)
         audioEvent.register("lightrain_wall.mp3", 0, volume * 1.17, 1.0, 0.0, 0)
         audioEvent.register("lightrain_wall.mp3", 1, volume * 1.17, 1.0, 0.0, 0)
-        audioEvent.run()
+        audioBuffer.registerCombine(audioEvent)
     
     def mist():
         volume = ((((0.458048 ** ( - 0.670194 * (utils.getLightningData() + 3.94567)) - 7.88269) / 32) + ((100 * utils.dataGrabber()[2][3]) + (100 * utils.dataGrabber()[9][1]) + (100 * utils.dataGrabber()[9][2])) * 0.3) * 7) + 15 + (utils.dataGrabber()[1][0] * 4)
         if volume > 100:
             volume = 100
         print("Playing Mist effect at volume: " + str(volume))
-        audio.playSoundWindow("lightrain.mp3;mist_nm.mp3", [volume * 0.85, volume * 1.7], 1.0, 0.0, 0)
-    
+        audioBuffer.playSoundWindow("lightrain.mp3;mist_nm.mp3", [volume * 0.85, volume * 1.7], 1.0, 0.0, 0)
+
 def main():
     while not status.exit:
         dataList = utils.dataGrabber()
@@ -86,7 +88,9 @@ def main():
         
 def run():
     status.hasExited = False
+    audioBuffer._start()
     main()
+    audioBuffer._stop()
     status.hasExited = True
             
         
